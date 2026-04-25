@@ -13,22 +13,16 @@ namespace HMS.Infrastructure.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        // =========================
-        // 🔴 STRICT
-        // =========================
         public Guid? GetTenantId()
         {
-            var tenantId = TryGetTenantId();
+            var tenant = TryGetTenantId();
 
-            if (!tenantId.HasValue)
+            if (!tenant.HasValue)
                 throw new Exception("Tenant not found in request");
 
-            return tenantId;
+            return tenant;
         }
 
-        // =========================
-        // 🟢 SAFE
-        // =========================
         public Guid? TryGetTenantId()
         {
             var context = _httpContextAccessor.HttpContext;
@@ -36,30 +30,31 @@ namespace HMS.Infrastructure.Services
             if (context == null)
                 return null;
 
-            // 🔥 Super Admin → global access
-            if (IsSuperAdmin())
-                return null;
+            // =========================
+            // 🔥 1. HEADER (أعلى أولوية)
+            // =========================
+            var headerTenant = context.Request.Headers["X-Tenant-Id"].FirstOrDefault();
 
-            // 🔥 من Middleware
-            if (context.Items.TryGetValue("TenantId", out var tenantObj) && tenantObj is Guid tenantId)
+            if (!string.IsNullOrEmpty(headerTenant) &&
+                Guid.TryParse(headerTenant, out var headerGuid))
             {
-                return tenantId;
+                return headerGuid;
             }
 
-            // 🔥 من JWT
+            // =========================
+            // 🔥 2. JWT
+            // =========================
             var claim = context.User?.FindFirst("orgId")?.Value;
 
-            if (!string.IsNullOrEmpty(claim) && Guid.TryParse(claim, out var parsedTenant))
+            if (!string.IsNullOrEmpty(claim) &&
+                Guid.TryParse(claim, out var claimGuid))
             {
-                return parsedTenant;
+                return claimGuid;
             }
 
             return null;
         }
 
-        // =========================
-        // 💣 SET TENANT
-        // =========================
         public void SetTenantId(Guid tenantId)
         {
             var context = _httpContextAccessor.HttpContext;
@@ -70,9 +65,6 @@ namespace HMS.Infrastructure.Services
             context.Items["TenantId"] = tenantId;
         }
 
-        // =========================
-        // 🔥 SUPER ADMIN
-        // =========================
         public bool IsSuperAdmin()
         {
             var context = _httpContextAccessor.HttpContext;

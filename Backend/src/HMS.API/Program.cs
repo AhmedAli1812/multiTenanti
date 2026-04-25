@@ -95,32 +95,52 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Internal Hospital Management System API"
     });
 
-
-options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-{
-    Name = "Authorization",
-    Type = SecuritySchemeType.Http,
-    Scheme = "bearer",
-    BearerFormat = "JWT",
-    In = ParameterLocation.Header,
-    Description = "Enter: Bearer {token}"
-});
-
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-{
+    // 🔐 JWT
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        new OpenApiSecurityScheme
-        {
-            Reference = new OpenApiReference
-            {
-                Type = ReferenceType.SecurityScheme,
-                Id = "Bearer"
-            }
-        },
-        Array.Empty<string>()
-    }
-});
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter: Bearer {token}"
+    });
 
+    // 🏢 Tenant Header (🔥 GLOBAL)
+    options.AddSecurityDefinition("Tenant", new OpenApiSecurityScheme
+    {
+        Name = "X-Tenant-Id",
+        Type = SecuritySchemeType.ApiKey,
+        In = ParameterLocation.Header,
+        Description = "Tenant Id for switching (Super Admin)"
+    });
+
+    // 🔥 Apply JWT + Tenant globally
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        },
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Tenant"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
 
 // =====================

@@ -1,6 +1,8 @@
 ﻿using HMS.Application.Abstractions.Tenant;
 using HMS.Domain.Entities.Base;
+using HMS.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace HMS.Infrastructure.Persistence.GlobalFilters
@@ -27,15 +29,39 @@ namespace HMS.Infrastructure.Persistence.GlobalFilters
             ITenantProvider tenantProvider)
             where TEntity : TenantEntity
         {
-            modelBuilder.Entity<TEntity>()
-                .HasQueryFilter(e =>
-                    // 🔥 Super Admin يشوف كل حاجة
-                    tenantProvider.IsSuperAdmin()
+            // ⚠️ مهم جدًا: خد القيمة مرة واحدة
+            var tenantId = tenantProvider.TryGetTenantId();
 
-                    // 🔥 Tenant filter (SAFE)
-                    || EF.Property<Guid?>(e, "TenantId") ==
-                       tenantProvider.TryGetTenantId()
-                );
+            Expression<Func<TEntity, bool>> filter;
+
+            // 🔥 Super Admin → يشوف كل حاجة
+            if (tenantProvider.IsSuperAdmin())
+            {
+                if (typeof(ISoftDeletable).IsAssignableFrom(typeof(TEntity)))
+                {
+                    filter = e => !((ISoftDeletable)e).IsDeleted;
+                }
+                else
+                {
+                    filter = e => true;
+                }
+            }
+            else
+            {
+                if (typeof(ISoftDeletable).IsAssignableFrom(typeof(TEntity)))
+                {
+                    filter = e =>
+                        EF.Property<Guid?>(e, "TenantId") == tenantId &&
+                        EF.Property<bool>(e, "IsDeleted") == false;
+                }
+                else
+                {
+                    filter = e =>
+                        EF.Property<Guid?>(e, "TenantId") == tenantId;
+                }
+            }
+
+            modelBuilder.Entity<TEntity>().HasQueryFilter(filter);
         }
     }
 }
