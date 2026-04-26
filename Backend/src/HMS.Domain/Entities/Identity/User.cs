@@ -1,4 +1,6 @@
 ﻿using HMS.Domain.Entities.Base;
+using HMS.Domain.Entities.Branches;
+using HMS.Domain.Entities.Departments;
 using HMS.Domain.Entities.Patients;
 
 namespace HMS.Domain.Entities.Identity
@@ -13,7 +15,11 @@ namespace HMS.Domain.Entities.Identity
         public string? PhoneNumber { get; set; }
         public string? Username { get; set; }
         public string? NationalId { get; set; }
+        public Guid? DepartmentId { get; set; }
+        public Department? Department { get; set; }
 
+        public Guid? BranchId { get; set; }
+        public Branch? Branch { get; set; }
         // 🔐 Security
         public string PasswordHash { get; set; } = default!;
 

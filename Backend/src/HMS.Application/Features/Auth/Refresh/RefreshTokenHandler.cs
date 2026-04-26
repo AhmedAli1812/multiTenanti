@@ -102,6 +102,7 @@ public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, Result<L
             user.TenantId,
             roles,
             permissions,
+            user.BranchId,
             user
         );
 

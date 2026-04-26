@@ -41,9 +41,6 @@ public class CreateUserHandler : IRequestHandler<CreateUserCommand, Guid>
         var email = request.Email?.Trim().ToLower();
         var username = request.Username?.Trim().ToLower();
 
-        // =========================
-        // 🔥 TRANSACTION
-        // =========================
         using var tx = await _context.BeginTransactionAsync(cancellationToken);
 
         // =========================
@@ -86,7 +83,11 @@ public class CreateUserHandler : IRequestHandler<CreateUserCommand, Guid>
             PasswordHash = _hasher.HashPassword(request.Password),
             TenantId = tenantId,
             IsActive = true,
-            IsLocked = false
+            IsLocked = false,
+
+            // 💣 الحل الأساسي للمشكلة
+            BranchId = request.BranchId,
+            DepartmentId = request.DepartmentId
         };
 
         await _context.Users.AddAsync(user, cancellationToken);

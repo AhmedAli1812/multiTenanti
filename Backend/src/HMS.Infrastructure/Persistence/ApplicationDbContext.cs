@@ -36,7 +36,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     }
 
     // =========================
-    // DB SETS
+    // DB SETS (CONSISTENT 💣)
     // =========================
     public DbSet<User> Users => Set<User>();
     public DbSet<Role> Roles => Set<Role>();
@@ -50,7 +50,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Floor> Floors => Set<Floor>();
     public DbSet<Branch> Branches => Set<Branch>();
     public DbSet<Room> Rooms => Set<Room>();
-    public DbSet<Department> Departments { get; set; }
+
+    // 💣 FIX هنا
+    public DbSet<Department> Departments => Set<Department>();
+
     public DbSet<PatientIntake> Intakes => Set<PatientIntake>();
     public DbSet<RoomAssignment> RoomAssignments => Set<RoomAssignment>();
 
@@ -83,6 +86,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         // =========================
         // RELATIONS
         // =========================
+
         modelBuilder.Entity<Room>()
             .HasOne(r => r.Branch)
             .WithMany()
@@ -107,6 +111,19 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             .HasForeignKey(a => a.VisitId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // 💣 IMPORTANT: User Relations
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.Branch)
+            .WithMany()
+            .HasForeignKey(u => u.BranchId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.Department)
+            .WithMany()
+            .HasForeignKey(u => u.DepartmentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         ApplyIndexes(modelBuilder);
         ApplyGlobalFilters(modelBuilder);
 
@@ -114,7 +131,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     }
 
     // =========================
-    // 🔥 GLOBAL FILTER (FIXED 💣)
+    // 🔥 GLOBAL FILTER
     // =========================
     private void ApplyGlobalFilters(ModelBuilder modelBuilder)
     {
@@ -136,7 +153,19 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     private void SetGlobalFilter<TEntity>(ModelBuilder modelBuilder)
         where TEntity : class
     {
-        if (typeof(ISoftDeletable).IsAssignableFrom(typeof(TEntity)))
+        if (typeof(Role).IsAssignableFrom(typeof(TEntity)))
+        {
+            // System roles are global - not tenant-specific
+            modelBuilder.Entity<Role>()
+                .HasQueryFilter(e =>
+                    e.IsSystem == true
+                    ||
+                    _tenantProvider.IsSuperAdmin()
+                    ||
+                    EF.Property<Guid?>(e, "TenantId") == _tenantProvider.TryGetTenantId()
+                );
+        }
+        else if (typeof(ISoftDeletable).IsAssignableFrom(typeof(TEntity)))
         {
             modelBuilder.Entity<TEntity>()
                 .HasQueryFilter(e =>

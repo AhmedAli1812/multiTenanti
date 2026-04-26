@@ -22,10 +22,13 @@ public class GetDoctorsHandler : IRequestHandler<GetDoctorsQuery, List<DoctorLoo
         GetDoctorsQuery request,
         CancellationToken cancellationToken)
     {
+        // =========================
+        // 🔥 Base Query
+        // =========================
         var query = _context.Users.AsNoTracking();
 
         // =========================
-        // 🔥 Super Admin
+        // 🔥 Super Admin يشوف كله
         // =========================
         if (_currentUser.IsGlobal)
         {
@@ -33,30 +36,31 @@ public class GetDoctorsHandler : IRequestHandler<GetDoctorsQuery, List<DoctorLoo
         }
 
         // =========================
-        // 💣 Get Doctor Role
+        // 💣 Get Doctor Role (DYNAMIC)
         // =========================
-        var doctorRoleId = await _context.Roles
+        var doctorRole = await _context.Roles
             .IgnoreQueryFilters()
             .AsNoTracking()
-            .Where(r => r.Name == "Doctor")
-            .Select(r => r.Id)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(r => 
+                r.Name.ToLower() == "doctor" ||
+                r.NormalizedName == "DOCTOR", // إذا كانت عندك normalized name
+            cancellationToken);
 
-        if (doctorRoleId == Guid.Empty)
-            throw new Exception("Doctor role not found");
+        if (doctorRole == null)
+            return new List<DoctorLookupDto>();
+
+        var doctorRoleId = doctorRole.Id;
 
         // =========================
-        // 💣 FIX هنا 👇
+        // 💣 Filter Doctors
         // =========================
         query = query.Where(u =>
-            _context.UserRoles
-                .IgnoreQueryFilters() // 🔥 أهم سطر
-                .Any(ur => ur.UserId == u.Id && ur.RoleId == doctorRoleId)
-        );
+            u.UserRoles.Any(ur => ur.RoleId == doctorRoleId));
 
         // =========================
         // 🔥 Branch Logic
         // =========================
+
         if (request.BranchId.HasValue)
         {
             query = query.Where(u => u.BranchId == request.BranchId);
@@ -65,7 +69,7 @@ public class GetDoctorsHandler : IRequestHandler<GetDoctorsQuery, List<DoctorLoo
         {
             query = query.Where(u => u.BranchId == _currentUser.BranchId);
         }
-        else if (!_currentUser.IsGlobal)
+        else if (!_currentUser.IsGlobal && !_currentUser.BranchId.HasValue)
         {
             return new List<DoctorLookupDto>();
         }
@@ -81,7 +85,7 @@ public class GetDoctorsHandler : IRequestHandler<GetDoctorsQuery, List<DoctorLoo
         // =========================
         // 📄 Result
         // =========================
-        return await query
+        var result = await query
             .OrderBy(u => u.FullName)
             .Select(u => new DoctorLookupDto
             {
@@ -89,5 +93,17 @@ public class GetDoctorsHandler : IRequestHandler<GetDoctorsQuery, List<DoctorLoo
                 Name = u.FullName
             })
             .ToListAsync(cancellationToken);
+
+        // أضف هذا في الـ handler للعثور على الاسم الفعلي
+        var allRoles = await _context.Roles
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Select(r => r.Name)
+            .ToListAsync(cancellationToken);
+
+        // Debug: شوف إيه الأدوار الموجودة فعلاً
+        System.Diagnostics.Debug.WriteLine($"Available Roles: {string.Join(", ", allRoles)}
+
+        return result;
     }
 }

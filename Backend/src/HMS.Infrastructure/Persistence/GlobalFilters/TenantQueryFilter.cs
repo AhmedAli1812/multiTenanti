@@ -2,7 +2,6 @@
 using HMS.Domain.Entities.Base;
 using HMS.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 using System.Reflection;
 
 namespace HMS.Infrastructure.Persistence.GlobalFilters
@@ -29,39 +28,30 @@ namespace HMS.Infrastructure.Persistence.GlobalFilters
             ITenantProvider tenantProvider)
             where TEntity : TenantEntity
         {
-            // ⚠️ مهم جدًا: خد القيمة مرة واحدة
-            var tenantId = tenantProvider.TryGetTenantId();
-
-            Expression<Func<TEntity, bool>> filter;
-
-            // 🔥 Super Admin → يشوف كل حاجة
-            if (tenantProvider.IsSuperAdmin())
+            // =========================
+            // 🔥 Entity فيها SoftDelete
+            // =========================
+            if (typeof(ISoftDeletable).IsAssignableFrom(typeof(TEntity)))
             {
-                if (typeof(ISoftDeletable).IsAssignableFrom(typeof(TEntity)))
-                {
-                    filter = e => !((ISoftDeletable)e).IsDeleted;
-                }
-                else
-                {
-                    filter = e => true;
-                }
+                modelBuilder.Entity<TEntity>().HasQueryFilter(e =>
+                    (
+                        tenantProvider.IsSuperAdmin()
+                        || EF.Property<Guid?>(e, "TenantId") == tenantProvider.TryGetTenantId()
+                    )
+                    &&
+                    EF.Property<bool>(e, "IsDeleted") == false
+                );
             }
             else
             {
-                if (typeof(ISoftDeletable).IsAssignableFrom(typeof(TEntity)))
-                {
-                    filter = e =>
-                        EF.Property<Guid?>(e, "TenantId") == tenantId &&
-                        EF.Property<bool>(e, "IsDeleted") == false;
-                }
-                else
-                {
-                    filter = e =>
-                        EF.Property<Guid?>(e, "TenantId") == tenantId;
-                }
+                // =========================
+                // 🔥 Entity مفيهاش SoftDelete
+                // =========================
+                modelBuilder.Entity<TEntity>().HasQueryFilter(e =>
+                    tenantProvider.IsSuperAdmin()
+                    || EF.Property<Guid?>(e, "TenantId") == tenantProvider.TryGetTenantId()
+                );
             }
-
-            modelBuilder.Entity<TEntity>().HasQueryFilter(filter);
         }
     }
 }

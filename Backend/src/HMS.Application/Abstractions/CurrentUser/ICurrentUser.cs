@@ -6,4 +6,5 @@ public interface ICurrentUser
     Guid TenantId { get; }
     string Role { get; }
     bool IsGlobal { get; }
+    Guid? BranchId { get; }
 }
