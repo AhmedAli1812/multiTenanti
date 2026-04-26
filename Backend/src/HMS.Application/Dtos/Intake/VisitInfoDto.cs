@@ -4,7 +4,7 @@ public class VisitInfoDto
 {
     public Guid BranchId { get; set; }
 
-    public VisitType VisitType { get; set; } // 🔥 بدل string
+    public VisitType VisitType { get; set; }
     public string ArrivalMethod { get; set; } = default!;
     public string Priority { get; set; } = default!;
 

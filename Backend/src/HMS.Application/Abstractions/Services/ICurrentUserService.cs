@@ -4,5 +4,6 @@ namespace HMS.Application.Abstractions.Services
     {
         Guid UserId { get; }
         Guid TenantId { get; }
+
     }
 }

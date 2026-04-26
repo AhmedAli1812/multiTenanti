@@ -24,20 +24,33 @@ public class GetPatientsHandler : IRequestHandler<GetPatientsQuery, PaginatedRes
         CancellationToken cancellationToken)
     {
         var tenantId = _currentUser.TenantId;
+        var isGlobal = _currentUser.IsGlobal; // 👈 لازم تضيفها في CurrentUser
 
         // =========================
         // 🧠 Base Query
         // =========================
         var query = _context.Patients
             .AsNoTracking()
-            .Where(x =>
-                x.TenantId == tenantId &&   // 💣 SaaS
-                !x.IsDeleted);              // 💣 Soft delete
+            .Where(x => !x.IsDeleted);
+
+        // =========================
+        // 🏢 Multi-Tenant Logic 🔥
+        // =========================
+        if (!isGlobal)
+        {
+            query = query.Where(x => x.TenantId == tenantId);
+        }
+        else if (request.TenantId.HasValue)
+        {
+            // 👈 Admin بيختار tenant
+            query = query.Where(x => x.TenantId == request.TenantId.Value);
+        }
+        // else: Super Admin يشوف كل البيانات (اختياري)
 
         var search = request.Search?.Trim();
 
         // =========================
-        // 🔍 Search (Optimized)
+        // 🔍 Search
         // =========================
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -61,7 +74,7 @@ public class GetPatientsHandler : IRequestHandler<GetPatientsQuery, PaginatedRes
         var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
 
         if (pageSize > 50)
-            pageSize = 50; // 💣 حماية السيرفر
+            pageSize = 50;
 
         // =========================
         // 📄 Data
@@ -79,9 +92,6 @@ public class GetPatientsHandler : IRequestHandler<GetPatientsQuery, PaginatedRes
             })
             .ToListAsync(cancellationToken);
 
-        // =========================
-        // 📦 Result
-        // =========================
         return new PaginatedResult<PatientDto>
         {
             PageNumber = page,

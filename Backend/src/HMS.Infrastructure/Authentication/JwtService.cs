@@ -50,15 +50,14 @@ public class JwtService : IJwtService
         };
 
         // =========================
-        // 🏢 Tenant (CRITICAL FIX)
+        // 🏢 Tenant (FIXED 🔥)
         // =========================
         if (tenantId.HasValue)
         {
-            claims.Add(new Claim("orgId", tenantId.Value.ToString()));
+            claims.Add(new Claim("tenantId", tenantId.Value.ToString())); // ✅ FIX
         }
         else
         {
-            // 🔥 Super Admin indicator
             claims.Add(new Claim("isGlobal", "true"));
         }
 

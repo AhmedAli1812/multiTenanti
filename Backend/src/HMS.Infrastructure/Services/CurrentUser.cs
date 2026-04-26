@@ -11,38 +11,67 @@ public class CurrentUser : ICurrentUser
         _httpContextAccessor = httpContextAccessor;
     }
 
+    // =========================
+    // 👤 UserId
+    // =========================
     public Guid UserId
     {
         get
         {
-            var userId = _httpContextAccessor.HttpContext?.User?
-                .FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = _httpContextAccessor.HttpContext?.User;
 
-            return string.IsNullOrEmpty(userId)
-                ? Guid.Empty
-                : Guid.Parse(userId);
+            if (user == null)
+                return Guid.Empty;
+
+            var claim = user.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (claim == null || string.IsNullOrWhiteSpace(claim.Value))
+                return Guid.Empty;
+
+            return Guid.TryParse(claim.Value, out var id)
+                ? id
+                : Guid.Empty;
         }
     }
 
+    // =========================
+    // 🏢 TenantId
+    // =========================
     public Guid TenantId
     {
         get
         {
-            var tenantId = _httpContextAccessor.HttpContext?.User?
-                .FindFirst("tenantId")?.Value;
+            var user = _httpContextAccessor.HttpContext?.User;
 
-            return string.IsNullOrEmpty(tenantId)
-                ? Guid.Empty
-                : Guid.Parse(tenantId);
+            if (user == null)
+                return Guid.Empty;
+
+            var claim =
+                user.FindFirst("tenantId") ??
+                user.FindFirst("tenant_id") ??
+                user.FindFirst("TenantId") ??
+                user.FindFirst("tid");
+
+            if (claim == null || string.IsNullOrWhiteSpace(claim.Value))
+                return Guid.Empty;
+
+            return Guid.TryParse(claim.Value, out var tenantId)
+                ? tenantId
+                : Guid.Empty;
         }
     }
 
-    public string Role
-    {
-        get
-        {
-            return _httpContextAccessor.HttpContext?.User?
-                .FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
-        }
-    }
+    // =========================
+    // 🌍 IsGlobal
+    // =========================
+    public bool IsGlobal =>
+        _httpContextAccessor.HttpContext?.User?
+            .FindFirst("isGlobal")?.Value == "true";
+
+    // =========================
+    // 👤 Role
+    // =========================
+    public string Role =>
+        _httpContextAccessor.HttpContext?.User?
+            .FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
 }

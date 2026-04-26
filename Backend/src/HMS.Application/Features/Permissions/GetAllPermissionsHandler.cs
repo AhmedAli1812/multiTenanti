@@ -3,9 +3,11 @@ using HMS.Application.Abstractions.CurrentUser;
 using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Dtos;
 using HMS.Application.Features.Permissions;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 public class GetAllPermissionsHandler
+    : IRequestHandler<GetAllPermissionsQuery, List<PermissionDto>>
 {
     private readonly IApplicationDbContext _context;
     private readonly IPermissionCacheService _cache;
@@ -21,7 +23,9 @@ public class GetAllPermissionsHandler
         _currentUser = currentUser;
     }
 
-    public async Task<List<PermissionDto>> Handle(GetAllPermissionsQuery request, CancellationToken cancellationToken)
+    public async Task<List<PermissionDto>> Handle(
+        GetAllPermissionsQuery request,
+        CancellationToken cancellationToken)
     {
         var userId = _currentUser.UserId;
 

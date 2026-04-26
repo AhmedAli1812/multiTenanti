@@ -23,14 +23,23 @@ public class GetPatientByIdHandler : IRequestHandler<GetPatientByIdQuery, Patien
         GetPatientByIdQuery request,
         CancellationToken cancellationToken)
     {
-        var tenantId = _currentUser.TenantId;
+        var query = _context.Patients
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted);
 
-        var patient = await _context.Patients
-            .AsNoTracking() // ⚡ performance
-            .Where(x =>
-                x.Id == request.Id &&
-                x.TenantId == tenantId &&   // 💣 SaaS isolation
-                !x.IsDeleted)               // 💣 soft delete
+        // 💣 Multi-tenant filter
+        if (!_currentUser.IsGlobal)
+        {
+            var tenantId = _currentUser.TenantId;
+
+            if (tenantId == Guid.Empty)
+                throw new UnauthorizedAccessException("Tenant not found");
+
+            query = query.Where(x => x.TenantId == tenantId);
+        }
+
+        var patient = await query
+            .Where(x => x.Id == request.Id)
             .Select(x => new PatientDto
             {
                 Id = x.Id,

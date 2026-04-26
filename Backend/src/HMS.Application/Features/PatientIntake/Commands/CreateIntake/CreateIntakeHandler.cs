@@ -33,31 +33,55 @@ public class CreateIntakeHandler : IRequestHandler<CreateIntakeCommand, Guid>
             throw new ArgumentException("Branch is required");
 
         // =========================
-        // 🔥 Check Patient exists
+        // 🔥 Get Patient + TenantId
         // =========================
-        var patientExists = await _context.Patients
+        var patientData = await _context.Patients
             .AsNoTracking()
-            .AnyAsync(p =>
-                p.Id == request.PatientId &&
-                p.TenantId == tenantId,
-                ct);
+            .Where(p => p.Id == request.PatientId && !p.IsDeleted)
+            .Select(p => new
+            {
+                p.Id,
+                p.TenantId
+            })
+            .FirstOrDefaultAsync(ct);
 
-        if (!patientExists)
+        if (patientData == null)
             throw new InvalidOperationException("Patient not found");
 
         // =========================
-        // 🔥 Prevent duplicate active intake
+        // 🔥 Multi-Tenant Check
         // =========================
-        var hasActiveIntake = await _context.Intakes
+        if (!_currentUser.IsGlobal && patientData.TenantId != tenantId)
+            throw new UnauthorizedAccessException("Access denied");
+
+        // =========================
+        // 🔥 Prevent duplicate intake
+        // =========================
+        var intakeQuery = _context.Intakes
             .AsNoTracking()
-            .AnyAsync(i =>
+            .Where(i =>
                 i.PatientId == request.PatientId &&
-                i.Status == IntakeStatus.Draft &&
-                i.TenantId == tenantId,
-                ct);
+                i.Status == IntakeStatus.Draft);
+
+        if (!_currentUser.IsGlobal)
+        {
+            intakeQuery = intakeQuery.Where(i => i.TenantId == tenantId);
+        }
+
+        var hasActiveIntake = await intakeQuery.AnyAsync(ct);
 
         if (hasActiveIntake)
             throw new InvalidOperationException("Patient already has an active intake");
+
+        // =========================
+        // 🔥 Resolve TenantId (FIX)
+        // =========================
+        if (patientData.TenantId == null)
+            throw new InvalidOperationException("Patient TenantId is missing");
+
+        var finalTenantId = _currentUser.IsGlobal
+            ? patientData.TenantId.Value
+            : tenantId;
 
         // =========================
         // 🔥 Create Intake
@@ -66,12 +90,12 @@ public class CreateIntakeHandler : IRequestHandler<CreateIntakeCommand, Guid>
         {
             Id = Guid.NewGuid(),
             PatientId = request.PatientId,
-            BranchId = request.BranchId.Value, // ✅ حل nullable
+            BranchId = request.BranchId.Value,
             Status = IntakeStatus.Draft,
-            TenantId = tenantId,
+            TenantId = finalTenantId,
 
             CreatedAt = DateTime.UtcNow,
-            CreatedBy = userId // 🔥 audit
+            CreatedBy = userId
         };
 
         await _context.Intakes.AddAsync(intake, ct);
