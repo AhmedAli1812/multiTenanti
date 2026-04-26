@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { authService, type LoginCredentials } from '../services/authService'
 import { useLanguage } from '../context/LanguageContext'
 import { translations } from '../context/translations'
-import { isAuthenticated, getRole } from '../utils/auth'
+import { isAuthenticated, getRole, decodeToken } from '../utils/auth'
 
 interface LoginForm {
   identifier: string
@@ -62,6 +62,12 @@ export function useLogin(): UseLoginReturn {
       localStorage.setItem('token', response.accessToken)
       localStorage.setItem('refreshToken', response.refreshToken)
       localStorage.setItem('user', JSON.stringify({ name: response.fullName }))
+
+      // ✅ احفظ الـ orgId من الـ JWT
+      const payload = decodeToken(response.accessToken)
+      if (payload?.orgId) {
+        localStorage.setItem('orgId', payload.orgId)
+      }
 
       console.log('token saved:', localStorage.getItem('token')?.substring(0, 20))
       console.log('isAuth:', isAuthenticated())

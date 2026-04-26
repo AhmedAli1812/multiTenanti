@@ -30,6 +30,21 @@ QuestPDF.Settings.License = LicenseType.Community;
 
 builder.Services.AddControllers();
 
+// =====================
+// 🌐 CORS
+// =====================
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 // Infrastructure (DB + Services)
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -71,6 +86,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // =====================
 // 🔐 Authorization (Permissions)
 // =====================
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("ViewAuditLogs", policy =>
@@ -178,7 +194,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// ✅ CORS أول حاجة — قبل كل حاجة
+app.UseCors("AllowFrontend");
+
 app.MapHub<NotificationHub>("/hubs/notifications");
 app.UseStaticFiles();
 
