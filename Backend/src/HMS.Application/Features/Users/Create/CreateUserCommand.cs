@@ -11,6 +11,7 @@ public class CreateUserCommand : IRequest<Guid>
     public string? PhoneNumber { get; set; }
     public string? Username { get; set; }      // ✅ أضف دي
     public string? NationalId { get; set; }    // ✅ أضف دي
-
+    public Guid? DepartmentId { get; set; }
+    public Guid? BranchId { get; set; }
     public List<Guid> RoleIds { get; set; } = new();
 }

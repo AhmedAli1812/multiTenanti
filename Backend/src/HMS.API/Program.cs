@@ -5,6 +5,7 @@ using HMS.Application.Abstractions.Security;
 using HMS.Application.Abstractions.Services;
 using HMS.Application.Features.Auth.Login;
 using HMS.Infrastructure.Caching;
+using HMS.Infrastructure.CurrentUser;
 using HMS.Infrastructure.DependencyInjection;
 using HMS.Infrastructure.Persistence;
 using HMS.Infrastructure.Persistence.Seed;

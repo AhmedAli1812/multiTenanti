@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 
+namespace HMS.Infrastructure.CurrentUser;
+
 public class CurrentUser : ICurrentUser
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -11,67 +13,65 @@ public class CurrentUser : ICurrentUser
         _httpContextAccessor = httpContextAccessor;
     }
 
+    private ClaimsPrincipal? User => _httpContextAccessor.HttpContext?.User;
+
     // =========================
-    // 👤 UserId
+    // 🔥 UserId
     // =========================
-    public Guid UserId
+    public Guid UserId =>
+        Guid.TryParse(
+            User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User?.FindFirst("sub")?.Value,   // fallback
+            out var userId)
+        ? userId
+        : Guid.Empty;
+
+    // =========================
+    // 🔥 TenantId
+    // =========================
+    public Guid TenantId =>
+        Guid.TryParse(
+            User?.FindFirst("tenantId")?.Value,
+            out var tenantId)
+        ? tenantId
+        : Guid.Empty;
+
+    // =========================
+    // 💣 BranchId
+    // =========================
+    public Guid? BranchId
     {
         get
         {
-            var user = _httpContextAccessor.HttpContext?.User;
+            var value = User?.FindFirst("branchId")?.Value;
 
-            if (user == null)
-                return Guid.Empty;
-
-            var claim = user.FindFirst(ClaimTypes.NameIdentifier);
-
-            if (claim == null || string.IsNullOrWhiteSpace(claim.Value))
-                return Guid.Empty;
-
-            return Guid.TryParse(claim.Value, out var id)
-                ? id
-                : Guid.Empty;
+            return Guid.TryParse(value, out var branchId)
+                ? branchId
+                : null;
         }
     }
 
     // =========================
-    // 🏢 TenantId
+    // 💣 Roles (supports multi roles)
     // =========================
-    public Guid TenantId
-    {
-        get
-        {
-            var user = _httpContextAccessor.HttpContext?.User;
-
-            if (user == null)
-                return Guid.Empty;
-
-            var claim =
-                user.FindFirst("tenantId") ??
-                user.FindFirst("tenant_id") ??
-                user.FindFirst("TenantId") ??
-                user.FindFirst("tid");
-
-            if (claim == null || string.IsNullOrWhiteSpace(claim.Value))
-                return Guid.Empty;
-
-            return Guid.TryParse(claim.Value, out var tenantId)
-                ? tenantId
-                : Guid.Empty;
-        }
-    }
+    public List<string> Roles =>
+        User?
+            .FindAll(ClaimTypes.Role)
+            .Select(r => r.Value)
+            .ToList()
+        ?? new List<string>();
 
     // =========================
-    // 🌍 IsGlobal
+    // 💣 Single Role (optional helper)
+    // =========================
+    public string? Role => Roles.FirstOrDefault();
+
+    // =========================
+    // 🔥 IsGlobal
     // =========================
     public bool IsGlobal =>
-        _httpContextAccessor.HttpContext?.User?
-            .FindFirst("isGlobal")?.Value == "true";
-
-    // =========================
-    // 👤 Role
-    // =========================
-    public string Role =>
-        _httpContextAccessor.HttpContext?.User?
-            .FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+        bool.TryParse(
+            User?.FindFirst("isGlobal")?.Value,
+            out var isGlobal)
+        && isGlobal;
 }

@@ -47,7 +47,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
         var identifier = request.Identifier.Trim().ToLower();
 
         // =========================
-        // 🔥 GET USER (بدون فلتر tenant)
+        // 🔥 GET USER
         // =========================
         var user = await _context.Users
             .IgnoreQueryFilters()
@@ -79,7 +79,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
         var isSuperAdmin = roles.Contains("Super Admin");
 
         // =========================
-        // 💣 TENANT (FIXED FINAL)
+        // 💣 TENANT
         // =========================
         Guid? tenantId = null;
 
@@ -90,8 +90,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
 
             tenantId = user.TenantId;
 
-            // ✅ أهم سطر
-            _tenantProvider.SetTenantId(user.TenantId!.Value);
+            _tenantProvider.SetTenantId(user.TenantId.Value);
         }
 
         // =========================
@@ -99,13 +98,6 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
         // =========================
         var ip = _requestInfo.GetIpAddress();
         var userAgent = _requestInfo.GetUserAgent();
-
-        // =========================
-        // 🚨 SUSPICIOUS LOGIN
-        // =========================
-        var hasDifferentIp = await _context.UserSessions
-            .IgnoreQueryFilters()
-            .AnyAsync(x => x.UserId == user.Id && x.IpAddress != ip, cancellationToken);
 
         // =========================
         // 🔥 PERMISSIONS
@@ -125,18 +117,25 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
             .ToListAsync(cancellationToken);
 
         // =========================
-        // 🔐 ACCESS TOKEN
+        // 🚨 VALIDATION (IMPORTANT)
+        // =========================
+        if (!isSuperAdmin && user.BranchId == null)
+            throw new Exception("User must be assigned to a branch");
+
+        // =========================
+        // 🔐 ACCESS TOKEN (FIXED)
         // =========================
         var accessToken = _jwt.GenerateToken(
             user.Id,
             tenantId,
             roles,
             permissions,
+            user.BranchId, // 🔥 لازم نضيف ده
             user
         );
 
         // =========================
-        // 🔄 SINGLE SESSION
+        // 🔄 SESSION CLEANUP
         // =========================
         var existingSessions = _context.UserSessions
             .Where(x => x.UserId == user.Id);

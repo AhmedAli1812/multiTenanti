@@ -27,10 +27,10 @@ public static class PermissionSeeder
 
             // 🔥 Dashboard
             new Permission { Code = "dashboard.view", Module = "Dashboard", Action = "view", Description = "View dashboard" },
-
+            new Permission { Code = "dashboard.reception.view", Module = "Dashboard", Action = "view", Description = "View reception dashboard" },
             // 🔥 Audit Logs
             new Permission { Code = "audit_logs.view", Module = "Audit Logs", Action = "view", Description = "View audit logs" },
-            new Permission { Code = "dashboard.reception.view", Module = "Dashboard", Action = "view", Description = "View reception dashboard" },
+            
              new Permission
             {
                 Id = Guid.NewGuid(),

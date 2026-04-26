@@ -26,88 +26,67 @@ public class JwtService : IJwtService
     }
 
     // =========================
-    // 🔑 Access Token
+    // 🔑 Access Token (FIXED 🔥)
     // =========================
     public string GenerateToken(
-        Guid userId,
-        Guid? tenantId,
-        List<string>? roles,
-        List<string>? permissions,
-        User user)
+    Guid userId,
+    Guid? tenantId,
+    List<string>? roles,
+    List<string>? permissions,
+    Guid? branchId,
+    User user
+)
     {
         if (user == null)
             throw new ArgumentNullException(nameof(user));
 
-        // =========================
-        // 🔥 Claims الأساسية
-        // =========================
         var claims = new List<Claim>
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            new Claim(ClaimTypes.Name, user.FullName ?? string.Empty)
-        };
+    {
+        new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+        new Claim(ClaimTypes.Name, user.FullName ?? string.Empty)
+    };
 
-        // =========================
-        // 🏢 Tenant (FIXED 🔥)
-        // =========================
+        // 🔥 BranchId
+        if (branchId.HasValue)
+        {
+            claims.Add(new Claim("branchId", branchId.Value.ToString()));
+        }
+
+        // 🔥 Tenant
         if (tenantId.HasValue)
         {
-            claims.Add(new Claim("tenantId", tenantId.Value.ToString())); // ✅ FIX
+            claims.Add(new Claim("tenantId", tenantId.Value.ToString()));
         }
         else
         {
             claims.Add(new Claim("isGlobal", "true"));
         }
 
-        // =========================
-        // 👤 Roles
-        // =========================
+        // Roles
         if (roles != null && roles.Any())
         {
-            claims.AddRange(
-                roles.Distinct()
-                     .Select(role => new Claim(ClaimTypes.Role, role))
-            );
+            claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
         }
 
-        // =========================
-        // 🔐 Permissions
-        // =========================
+        // Permissions
         if (permissions != null && permissions.Any())
         {
-            claims.AddRange(
-                permissions.Distinct()
-                           .Select(p => new Claim("permission", p))
-            );
+            claims.AddRange(permissions.Select(p => new Claim("permission", p)));
         }
 
-        // =========================
-        // 🔐 Signing Key
-        // =========================
-        var keyValue = _configuration["Jwt:Key"];
-        if (string.IsNullOrWhiteSpace(keyValue))
-            throw new InvalidOperationException("Jwt:Key is not configured");
+        var key = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!)
+        );
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyValue));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        // =========================
-        // ⏱ Expiration
-        // =========================
-        var expiryMinutes = int.TryParse(_configuration["Jwt:ExpiryMinutes"], out var mins)
-            ? mins
-            : 30;
-
-        // =========================
-        // 🧾 Token
-        // =========================
         var token = new JwtSecurityToken(
             issuer: _configuration["Jwt:Issuer"],
             audience: _configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
+            expires: DateTime.UtcNow.AddMinutes(30),
             signingCredentials: creds
         );
 
