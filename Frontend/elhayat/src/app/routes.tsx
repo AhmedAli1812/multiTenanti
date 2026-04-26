@@ -1,7 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from '../pages/Login/LoginPage'
-import ReceptionDashboard from '../pages/Dashboard/Reception/ReceptionDashboard'
+import Receptiondashboard from '../pages/Dashboard/Reception/Receptiondashboard'
 import AdminDashboard from '../pages/Dashboard/Admin/AdminDashboard'
+import PatientIntakeFlow from '../pages/Intake/PatientIntakeFlow'
 import { isAuthenticated, getRole } from '../utils/auth'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -11,13 +12,8 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 function DashboardRouter() {
   const role = getRole()
-
-  // Reception (مع الـ typo في الباك اند)
-  if (role === 'reception' || role === 'recption') return <ReceptionDashboard />
-
-  // Admin (مع الـ space في الباك اند "Adm in")
-  if (role === 'Admin' || role === 'Admin' || role === 'admin' || role === 'superadmin') return <AdminDashboard />
-
+  if (role === 'Receptionist') return <Receptiondashboard />
+  if (['Super Admin', 'Admin', 'admin', 'superadmin'].includes(role)) return <AdminDashboard />
   return <Navigate to="/login" replace />
 }
 
@@ -30,6 +26,14 @@ export default function AppRoutes() {
         element={
           <PrivateRoute>
             <DashboardRouter />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/patients/new"
+        element={
+          <PrivateRoute>
+            <PatientIntakeFlow />
           </PrivateRoute>
         }
       />
