@@ -25,8 +25,6 @@ public class GetVisitsHandler : IRequestHandler<GetVisitsQuery, PaginatedResult<
         GetVisitsQuery request,
         CancellationToken cancellationToken)
     {
-        var tenantId = _currentUser.TenantId;
-
         var page = request.PageNumber <= 0 ? 1 : request.PageNumber;
         var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
         if (pageSize > 50) pageSize = 50;
@@ -37,8 +35,13 @@ public class GetVisitsHandler : IRequestHandler<GetVisitsQuery, PaginatedResult<
         // 🧠 Base Query
         // =========================
         var query = _context.Visits
-            .AsNoTracking()
-            .Where(v => v.TenantId == tenantId);
+            .AsNoTracking();
+
+        // 🔥 Super Admin يشوف كل الداتا
+        if (_currentUser.IsGlobal)
+        {
+            query = query.IgnoreQueryFilters(); // مهم جدًا لو عندك Global Filter
+        }
 
         // =========================
         // 🔍 Search
@@ -65,7 +68,7 @@ public class GetVisitsHandler : IRequestHandler<GetVisitsQuery, PaginatedResult<
         var totalCount = await query.CountAsync(cancellationToken);
 
         // =========================
-        // 📄 Data (Room via Assignment 💣)
+        // 📄 Data
         // =========================
         var visits = await query
             .OrderByDescending(v => v.CreatedAt)
@@ -87,7 +90,6 @@ public class GetVisitsHandler : IRequestHandler<GetVisitsQuery, PaginatedResult<
                     .Select(a => a.Room.RoomNumber)
                     .FirstOrDefault() ?? "—",
 
-                // 🔥 Branch من Visit نفسه
                 BranchName = v.Branch.Name,
 
                 Status = v.Status.ToString(),

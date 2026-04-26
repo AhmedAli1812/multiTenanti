@@ -1,18 +1,19 @@
-﻿using HMS.Application.Abstractions.Persistence;
+﻿using HMS.Application.Abstractions.CurrentUser;
+using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.Tenant;
-using HMS.Application.Abstractions.CurrentUser;
 using HMS.Domain.Entities;
 using HMS.Domain.Entities.Audit;
 using HMS.Domain.Entities.Base;
 using HMS.Domain.Entities.Branches;
+using HMS.Domain.Entities.Departments;
 using HMS.Domain.Entities.Doctors;
 using HMS.Domain.Entities.Identity;
 using HMS.Domain.Entities.Operations;
 using HMS.Domain.Entities.PatientIntake;
 using HMS.Domain.Entities.Patients;
+using HMS.Domain.Entities.Rooms;
 using HMS.Domain.Entities.Tenancy;
 using HMS.Domain.Entities.Visits;
-using HMS.Domain.Entities.Rooms;
 using HMS.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -49,7 +50,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Floor> Floors => Set<Floor>();
     public DbSet<Branch> Branches => Set<Branch>();
     public DbSet<Room> Rooms => Set<Room>();
-
+    public DbSet<Department> Departments { get; set; }
     public DbSet<PatientIntake> Intakes => Set<PatientIntake>();
     public DbSet<RoomAssignment> RoomAssignments => Set<RoomAssignment>();
 

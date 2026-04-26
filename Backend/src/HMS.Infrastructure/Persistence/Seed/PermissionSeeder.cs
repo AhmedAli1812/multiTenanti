@@ -30,6 +30,7 @@ public static class PermissionSeeder
 
             // 🔥 Audit Logs
             new Permission { Code = "audit_logs.view", Module = "Audit Logs", Action = "view", Description = "View audit logs" },
+            new Permission { Code = "dashboard.reception.view", Module = "Dashboard", Action = "view", Description = "View reception dashboard" },
              new Permission
             {
                 Id = Guid.NewGuid(),
@@ -38,6 +39,7 @@ public static class PermissionSeeder
                 Action = "create",
                 Description = "Create patient"
             }
+
 
         };
 

@@ -12,6 +12,7 @@ using HMS.Domain.Entities.Rooms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using HMS.Domain.Entities.Tenancy;
+using HMS.Domain.Entities.Departments;
 
 namespace HMS.Application.Abstractions.Persistence
 {
@@ -40,6 +41,7 @@ namespace HMS.Application.Abstractions.Persistence
         DbSet<Visit> Visits { get; }
         DbSet<PatientIntake> Intakes { get; }
         DbSet<DoctorProfile> DoctorProfiles { get; }
+        DbSet<Department> Departments { get; }
 
         // =========================
         // 🏢 Structure
