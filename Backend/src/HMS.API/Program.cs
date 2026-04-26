@@ -71,13 +71,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // =====================
 // 🔐 Authorization (Permissions)
 // =====================
-
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("ViewAuditLogs", policy =>
     {
         policy.RequireClaim("permission", "audit_logs.view");
     });
+});
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("DashboardReceptionView", policy =>
+    {
+        policy.RequireClaim("permission", "dashboard.reception.view");
+    });
+
 });
 
 // =====================

@@ -23,5 +23,6 @@ public static class Permissions
     public const string MedicalFileView = "medical_file.view";
     public const string MedicalFileEdit = "medical_file.edit";
     public const string ViewAuditLogs = "audit_logs.view";
+    public const string DashboardReceptionView = "dashboard.reception.view";
 
 }

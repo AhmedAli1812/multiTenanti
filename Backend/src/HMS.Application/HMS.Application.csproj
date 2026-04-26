@@ -16,7 +16,6 @@
     <Folder Include="Features\PatientIntake\DTOs\" />
     <Folder Include="Features\PatientIntake\Contracts\" />
     <Folder Include="Features\PatientIntake\Queries\" />
-    <Folder Include="Features\Reception\" />
     <Folder Include="Features\Reports\" />
   </ItemGroup>
 

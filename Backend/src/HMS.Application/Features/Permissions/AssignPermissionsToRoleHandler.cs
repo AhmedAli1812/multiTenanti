@@ -25,46 +25,58 @@ public class AssignPermissionsToRoleHandler
     }
 
     public async Task<bool> Handle(
-        AssignPermissionsToRoleCommand request,
-        CancellationToken cancellationToken)
+     AssignPermissionsToRoleCommand request,
+     CancellationToken cancellationToken)
     {
         var tenantId = _currentUser.TenantId;
 
-        // =========================
-        // 💣 Validation
-        // =========================
         if (request.RoleId == Guid.Empty)
             throw new ArgumentException("Invalid role");
 
         if (request.PermissionIds == null || !request.PermissionIds.Any())
             return true;
 
-        // remove duplicates from request
         var permissionIds = request.PermissionIds.Distinct().ToList();
 
         // =========================
-        // 🔥 Ensure role belongs to tenant
+        // 🔥 Base Query (Global aware)
         // =========================
-        var roleExists = await _context.Roles
-            .AsNoTracking()
-            .AnyAsync(r => r.Id == request.RoleId && r.TenantId == tenantId, cancellationToken);
+        var rolesQuery = _context.Roles.AsNoTracking();
 
-        if (!roleExists)
+        if (_currentUser.IsGlobal)
+        {
+            rolesQuery = rolesQuery.IgnoreQueryFilters(); // 💣
+        }
+
+        var role = await rolesQuery
+            .FirstOrDefaultAsync(r => r.Id == request.RoleId, cancellationToken);
+
+        if (role == null)
             throw new InvalidOperationException("Role not found");
 
         // =========================
-        // 🔥 Get existing permissions مرة واحدة
+        // 🔥 Non-global لازم نفس التينانت
         // =========================
-        var existingPermissionIds = await _context.RolePermissions
-            .AsNoTracking()
-            .Where(rp =>
-                rp.RoleId == request.RoleId &&
-                rp.TenantId == tenantId)
+        if (!_currentUser.IsGlobal && role.TenantId != tenantId)
+            throw new UnauthorizedAccessException("Access denied");
+
+        // =========================
+        // 🔥 RolePermissions Query
+        // =========================
+        var rolePermissionsQuery = _context.RolePermissions.AsNoTracking();
+
+        if (_currentUser.IsGlobal)
+        {
+            rolePermissionsQuery = rolePermissionsQuery.IgnoreQueryFilters();
+        }
+
+        var existingPermissionIds = await rolePermissionsQuery
+            .Where(rp => rp.RoleId == request.RoleId)
             .Select(rp => rp.PermissionId)
             .ToListAsync(cancellationToken);
 
         // =========================
-        // 🔥 Filter new permissions فقط
+        // 🔥 Filter new permissions
         // =========================
         var newPermissions = permissionIds
             .Except(existingPermissionIds)
@@ -80,16 +92,13 @@ public class AssignPermissionsToRoleHandler
         {
             RoleId = request.RoleId,
             PermissionId = pid,
-            TenantId = tenantId
+            TenantId = role.TenantId // 💣 مهم جدًا
         });
 
         await _context.RolePermissions.AddRangeAsync(entities, cancellationToken);
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        // =========================
-        // 🔥 Clear cache
-        // =========================
         await _cache.RemoveRoleAsync(request.RoleId);
 
         return true;

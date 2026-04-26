@@ -1,10 +1,13 @@
-﻿using HMS.Application.Features.ReceptionDashboard.Queries;
+using HMS.Application.Features.ReceptionDashboard.Queries;
+using HMS.Domain.Constants;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HMS.API.Controllers;
 
 [ApiController]
+[Authorize(Policy = "DashboardReceptionView")]
 [Route("api/dashboard")]
 public class DashboardController : ControllerBase
 {
