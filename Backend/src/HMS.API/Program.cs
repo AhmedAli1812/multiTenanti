@@ -94,6 +94,14 @@ builder.Services.AddAuthorization(options =>
         policy.RequireClaim("permission", "audit_logs.view");
     });
 });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("DashboardReceptionView", policy =>
+    {
+        policy.RequireClaim("permission", "dashboard.reception.view");
+    });
+
+});
 
 // =====================
 // 🧾 Swagger
