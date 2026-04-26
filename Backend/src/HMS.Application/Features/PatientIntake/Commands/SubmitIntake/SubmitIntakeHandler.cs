@@ -1,5 +1,6 @@
 ﻿using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.Services;
+using HMS.Application.Abstractions.CurrentUser;
 using HMS.Application.Features.PatientIntake.Commands.SubmitIntake;
 using HMS.Application.Dtos;
 using HMS.Domain.Entities.Operations;
@@ -17,21 +18,30 @@ public class SubmitIntakeHandler : IRequestHandler<SubmitIntakeCommand, Wristban
     private readonly IAssignmentService _assignment;
     private readonly IQrCodeService _qr;
     private readonly IDashboardNotifier _notifier;
+    private readonly ICurrentUser _currentUser;
 
     public SubmitIntakeHandler(
         IApplicationDbContext context,
         IAssignmentService assignment,
         IQrCodeService qr,
-        IDashboardNotifier notifier)
+        IDashboardNotifier notifier,
+        ICurrentUser currentUser)
     {
         _context = context;
         _assignment = assignment;
         _qr = qr;
         _notifier = notifier;
+        _currentUser = currentUser;
     }
 
     public async Task<WristbandDto> Handle(SubmitIntakeCommand request, CancellationToken ct)
     {
+        var tenantId = _currentUser.IsGlobal
+            ? request.TenantId   // 👈 مسموح بس للـ super admin
+            : _currentUser.TenantId;
+
+        var userId = _currentUser.UserId;
+
         // =============================
         // 💣 Validation
         // =============================
@@ -44,6 +54,9 @@ public class SubmitIntakeHandler : IRequestHandler<SubmitIntakeCommand, Wristban
         if (!Enum.TryParse<Gender>(request.PersonalInfo.Gender, true, out var gender))
             throw new ArgumentException("Invalid gender");
 
+        // =============================
+        // 🔥 Transaction
+        // =============================
         using var transaction = await _context.BeginTransactionAsync(ct);
 
         // =============================
@@ -52,33 +65,41 @@ public class SubmitIntakeHandler : IRequestHandler<SubmitIntakeCommand, Wristban
         var patient = await _context.Patients
             .FirstOrDefaultAsync(p =>
                 p.MedicalNumber == request.PersonalInfo.MedicalNumber &&
-                p.TenantId == request.TenantId,
+                p.TenantId == tenantId,
                 ct);
 
         if (patient == null)
         {
             patient = new Patient
             {
+                Id = Guid.NewGuid(),
                 FullName = request.PersonalInfo.FullName.Trim(),
                 MedicalNumber = request.PersonalInfo.MedicalNumber.Trim(),
                 PhoneNumber = request.PersonalInfo.Phone,
                 Email = request.PersonalInfo.Email,
                 DateOfBirth = request.PersonalInfo.DateOfBirth,
                 Gender = gender,
-                TenantId = request.TenantId
+                TenantId = tenantId,
+
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = userId
             };
 
             await _context.Patients.AddAsync(patient, ct);
         }
 
         // =============================
-        // 🔥 Intake
+        // 🔥 Get Intake (Tenant Safe)
         // =============================
-        var intake = await _context.Intakes
-            .FirstOrDefaultAsync(x =>
-                x.Id == request.IntakeId &&
-                x.TenantId == request.TenantId,
-                ct);
+        var intakeQuery = _context.Intakes
+            .Where(x => x.Id == request.IntakeId);
+
+        if (!_currentUser.IsGlobal)
+        {
+            intakeQuery = intakeQuery.Where(x => x.TenantId == tenantId);
+        }
+
+        var intake = await intakeQuery.FirstOrDefaultAsync(ct);
 
         if (intake == null)
             throw new InvalidOperationException("Intake not found");
@@ -109,15 +130,19 @@ public class SubmitIntakeHandler : IRequestHandler<SubmitIntakeCommand, Wristban
         }
 
         // =============================
-        // 🔥 Create Visit (NO RoomId ❌)
+        // 🔥 Create Visit
         // =============================
         var visit = new Visit
         {
+            Id = Guid.NewGuid(),
             PatientId = patient.Id,
             BranchId = intake.BranchId,
             VisitType = intake.VisitType,
             DoctorId = doctorId,
-            TenantId = request.TenantId
+            TenantId = tenantId,
+
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = userId
         };
 
         visit.SetVisitDate(DateTime.UtcNow);
@@ -125,16 +150,20 @@ public class SubmitIntakeHandler : IRequestHandler<SubmitIntakeCommand, Wristban
         await _context.Visits.AddAsync(visit, ct);
 
         // =============================
-        // 🛏️ Room Assignment (ONLY HERE)
+        // 🛏️ Room Assignment
         // =============================
         if (roomId.HasValue)
         {
             await _context.RoomAssignments.AddAsync(new RoomAssignment
             {
+                Id = Guid.NewGuid(),
                 VisitId = visit.Id,
                 RoomId = roomId.Value,
                 IsActive = true,
-                TenantId = request.TenantId
+                TenantId = tenantId,
+
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = userId
             }, ct);
         }
 
@@ -142,29 +171,23 @@ public class SubmitIntakeHandler : IRequestHandler<SubmitIntakeCommand, Wristban
         // 🔄 Update Intake
         // =============================
         intake.Status = IntakeStatus.ConvertedToVisit;
+        intake.UpdatedAt = DateTime.UtcNow;
+        intake.UpdatedBy = userId;
 
         await _context.SaveChangesAsync(ct);
-
         await transaction.CommitAsync(ct);
 
         // =============================
-        // 🔴 Real-time (SMART EVENTS)
+        // 🔴 Real-time Notifications
         // =============================
+        await _notifier.NotifyNewVisit(tenantId, intake.BranchId);
 
-        // 🟢 Reception → فيه مريض جديد
-        await _notifier.NotifyNewVisit(request.TenantId, intake.BranchId);
-
-        // 👨‍⚕️ Doctor → الطابور اتغير
         if (doctorId.HasValue)
-        {
             await _notifier.NotifyDoctorQueue(doctorId.Value);
-        }
 
-        // 🏥 Nurses → الغرف اتغيرت
         if (roomId.HasValue)
-        {
-            await _notifier.NotifyRoomAssigned(request.TenantId, intake.BranchId);
-        }
+            await _notifier.NotifyRoomAssigned(tenantId, intake.BranchId);
+
         // =============================
         // 💣 QR Code
         // =============================

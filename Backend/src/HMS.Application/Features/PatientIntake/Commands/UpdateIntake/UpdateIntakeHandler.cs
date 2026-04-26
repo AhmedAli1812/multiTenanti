@@ -20,15 +20,20 @@ public class UpdateIntakeHandler : IRequestHandler<UpdateIntakeCommand, Unit>
     public async Task<Unit> Handle(UpdateIntakeCommand request, CancellationToken ct)
     {
         var tenantId = _currentUser.TenantId;
+        var userId = _currentUser.UserId;
 
         // =========================
-        // 🔥 Get Intake (Tenant Safe)
+        // 🔥 Get Intake (Multi-tenant safe)
         // =========================
-        var intake = await _context.Intakes
-            .FirstOrDefaultAsync(x =>
-                x.Id == request.IntakeId &&
-                x.TenantId == tenantId,
-                ct);
+        var intakeQuery = _context.Intakes
+            .Where(x => x.Id == request.IntakeId);
+
+        if (!_currentUser.IsGlobal)
+        {
+            intakeQuery = intakeQuery.Where(x => x.TenantId == tenantId);
+        }
+
+        var intake = await intakeQuery.FirstOrDefaultAsync(ct);
 
         if (intake == null)
             throw new InvalidOperationException("Intake not found");
@@ -44,12 +49,16 @@ public class UpdateIntakeHandler : IRequestHandler<UpdateIntakeCommand, Unit>
         // =========================
         if (request.BranchId.HasValue)
         {
-            var branchExists = await _context.Branches
+            var branchQuery = _context.Branches
                 .AsNoTracking()
-                .AnyAsync(b =>
-                    b.Id == request.BranchId.Value &&
-                    b.TenantId == tenantId,
-                    ct);
+                .Where(b => b.Id == request.BranchId.Value);
+
+            if (!_currentUser.IsGlobal)
+            {
+                branchQuery = branchQuery.Where(b => b.TenantId == tenantId);
+            }
+
+            var branchExists = await branchQuery.AnyAsync(ct);
 
             if (!branchExists)
                 throw new InvalidOperationException("Invalid branch");
@@ -57,8 +66,9 @@ public class UpdateIntakeHandler : IRequestHandler<UpdateIntakeCommand, Unit>
             intake.BranchId = request.BranchId.Value;
         }
 
-        // 🚫 مفيش Room هنا خلاص
-
+        // =========================
+        // 🔄 Update fields
+        // =========================
         if (request.VisitType.HasValue)
             intake.VisitType = request.VisitType.Value;
 
@@ -74,6 +84,12 @@ public class UpdateIntakeHandler : IRequestHandler<UpdateIntakeCommand, Unit>
         intake.EmergencyContactJson = request.EmergencyContactJson;
         intake.InsuranceJson = request.InsuranceJson;
         intake.FlagsJson = request.FlagsJson;
+
+        // =========================
+        // 🧾 Audit
+        // =========================
+        intake.UpdatedAt = DateTime.UtcNow;
+        intake.UpdatedBy = userId;
 
         // =========================
         // 💾 Save

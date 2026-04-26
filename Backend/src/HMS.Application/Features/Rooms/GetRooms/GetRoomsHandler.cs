@@ -19,25 +19,29 @@ public class GetRoomsHandler : IRequestHandler<GetRoomsQuery, List<RoomDto>>
     }
 
     public async Task<List<RoomDto>> Handle(
-        GetRoomsQuery request,
-        CancellationToken cancellationToken)
+    GetRoomsQuery request,
+    CancellationToken cancellationToken)
     {
-        var tenantId = _currentUser.TenantId;
         var now = DateTime.UtcNow;
 
         // =========================
         // 🧠 Base Query
         // =========================
-        var query = _context.Rooms
-            .AsNoTracking()
-            .Where(r => r.TenantId == tenantId);
+        var query = _context.Rooms.AsNoTracking();
+
+        // 🔥 SaaS filter
+        if (!_currentUser.IsGlobal)
+        {
+            var tenantId = _currentUser.TenantId;
+            query = query.Where(r => r.TenantId == tenantId);
+        }
 
         // =========================
         // 🔍 Filters
         // =========================
         if (request.BranchId.HasValue)
         {
-            query = query.Where(r => r.BranchId == request.BranchId);
+            query = query.Where(r => r.BranchId == request.BranchId.Value);
         }
 
         if (request.IsAvailable == true)
@@ -58,7 +62,6 @@ public class GetRoomsHandler : IRequestHandler<GetRoomsQuery, List<RoomDto>>
                 RoomNumber = r.RoomNumber,
                 Capacity = r.Capacity,
                 IsOccupied = r.IsOccupied,
-
                 FloorName = r.Floor.Name,
                 BranchName = r.Floor.Branch.Name
             })

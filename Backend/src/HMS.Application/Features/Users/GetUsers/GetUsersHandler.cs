@@ -35,9 +35,13 @@ public class GetUsersHandler : IRequestHandler<GetUsersQuery, PaginatedResult<Us
         // =========================
         var usersQuery = _context.Users
             .AsNoTracking()
-            .Where(u =>
-                u.TenantId == tenantId &&
-                !u.IsDeleted);
+            .Where(u => !u.IsDeleted);
+
+        // 🔥 Multi-Tenant Logic
+        if (!_currentUser.IsGlobal)
+        {
+            usersQuery = usersQuery.Where(u => u.TenantId == tenantId);
+        }
 
         // =========================
         // 🔍 Search
@@ -76,13 +80,19 @@ public class GetUsersHandler : IRequestHandler<GetUsersQuery, PaginatedResult<Us
         var userIds = users.Select(u => u.Id).ToList();
 
         // =========================
-        // 🔥 Load Roles مرة واحدة
+        // 🔥 Load Roles (Optimized)
         // =========================
-        var roles = await _context.UserRoles
+        var rolesQuery = _context.UserRoles
             .AsNoTracking()
-            .Where(ur =>
-                userIds.Contains(ur.UserId) &&
-                ur.TenantId == tenantId)
+            .Where(ur => userIds.Contains(ur.UserId));
+
+        // 🔥 برضو هنا Multi-Tenant
+        if (!_currentUser.IsGlobal)
+        {
+            rolesQuery = rolesQuery.Where(ur => ur.TenantId == tenantId);
+        }
+
+        var roles = await rolesQuery
             .Join(_context.Roles,
                 ur => ur.RoleId,
                 r => r.Id,

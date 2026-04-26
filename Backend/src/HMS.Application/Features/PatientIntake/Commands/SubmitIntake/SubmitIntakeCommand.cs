@@ -1,19 +1,17 @@
-﻿using HMS.Application.Dtos.Intake;
+﻿using HMS.Application.Dtos;
+using HMS.Application.Dtos.Intake;
 using MediatR;
 
-namespace HMS.Application.Features.PatientIntake.Commands.SubmitIntake;
-
-public class SubmitIntakeCommand : IRequest<WristbandDto>
+public class SubmitIntakeCommand : IRequest<WristbandDto> // 🔥 FIX مهم
 {
-    public Guid IntakeId { get; set; }      // 🔥 مهم
-    public Guid TenantId { get; set; }      // 🔥 مهم (عشان TenantEntity)
-    public Guid? DoctorId { get; set; }
-    public Guid? RoomId { get; set; }
-    public PersonalInfoDto PersonalInfo { get; set; } = default!;
-    public EmergencyContactDto EmergencyContact { get; set; } = default!;
-    public ContactPreferencesDto ContactPreferences { get; set; } = default!;
-    public VisitInfoDto VisitInfo { get; set; } = default!;
-    public PaymentDto Payment { get; set; } = default!;
-    public ConsentDto Consent { get; set; } = default!;
-    public FlagsDto Flags { get; set; } = default!;
+    public Guid IntakeId { get; set; }
+    public Guid TenantId { get; set; }
+
+    public PersonalInfoDto PersonalInfo { get; set; }
+    public EmergencyContactDto EmergencyContact { get; set; }
+    public ContactPreferencesDto ContactPreferences { get; set; }
+    public VisitInfoDto VisitInfo { get; set; }
+    public PaymentDto Payment { get; set; }
+    public ConsentDto Consent { get; set; }
+    public FlagsDto Flags { get; set; }
 }
