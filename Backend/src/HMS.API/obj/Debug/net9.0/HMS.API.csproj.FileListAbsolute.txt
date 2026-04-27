@@ -394,3 +394,4 @@ D:\multi tenant\multiTenanti\Backend\src\HMS.API\obj\Debug\net9.0\refint\HMS.API
 D:\multi tenant\multiTenanti\Backend\src\HMS.API\obj\Debug\net9.0\HMS.API.pdb
 D:\multi tenant\multiTenanti\Backend\src\HMS.API\obj\Debug\net9.0\HMS.API.genruntimeconfig.cache
 D:\multi tenant\multiTenanti\Backend\src\HMS.API\obj\Debug\net9.0\ref\HMS.API.dll
+D:\multi tenant\multiTenanti\Backend\src\HMS.API\obj\Debug\net9.0\HMS.API.MvcApplicationPartsAssemblyInfo.cs

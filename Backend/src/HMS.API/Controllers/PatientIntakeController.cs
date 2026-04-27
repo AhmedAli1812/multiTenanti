@@ -2,7 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using HMS.Application.Abstractions.Services;
-
+using HMS.Application.Features.Reception.Intake.Commands;
 [ApiController]
 [Route("api/intake")]
 public class PatientIntakeController : ControllerBase
