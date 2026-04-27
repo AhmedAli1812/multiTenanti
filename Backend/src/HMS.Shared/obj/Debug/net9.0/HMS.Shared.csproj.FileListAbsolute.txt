@@ -1,0 +1,24 @@
+A:\multiTenanti\Backend\src\HMS.Shared\bin\Debug\net9.0\HMS.Shared.deps.json
+A:\multiTenanti\Backend\src\HMS.Shared\bin\Debug\net9.0\HMS.Shared.dll
+A:\multiTenanti\Backend\src\HMS.Shared\bin\Debug\net9.0\HMS.Shared.pdb
+A:\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\HMS.Shared.GeneratedMSBuildEditorConfig.editorconfig
+A:\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\HMS.Shared.AssemblyInfoInputs.cache
+A:\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\HMS.Shared.AssemblyInfo.cs
+A:\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\HMS.Shared.csproj.CoreCompileInputs.cache
+A:\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\HMS.Shared.sourcelink.json
+A:\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\HMS.Shared.dll
+A:\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\refint\HMS.Shared.dll
+A:\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\HMS.Shared.pdb
+A:\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\ref\HMS.Shared.dll
+D:\multi tenant\multiTenanti\Backend\src\HMS.Shared\bin\Debug\net9.0\HMS.Shared.deps.json
+D:\multi tenant\multiTenanti\Backend\src\HMS.Shared\bin\Debug\net9.0\HMS.Shared.dll
+D:\multi tenant\multiTenanti\Backend\src\HMS.Shared\bin\Debug\net9.0\HMS.Shared.pdb
+D:\multi tenant\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\HMS.Shared.GeneratedMSBuildEditorConfig.editorconfig
+D:\multi tenant\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\HMS.Shared.AssemblyInfoInputs.cache
+D:\multi tenant\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\HMS.Shared.AssemblyInfo.cs
+D:\multi tenant\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\HMS.Shared.csproj.CoreCompileInputs.cache
+D:\multi tenant\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\HMS.Shared.sourcelink.json
+D:\multi tenant\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\HMS.Shared.dll
+D:\multi tenant\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\refint\HMS.Shared.dll
+D:\multi tenant\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\HMS.Shared.pdb
+D:\multi tenant\multiTenanti\Backend\src\HMS.Shared\obj\Debug\net9.0\ref\HMS.Shared.dll
