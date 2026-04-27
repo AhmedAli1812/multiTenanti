@@ -7,7 +7,7 @@ namespace HMS.Domain.Entities.PatientIntake;
 public class PatientIntake : TenantEntity
 {
     public Guid TenantId { get; set; }
-    public Guid PatientId { get; set; }
+    public Guid? PatientId { get; set; }
     public Guid BranchId { get; set; }
     public VisitType VisitType { get; set; }
     public ArrivalMethod ArrivalMethod { get; set; }
