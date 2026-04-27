@@ -1,8 +1,9 @@
-﻿using HMS.Application.Abstractions.Persistence;
+﻿using HMS.Application.Abstractions.CurrentUser;
+using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.Services;
-using HMS.Application.Abstractions.CurrentUser;
-using HMS.Application.Features.PatientIntake.Commands.SubmitIntake;
 using HMS.Application.Dtos;
+using HMS.Application.Features.PatientIntake.Commands.SubmitIntake;
+using HMS.Application.Features.Reception.Intake.Commands;
 using HMS.Domain.Entities.Operations;
 using HMS.Domain.Entities.Patients;
 using HMS.Domain.Entities.Visits;
@@ -37,7 +38,7 @@ public class SubmitIntakeHandler : IRequestHandler<SubmitIntakeCommand, Wristban
     public async Task<WristbandDto> Handle(SubmitIntakeCommand request, CancellationToken ct)
     {
         var tenantId = _currentUser.IsGlobal
-            ? request.TenantId   // 👈 مسموح بس للـ super admin
+            ? request.TenantId
             : _currentUser.TenantId;
 
         var userId = _currentUser.UserId;
@@ -89,15 +90,13 @@ public class SubmitIntakeHandler : IRequestHandler<SubmitIntakeCommand, Wristban
         }
 
         // =============================
-        // 🔥 Get Intake (Tenant Safe)
+        // 🔥 Get Intake
         // =============================
         var intakeQuery = _context.Intakes
             .Where(x => x.Id == request.IntakeId);
 
         if (!_currentUser.IsGlobal)
-        {
             intakeQuery = intakeQuery.Where(x => x.TenantId == tenantId);
-        }
 
         var intake = await intakeQuery.FirstOrDefaultAsync(ct);
 
@@ -110,7 +109,7 @@ public class SubmitIntakeHandler : IRequestHandler<SubmitIntakeCommand, Wristban
         intake.PatientId = patient.Id;
 
         // =============================
-        // 💣 Assignment Logic
+        // 💣 Assignment
         // =============================
         Guid? doctorId = null;
         Guid? roomId = null;
@@ -178,7 +177,7 @@ public class SubmitIntakeHandler : IRequestHandler<SubmitIntakeCommand, Wristban
         await transaction.CommitAsync(ct);
 
         // =============================
-        // 🔴 Real-time Notifications
+        // 🔴 Notifications
         // =============================
         await _notifier.NotifyNewVisit(tenantId, intake.BranchId);
 
@@ -189,14 +188,31 @@ public class SubmitIntakeHandler : IRequestHandler<SubmitIntakeCommand, Wristban
             await _notifier.NotifyRoomAssigned(tenantId, intake.BranchId);
 
         // =============================
+        // 🛏️ Get Room Number
+        // =============================
+        string? roomNumber = null;
+
+        if (roomId.HasValue)
+        {
+            roomNumber = await _context.Rooms
+                .Where(r => r.Id == roomId.Value)
+                .Select(r => r.RoomNumber)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        // =============================
         // 💣 QR Code
         // =============================
-        var qrBytes = _qr.Generate($"https://your-domain/api/patients/{patient.Id}");
+        var qrBytes = _qr.Generate($"{patient.MedicalNumber}|{visit.Id}");
 
+        // =============================
+        // 🎯 Return Wristband
+        // =============================
         return new WristbandDto
         {
             PatientName = patient.FullName,
             MedicalNumber = patient.MedicalNumber,
+            //RoomNumber = roomNumber ?? "-",
             QrCode = qrBytes
         };
     }
