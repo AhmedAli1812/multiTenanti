@@ -18,10 +18,10 @@ public class PatientIntakeController : ControllerBase
 
     // 🟢 Create Intake (Draft)
     [HttpPost]
-    public async Task<IActionResult> Create(CreateIntakeCommand cmd)
+    public async Task<IActionResult> Create([FromBody] CreateIntakeCommand command)
     {
-        var id = await _mediator.Send(cmd);
-        return Ok(id);
+        var result = await _mediator.Send(command);
+        return Ok(result);
     }
 
     // 🟡 Update Intake
