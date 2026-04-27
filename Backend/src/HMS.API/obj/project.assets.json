@@ -6289,24 +6289,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Yathrip\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\ahmed\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.API\\HMS.API.csproj",
+      "projectUniqueName": "A:\\multiTenanti\\Backend\\src\\HMS.API\\HMS.API.csproj",
       "projectName": "HMS.API",
-      "projectPath": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.API\\HMS.API.csproj",
-      "packagesPath": "C:\\Users\\Yathrip\\.nuget\\packages\\",
-      "outputPath": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.API\\obj\\",
+      "projectPath": "A:\\multiTenanti\\Backend\\src\\HMS.API\\HMS.API.csproj",
+      "packagesPath": "C:\\Users\\ahmed\\.nuget\\packages\\",
+      "outputPath": "A:\\multiTenanti\\Backend\\src\\HMS.API\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\Yathrip\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Users\\ahmed\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -6318,13 +6313,14 @@
       },
       "frameworks": {
         "net9.0": {
+          "framework": "net9.0",
           "targetAlias": "net9.0",
           "projectReferences": {
-            "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Application\\HMS.Application.csproj": {
-              "projectPath": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Application\\HMS.Application.csproj"
+            "A:\\multiTenanti\\Backend\\src\\HMS.Application\\HMS.Application.csproj": {
+              "projectPath": "A:\\multiTenanti\\Backend\\src\\HMS.Application\\HMS.Application.csproj"
             },
-            "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Infrastructure\\HMS.Infrastructure.csproj": {
-              "projectPath": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Infrastructure\\HMS.Infrastructure.csproj"
+            "A:\\multiTenanti\\Backend\\src\\HMS.Infrastructure\\HMS.Infrastructure.csproj": {
+              "projectPath": "A:\\multiTenanti\\Backend\\src\\HMS.Infrastructure\\HMS.Infrastructure.csproj"
             }
           }
         }
@@ -6339,10 +6335,11 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.300"
+      "SdkAnalysisLevel": "10.0.200"
     },
     "frameworks": {
       "net9.0": {
+        "framework": "net9.0",
         "targetAlias": "net9.0",
         "dependencies": {
           "Microsoft.AspNetCore.Authentication.JwtBearer": {
@@ -6383,7 +6380,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.309/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

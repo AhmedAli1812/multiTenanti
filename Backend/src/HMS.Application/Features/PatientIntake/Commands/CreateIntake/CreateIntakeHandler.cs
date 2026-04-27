@@ -3,7 +3,6 @@ using HMS.Application.Abstractions.CurrentUser;
 using HMS.Domain.Entities.PatientIntake;
 using HMS.Domain.Enums;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 public class CreateIntakeHandler : IRequestHandler<CreateIntakeCommand, Guid>
 {
@@ -26,73 +25,20 @@ public class CreateIntakeHandler : IRequestHandler<CreateIntakeCommand, Guid>
         // =========================
         // 💣 Validation
         // =========================
-        if (request.PatientId == Guid.Empty)
-            throw new ArgumentException("Patient is required");
-
-        if (!request.BranchId.HasValue || request.BranchId.Value == Guid.Empty)
+        if (request.BranchId == Guid.Empty)
             throw new ArgumentException("Branch is required");
 
         // =========================
-        // 🔥 Get Patient + TenantId
-        // =========================
-        var patientData = await _context.Patients
-            .AsNoTracking()
-            .Where(p => p.Id == request.PatientId && !p.IsDeleted)
-            .Select(p => new
-            {
-                p.Id,
-                p.TenantId
-            })
-            .FirstOrDefaultAsync(ct);
-
-        if (patientData == null)
-            throw new InvalidOperationException("Patient not found");
-
-        // =========================
-        // 🔥 Multi-Tenant Check
-        // =========================
-        if (!_currentUser.IsGlobal && patientData.TenantId != tenantId)
-            throw new UnauthorizedAccessException("Access denied");
-
-        // =========================
-        // 🔥 Prevent duplicate intake
-        // =========================
-        var intakeQuery = _context.Intakes
-            .AsNoTracking()
-            .Where(i =>
-                i.PatientId == request.PatientId &&
-                i.Status == IntakeStatus.Draft);
-
-        if (!_currentUser.IsGlobal)
-        {
-            intakeQuery = intakeQuery.Where(i => i.TenantId == tenantId);
-        }
-
-        var hasActiveIntake = await intakeQuery.AnyAsync(ct);
-
-        if (hasActiveIntake)
-            throw new InvalidOperationException("Patient already has an active intake");
-
-        // =========================
-        // 🔥 Resolve TenantId (FIX)
-        // =========================
-        if (patientData.TenantId == null)
-            throw new InvalidOperationException("Patient TenantId is missing");
-
-        var finalTenantId = _currentUser.IsGlobal
-            ? patientData.TenantId.Value
-            : tenantId;
-
-        // =========================
-        // 🔥 Create Intake
+        // 🔥 Create Intake (Draft بدون Patient)
         // =========================
         var intake = new PatientIntake
         {
             Id = Guid.NewGuid(),
-            PatientId = request.PatientId,
-            BranchId = request.BranchId.Value,
+            BranchId = request.BranchId, // ✅ مباشر
             Status = IntakeStatus.Draft,
-            TenantId = finalTenantId,
+            TenantId = tenantId,
+
+            PatientId = null, // 👈 لسه Draft
 
             CreatedAt = DateTime.UtcNow,
             CreatedBy = userId
