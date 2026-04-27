@@ -212,15 +212,8 @@ public class SubmitIntakeHandler : IRequestHandler<SubmitIntakeCommand, Wristban
         {
             PatientName = patient.FullName,
             MedicalNumber = patient.MedicalNumber,
-<<<<<<< HEAD
+
             RoomNumber = roomNumber ?? "-",
-=======
-<<<<<<< HEAD
-            //RoomNumber = roomNumber ?? "-",
-=======
-            RoomNumber = roomNumber ?? "-",
->>>>>>> 3b1d535 (fix)
->>>>>>> 5a66cf210c97ca2f15ba45369f0dbba6585b23ad
             QrCode = qrBytes
         };
     }
