@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from '../pages/Login/LoginPage'
-import Receptiondashboard from '../pages/Dashboard/Reception/Receptiondashboard'
+import ReceptionDashboard from '../pages/Dashboard/Reception/Receptiondashboard'
 import AdminDashboard from '../pages/Dashboard/Admin/AdminDashboard'
 import PatientIntakeFlow from '../pages/Intake/PatientIntakeFlow'
 import { isAuthenticated, getRole } from '../utils/auth'
@@ -12,7 +12,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 function DashboardRouter() {
   const role = getRole()
-  if (role === 'Receptionist') return <Receptiondashboard />
+if (role === 'Receptionist' || role === 'Reception') return <ReceptionDashboard />
   if (['Super Admin', 'Admin', 'admin', 'superadmin'].includes(role)) return <AdminDashboard />
   return <Navigate to="/login" replace />
 }

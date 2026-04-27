@@ -14,7 +14,15 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HMS.IntegrationTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+<<<<<<< HEAD
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3b1d5359f2f1e319831aab6a0aca0d2e515e819a")]
+=======
+<<<<<<< HEAD
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1057e85ac000bcf629a95729f000852c99aeb02c")]
+=======
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+260c96c49f1ad317f4b9eb35c8d8df0610771703")]
+>>>>>>> 3b1d535 (fix)
+>>>>>>> 5a66cf210c97ca2f15ba45369f0dbba6585b23ad
 [assembly: System.Reflection.AssemblyProductAttribute("HMS.IntegrationTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HMS.IntegrationTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
