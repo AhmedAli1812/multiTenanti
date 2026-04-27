@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   intakeService,
   type IntakeFormData,
+  type IntakeSubmitPayload,
+  type IntakeUpdatePayload,
   type Department,
   type Doctor,
   type Room,
@@ -63,7 +65,42 @@ export function useIntake() {
   const goPrev = useCallback(() => setCurrentStep(s => Math.max(s - 1, 1)), [])
   const goToStep = useCallback((step: number) => setCurrentStep(step), [])
 
-  const buildSubmitPayload = useCallback((id: string) => {
+  // ─── بناء payload الـ PUT /intake/{id} ───────────────────────────────────
+  const buildUpdatePayload = useCallback((id: string): IntakeUpdatePayload => {
+    const { step2, step3, step4, step6 } = formData
+
+    return {
+      intakeId: id,
+      branchId: step3.departmentId ?? '',
+      roomId: step3.roomId || null,          // ← null وليس "" لأن الـ API يتوقع Nullable<Guid>
+      visitType:
+        step3.visitType === 'Inpatient' ? 1
+        : step3.visitType === 'Emergency' ? 2
+        : 3,
+      priority: step3.priority ?? '',
+      chiefComplaint: step3.chiefComplaint ?? '',
+      emergencyContactJson: JSON.stringify({
+        name: step2.emergencyContactName ?? '',
+        relation: step2.emergencyRelation ?? '',
+        phone: step2.emergencyPhone ?? '',
+      }),
+      insuranceJson: JSON.stringify({
+        paymentType: step4.paymentType ?? 'Cash',
+        company: step4.insuranceCompany ?? '',
+        policyNumber: step4.policyNumber ?? '',
+        class: step4.coverageClass ?? '',
+      }),
+      flagsJson: JSON.stringify({
+        needsTranslator: step6.needsTranslator ?? false,
+        isVip: step6.isVip ?? false,
+        needsAssistance: step6.needsMobilityAssistance ?? false,
+        behavioralAlert: step6.behavioralAlert ?? false,
+      }),
+    }
+  }, [formData])
+
+  // ─── بناء payload الـ POST /intake/submit ────────────────────────────────
+  const buildSubmitPayload = useCallback((id: string): IntakeSubmitPayload => {
     const { step1, step2, step3, step4, step5, step6 } = formData
     const tenantId = getTenantId()
 
@@ -92,12 +129,15 @@ export function useIntake() {
       },
       visitInfo: {
         branchId: step3.departmentId ?? '',
-        visitType: step3.visitType === 'Inpatient' ? 1 : step3.visitType === 'Emergency' ? 2 : 3,
+        visitType:
+          step3.visitType === 'Inpatient' ? 1
+          : step3.visitType === 'Emergency' ? 2
+          : 3,
         arrivalMethod: step3.arrivalMethod ?? '',
         priority: step3.priority ?? '',
         chiefComplaint: step3.chiefComplaint ?? '',
         doctorId: step3.doctorId || null,
-        roomId: step3.roomId || null,
+        roomId: step3.roomId || null,        // ← null وليس "" لتجنب خطأ Guid conversion
       },
       payment: {
         paymentType: step4.paymentType ?? 'Cash',
@@ -123,21 +163,27 @@ export function useIntake() {
     setIsSubmitting(true)
     setError(null)
     try {
-      // Step 1: إنشاء intake draft والحصول على id
+      const { step1, step3 } = formData
+
+      // ── الخطوة 1: POST /intake — يحتاج patientId + branchId ──────────────
       let id = intakeId
       if (!id) {
         const created = await intakeService.createIntake({
-          tenantId: getTenantId(),
+          patientId: step1.patientId ?? '',   // ← يُملأ من بحث المريض في step1
+          branchId: step3.departmentId ?? '',
         })
         id = created.id
         setIntakeId(id)
       }
 
-      // Step 2: submit مع الـ intakeId
-      const payload = buildSubmitPayload(id)
+      // ── الخطوة 2: PUT /intake/{id} — تحديث بيانات الزيارة ───────────────
+      await intakeService.updateIntake(id, buildUpdatePayload(id))
+
+      // ── الخطوة 3: POST /intake/submit أو submit-and-print ────────────────
+      const submitPayload = buildSubmitPayload(id)
       const result = printBracelet
-        ? await intakeService.submitAndPrint(payload)
-        : await intakeService.submitIntake(payload)
+        ? await intakeService.submitAndPrint(submitPayload)
+        : await intakeService.submitIntake(submitPayload)
 
       setSubmitResult(result)
     } catch (err: unknown) {
@@ -150,7 +196,7 @@ export function useIntake() {
     } finally {
       setIsSubmitting(false)
     }
-  }, [intakeId, buildSubmitPayload])
+  }, [intakeId, formData, buildUpdatePayload, buildSubmitPayload])
 
   const reset = useCallback(() => {
     setCurrentStep(1)

@@ -4,7 +4,7 @@ import apiClient from './apiClient'
 
 export interface IntakeStep1 {
   fullName: string
-  medicalNumber: string       // ← جديد
+  medicalNumber: string
   nationalId: string
   dateOfBirth: string
   gender: 'Male' | 'Female'
@@ -12,6 +12,7 @@ export interface IntakeStep1 {
   phone: string
   email?: string
   idDocumentUrl?: string
+  patientId?: string        // ← مطلوب لإنشاء الـ intake
 }
 
 export interface IntakeStep2 {
@@ -88,6 +89,76 @@ export interface Room {
   isAvailable: boolean
 }
 
+// ─── Payload Types ────────────────────────────────────────────────────────────
+
+export interface IntakeCreatePayload {
+  patientId: string
+  branchId: string
+}
+
+export interface IntakeUpdatePayload {
+  intakeId: string
+  branchId: string
+  roomId: string | null
+  visitType: number
+  priority: string
+  chiefComplaint: string
+  emergencyContactJson: string
+  insuranceJson: string
+  flagsJson: string
+}
+
+export interface IntakeSubmitPayload {
+  intakeId: string
+  tenantId: string
+  personalInfo: {
+    fullName: string
+    medicalNumber: string
+    nationalId: string
+    dateOfBirth: string
+    gender: string
+    phone: string
+    email: string
+    idCardFrontUrl: string
+  }
+  emergencyContact: {
+    name: string
+    relation: string
+    phone: string
+  }
+  contactPreferences: {
+    whatsApp: boolean
+    sms: boolean
+    email: boolean
+  }
+  visitInfo: {
+    branchId: string
+    visitType: number
+    arrivalMethod: string
+    priority: string
+    chiefComplaint: string
+    doctorId: string | null
+    roomId: string | null
+  }
+  payment: {
+    paymentType: string
+    company: string
+    policyNumber: string
+    class: string
+  }
+  consent: {
+    treatment: boolean
+    privacy: boolean
+    insuranceShare: boolean
+  }
+  flags: {
+    needsTranslator: boolean
+    isVip: boolean
+    needsAssistance: boolean
+    behavioralAlert: boolean
+  }
+}
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 export const intakeService = {
@@ -125,21 +196,25 @@ export const intakeService = {
     }
   },
 
-  createIntake: async (payload: object): Promise<IntakeCreateResponse> => {
+  // POST /api/intake — يحتاج patientId + branchId فقط
+  createIntake: async (payload: IntakeCreatePayload): Promise<IntakeCreateResponse> => {
     const { data } = await apiClient.post('/intake', payload)
     return data
   },
 
-  updateIntake: async (id: string, payload: object): Promise<void> => {
+  // PUT /api/intake/{id} — تحديث بيانات الزيارة الكاملة
+  updateIntake: async (id: string, payload: IntakeUpdatePayload): Promise<void> => {
     await apiClient.put(`/intake/${id}`, payload)
   },
 
-  submitIntake: async (payload: object): Promise<IntakeSubmitResponse> => {
+  // POST /api/intake/submit
+  submitIntake: async (payload: IntakeSubmitPayload): Promise<IntakeSubmitResponse> => {
     const { data } = await apiClient.post('/intake/submit', payload)
     return data
   },
 
-  submitAndPrint: async (payload: object): Promise<IntakeSubmitResponse> => {
+  // POST /api/intake/submit-and-print
+  submitAndPrint: async (payload: IntakeSubmitPayload): Promise<IntakeSubmitResponse> => {
     const { data } = await apiClient.post('/intake/submit-and-print', payload)
     return data
   },
