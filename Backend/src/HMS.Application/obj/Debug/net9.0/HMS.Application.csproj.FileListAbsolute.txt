@@ -16,3 +16,21 @@ A:\multiTenanti\Backend\src\HMS.Application\obj\Debug\net9.0\HMS.Application.dll
 A:\multiTenanti\Backend\src\HMS.Application\obj\Debug\net9.0\refint\HMS.Application.dll
 A:\multiTenanti\Backend\src\HMS.Application\obj\Debug\net9.0\HMS.Application.pdb
 A:\multiTenanti\Backend\src\HMS.Application\obj\Debug\net9.0\ref\HMS.Application.dll
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\bin\Debug\net9.0\HMS.Application.deps.json
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\bin\Debug\net9.0\HMS.Application.dll
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\bin\Debug\net9.0\HMS.Application.pdb
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\bin\Debug\net9.0\HMS.Domain.dll
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\bin\Debug\net9.0\HMS.Shared.dll
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\bin\Debug\net9.0\HMS.Domain.pdb
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\bin\Debug\net9.0\HMS.Shared.pdb
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\obj\Debug\net9.0\HMS.Application.csproj.AssemblyReference.cache
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\obj\Debug\net9.0\HMS.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\obj\Debug\net9.0\HMS.Application.AssemblyInfoInputs.cache
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\obj\Debug\net9.0\HMS.Application.AssemblyInfo.cs
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\obj\Debug\net9.0\HMS.Application.csproj.CoreCompileInputs.cache
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\obj\Debug\net9.0\HMS.Application.sourcelink.json
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\obj\Debug\net9.0\HMS.Appl.3C7B4939.Up2Date
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\obj\Debug\net9.0\HMS.Application.dll
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\obj\Debug\net9.0\refint\HMS.Application.dll
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\obj\Debug\net9.0\HMS.Application.pdb
+D:\multi tenant\multiTenanti\Backend\src\HMS.Application\obj\Debug\net9.0\ref\HMS.Application.dll
