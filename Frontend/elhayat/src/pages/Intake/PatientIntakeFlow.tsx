@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom'
 import { useIntake } from '../../hooks/useIntake'
 import './PatientIntakeFlow.css'
 
-// ─── Step Labels ─────────────────────────────────────────────────────────────
 const STEPS = [
   { num: 1, label: 'بيانات الهوية' },
   { num: 2, label: 'التواصل / الطوارئ' },
@@ -12,7 +11,6 @@ const STEPS = [
   { num: 6, label: 'المؤشرات التشغيلية' },
 ]
 
-// ─── Stepper ─────────────────────────────────────────────────────────────────
 function Stepper({ current }: { current: number }) {
   return (
     <div className="pif-stepper">
@@ -29,7 +27,7 @@ function Stepper({ current }: { current: number }) {
   )
 }
 
-// ─── Step 1: بيانات الهوية ────────────────────────────────────────────────────
+// ─── Step 1 ───────────────────────────────────────────────────────────────────
 function Step1({ data, onChange }: {
   data: ReturnType<typeof useIntake>['formData']['step1']
   onChange: (d: typeof data) => void
@@ -44,19 +42,32 @@ function Step1({ data, onChange }: {
         <div className="pif-grid pif-grid--2">
           <div className="pif-field">
             <label>الاسم الكامل (بالعربية) <span className="pif-required">*</span></label>
-            <input className="pif-input" placeholder="أحمد محمد علي" value={data.fullName ?? ''} onChange={e => onChange({ ...data, fullName: e.target.value })} />
+            <input className="pif-input" placeholder="أحمد محمد علي"
+              value={data.fullName ?? ''}
+              onChange={e => onChange({ ...data, fullName: e.target.value })} />
+          </div>
+          <div className="pif-field">
+            <label>الرقم الطبي <span className="pif-required">*</span></label>
+            <input className="pif-input" placeholder="MED-XXXXXX"
+              value={data.medicalNumber ?? ''}
+              onChange={e => onChange({ ...data, medicalNumber: e.target.value })} />
           </div>
           <div className="pif-field">
             <label>رقم الهوية / الإقامة <span className="pif-required">*</span></label>
-            <input className="pif-input" placeholder="1XXXXXXXXX" value={data.nationalId ?? ''} onChange={e => onChange({ ...data, nationalId: e.target.value })} />
+            <input className="pif-input" placeholder="1XXXXXXXXX"
+              value={data.nationalId ?? ''}
+              onChange={e => onChange({ ...data, nationalId: e.target.value })} />
           </div>
           <div className="pif-field">
             <label>تاريخ الميلاد <span className="pif-required">*</span></label>
-            <input className="pif-input" type="date" value={data.dateOfBirth ?? ''} onChange={e => onChange({ ...data, dateOfBirth: e.target.value })} />
+            <input className="pif-input" type="date"
+              value={data.dateOfBirth ?? ''}
+              onChange={e => onChange({ ...data, dateOfBirth: e.target.value })} />
           </div>
           <div className="pif-field">
             <label>الجنسية</label>
-            <select className="pif-input" value={data.nationality ?? 'مصري'} onChange={e => onChange({ ...data, nationality: e.target.value })}>
+            <select className="pif-input" value={data.nationality ?? 'مصري'}
+              onChange={e => onChange({ ...data, nationality: e.target.value })}>
               <option>مصري</option>
               <option>سعودي</option>
               <option>إماراتي</option>
@@ -69,7 +80,8 @@ function Step1({ data, onChange }: {
             <div className="pif-radio-group">
               {(['Male', 'Female'] as const).map(g => (
                 <label key={g} className={`pif-radio-card ${data.gender === g ? 'selected' : ''}`}>
-                  <input type="radio" name="gender" value={g} checked={data.gender === g} onChange={() => onChange({ ...data, gender: g })} />
+                  <input type="radio" name="gender" value={g} checked={data.gender === g}
+                    onChange={() => onChange({ ...data, gender: g })} />
                   {g === 'Male' ? '🧔 ذكر' : '👩 أنثى'}
                 </label>
               ))}
@@ -88,12 +100,16 @@ function Step1({ data, onChange }: {
             <label>رقم الجوال <span className="pif-required">*</span></label>
             <div className="pif-input-prefix">
               <span>+20</span>
-              <input className="pif-input" placeholder="1XXXXXXXX" value={data.phone ?? ''} onChange={e => onChange({ ...data, phone: e.target.value })} />
+              <input className="pif-input" placeholder="1XXXXXXXX"
+                value={data.phone ?? ''}
+                onChange={e => onChange({ ...data, phone: e.target.value })} />
             </div>
           </div>
           <div className="pif-field">
             <label>البريد الإلكتروني (اختياري)</label>
-            <input className="pif-input" type="email" placeholder="example@gmail.com" value={data.email ?? ''} onChange={e => onChange({ ...data, email: e.target.value })} />
+            <input className="pif-input" type="email" placeholder="example@gmail.com"
+              value={data.email ?? ''}
+              onChange={e => onChange({ ...data, email: e.target.value })} />
           </div>
         </div>
       </div>
@@ -111,13 +127,13 @@ function Step1({ data, onChange }: {
             onChange={e => {
               const file = e.target.files?.[0]
               if (file) onChange({ ...data, idDocumentUrl: file.name })
-            }}
-          />
+            }} />
         </div>
         {data.idDocumentUrl && (
           <div className="pif-upload-preview">
             <span>📄 {data.idDocumentUrl}</span>
-            <button className="pif-upload-preview__remove" onClick={() => onChange({ ...data, idDocumentUrl: undefined })}>✕</button>
+            <button className="pif-upload-preview__remove"
+              onClick={() => onChange({ ...data, idDocumentUrl: undefined })}>✕</button>
           </div>
         )}
       </div>
@@ -125,7 +141,7 @@ function Step1({ data, onChange }: {
   )
 }
 
-// ─── Step 2: التواصل / الطوارئ ───────────────────────────────────────────────
+// ─── Step 2 ───────────────────────────────────────────────────────────────────
 function Step2({ data, onChange }: {
   data: ReturnType<typeof useIntake>['formData']['step2']
   onChange: (d: typeof data) => void
@@ -140,11 +156,14 @@ function Step2({ data, onChange }: {
         <div className="pif-grid pif-grid--3">
           <div className="pif-field">
             <label>اسم الشخص المختص</label>
-            <input className="pif-input" placeholder="الاسم الثلاثي" value={data.emergencyContactName ?? ''} onChange={e => onChange({ ...data, emergencyContactName: e.target.value })} />
+            <input className="pif-input" placeholder="الاسم الثلاثي"
+              value={data.emergencyContactName ?? ''}
+              onChange={e => onChange({ ...data, emergencyContactName: e.target.value })} />
           </div>
           <div className="pif-field">
             <label>صلة القرابة</label>
-            <select className="pif-input" value={data.emergencyRelation ?? ''} onChange={e => onChange({ ...data, emergencyRelation: e.target.value })}>
+            <select className="pif-input" value={data.emergencyRelation ?? ''}
+              onChange={e => onChange({ ...data, emergencyRelation: e.target.value })}>
               <option value="">اختر</option>
               <option>أب / أم</option>
               <option>زوج / زوجة</option>
@@ -155,7 +174,9 @@ function Step2({ data, onChange }: {
           </div>
           <div className="pif-field">
             <label>رقم الجوال</label>
-            <input className="pif-input" placeholder="5XXXXXXXX" value={data.emergencyPhone ?? ''} onChange={e => onChange({ ...data, emergencyPhone: e.target.value })} />
+            <input className="pif-input" placeholder="5XXXXXXXX"
+              value={data.emergencyPhone ?? ''}
+              onChange={e => onChange({ ...data, emergencyPhone: e.target.value })} />
           </div>
         </div>
       </div>
@@ -172,7 +193,9 @@ function Step2({ data, onChange }: {
             { value: 'SMS', label: 'رسائل قصيرة (SMS)', icon: '💬' },
           ] as const).map(opt => (
             <label key={opt.value} className={`pif-contact-option ${data.preferredContact === opt.value ? 'selected' : ''}`}>
-              <input type="radio" name="contact" value={opt.value} checked={data.preferredContact === opt.value} onChange={() => onChange({ ...data, preferredContact: opt.value })} />
+              <input type="radio" name="contact" value={opt.value}
+                checked={data.preferredContact === opt.value}
+                onChange={() => onChange({ ...data, preferredContact: opt.value })} />
               <span>{opt.icon} {opt.label}</span>
             </label>
           ))}
@@ -182,7 +205,7 @@ function Step2({ data, onChange }: {
   )
 }
 
-// ─── Step 3: الزيارة ──────────────────────────────────────────────────────────
+// ─── Step 3 ───────────────────────────────────────────────────────────────────
 function Step3({ data, onChange, departments, doctors, rooms }: {
   data: ReturnType<typeof useIntake>['formData']['step3']
   onChange: (d: typeof data) => void
@@ -200,7 +223,8 @@ function Step3({ data, onChange, departments, doctors, rooms }: {
         <div className="pif-grid pif-grid--2">
           <div className="pif-field">
             <label>القسم <span className="pif-required">*</span></label>
-            <select className="pif-input" value={data.departmentId ?? ''} onChange={e => onChange({ ...data, departmentId: e.target.value })}>
+            <select className="pif-input" value={data.departmentId ?? ''}
+              onChange={e => onChange({ ...data, departmentId: e.target.value })}>
               <option value="">اختر القسم</option>
               {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
@@ -213,7 +237,9 @@ function Step3({ data, onChange, departments, doctors, rooms }: {
                 { value: 'Emergency', label: 'طوارئ' },
                 { value: 'Outpatient', label: 'حاضنات' },
               ] as const).map(t => (
-                <button key={t.value} className={`pif-segmented__btn ${data.visitType === t.value ? 'active' : ''}`} onClick={() => onChange({ ...data, visitType: t.value })}>
+                <button key={t.value}
+                  className={`pif-segmented__btn ${data.visitType === t.value ? 'active' : ''}`}
+                  onClick={() => onChange({ ...data, visitType: t.value })}>
                   {t.label}
                 </button>
               ))}
@@ -221,14 +247,16 @@ function Step3({ data, onChange, departments, doctors, rooms }: {
           </div>
           <div className="pif-field">
             <label>الدكتور</label>
-            <select className="pif-input" value={data.doctorId ?? ''} onChange={e => onChange({ ...data, doctorId: e.target.value })}>
+            <select className="pif-input" value={data.doctorId ?? ''}
+              onChange={e => onChange({ ...data, doctorId: e.target.value })}>
               <option value="">اختر الدكتور</option>
               {doctors.map(d => <option key={d.id} value={d.id}>د. {d.name}</option>)}
             </select>
           </div>
           <div className="pif-field">
             <label>الغرفة</label>
-            <select className="pif-input" value={data.roomId ?? ''} onChange={e => onChange({ ...data, roomId: e.target.value })}>
+            <select className="pif-input" value={data.roomId ?? ''}
+              onChange={e => onChange({ ...data, roomId: e.target.value })}>
               <option value="">اختر الغرفة</option>
               {rooms.filter(r => r.isAvailable).map(r => <option key={r.id} value={r.id}>{r.roomNumber}</option>)}
             </select>
@@ -243,7 +271,9 @@ function Step3({ data, onChange, departments, doctors, rooms }: {
               { value: 'Urgent', label: 'عاجل', icon: '⚠', cls: 'urgent' },
               { value: 'Emergency', label: 'طارئ', icon: '!', cls: 'emergency' },
             ] as const).map(p => (
-              <button key={p.value} className={`pif-priority-btn pif-priority-btn--${p.cls} ${data.priority === p.value ? 'active' : ''}`} onClick={() => onChange({ ...data, priority: p.value })}>
+              <button key={p.value}
+                className={`pif-priority-btn pif-priority-btn--${p.cls} ${data.priority === p.value ? 'active' : ''}`}
+                onClick={() => onChange({ ...data, priority: p.value })}>
                 <span>{p.icon}</span> {p.label}
               </button>
             ))}
@@ -258,7 +288,9 @@ function Step3({ data, onChange, departments, doctors, rooms }: {
               { value: 'Ambulance', label: '🚑 إسعاف' },
             ] as const).map(a => (
               <label key={a.value} className={`pif-radio-card ${data.arrivalMethod === a.value ? 'selected' : ''}`}>
-                <input type="radio" name="arrival" value={a.value} checked={data.arrivalMethod === a.value} onChange={() => onChange({ ...data, arrivalMethod: a.value })} />
+                <input type="radio" name="arrival" value={a.value}
+                  checked={data.arrivalMethod === a.value}
+                  onChange={() => onChange({ ...data, arrivalMethod: a.value })} />
                 {a.label}
               </label>
             ))}
@@ -267,14 +299,17 @@ function Step3({ data, onChange, departments, doctors, rooms }: {
 
         <div className="pif-field pif-field--full" style={{ marginTop: '1.5rem' }}>
           <label>الشكوى الرئيسية</label>
-          <textarea className="pif-input pif-textarea" placeholder="اكتب الشكوى الرئيسية للمريض هنا..." rows={4} value={data.chiefComplaint ?? ''} onChange={e => onChange({ ...data, chiefComplaint: e.target.value })} />
+          <textarea className="pif-input pif-textarea"
+            placeholder="اكتب الشكوى الرئيسية للمريض هنا..." rows={4}
+            value={data.chiefComplaint ?? ''}
+            onChange={e => onChange({ ...data, chiefComplaint: e.target.value })} />
         </div>
       </div>
     </div>
   )
 }
 
-// ─── Step 4: التأمين ──────────────────────────────────────────────────────────
+// ─── Step 4 ───────────────────────────────────────────────────────────────────
 function Step4({ data, onChange }: {
   data: ReturnType<typeof useIntake>['formData']['step4']
   onChange: (d: typeof data) => void
@@ -288,13 +323,15 @@ function Step4({ data, onChange }: {
         </div>
         <div className="pif-payment-group">
           <label className={`pif-payment-card ${data.paymentType === 'Cash' ? 'selected' : ''}`}>
-            <input type="radio" name="payment" checked={data.paymentType === 'Cash'} onChange={() => onChange({ ...data, paymentType: 'Cash', insuranceCompany: undefined, policyNumber: undefined, coverageClass: undefined })} />
+            <input type="radio" name="payment" checked={data.paymentType === 'Cash'}
+              onChange={() => onChange({ ...data, paymentType: 'Cash', insuranceCompany: undefined, policyNumber: undefined, coverageClass: undefined })} />
             <span className="pif-payment-card__icon">🪙</span>
             <strong>نقدي (Cash)</strong>
             <small>دفع ذاتي مباشر</small>
           </label>
           <label className={`pif-payment-card ${data.paymentType === 'Insurance' ? 'selected' : ''}`}>
-            <input type="radio" name="payment" checked={data.paymentType === 'Insurance'} onChange={() => onChange({ ...data, paymentType: 'Insurance' })} />
+            <input type="radio" name="payment" checked={data.paymentType === 'Insurance'}
+              onChange={() => onChange({ ...data, paymentType: 'Insurance' })} />
             <span className="pif-payment-card__icon">🛡️</span>
             <strong>تأمين صحي</strong>
             <small>شركات التأمين المتعاقدة</small>
@@ -311,7 +348,8 @@ function Step4({ data, onChange }: {
           <div className="pif-grid pif-grid--2">
             <div className="pif-field">
               <label>شركة التأمين</label>
-              <select className="pif-input" value={data.insuranceCompany ?? ''} onChange={e => onChange({ ...data, insuranceCompany: e.target.value })}>
+              <select className="pif-input" value={data.insuranceCompany ?? ''}
+                onChange={e => onChange({ ...data, insuranceCompany: e.target.value })}>
                 <option value="">اختر الشركة</option>
                 <option>شركة بوبا العربية</option>
                 <option>تكافل الراجحي</option>
@@ -321,14 +359,18 @@ function Step4({ data, onChange }: {
             </div>
             <div className="pif-field">
               <label>رقم البوليصة</label>
-              <input className="pif-input" placeholder="POL-XXXXXXXX" value={data.policyNumber ?? ''} onChange={e => onChange({ ...data, policyNumber: e.target.value })} />
+              <input className="pif-input" placeholder="POL-XXXXXXXX"
+                value={data.policyNumber ?? ''}
+                onChange={e => onChange({ ...data, policyNumber: e.target.value })} />
             </div>
           </div>
           <div className="pif-field pif-field--full" style={{ marginTop: '1.5rem' }}>
             <label>فئة التغطية</label>
             <div className="pif-coverage-group">
               {(['VIP', 'A', 'B'] as const).map(cls => (
-                <button key={cls} className={`pif-coverage-btn ${data.coverageClass === cls ? 'active' : ''}`} onClick={() => onChange({ ...data, coverageClass: cls })}>
+                <button key={cls}
+                  className={`pif-coverage-btn ${data.coverageClass === cls ? 'active' : ''}`}
+                  onClick={() => onChange({ ...data, coverageClass: cls })}>
                   {cls === 'VIP' && '⭐ '}فئة {cls}
                 </button>
               ))}
@@ -340,7 +382,7 @@ function Step4({ data, onChange }: {
   )
 }
 
-// ─── Step 5: الجوانب القانونية ────────────────────────────────────────────────
+// ─── Step 5 ───────────────────────────────────────────────────────────────────
 function Step5({ data, onChange }: {
   data: ReturnType<typeof useIntake>['formData']['step5']
   onChange: (d: typeof data) => void
@@ -361,7 +403,8 @@ function Step5({ data, onChange }: {
         <div className="pif-consents">
           {consents.map(c => (
             <label key={c.key} className={`pif-consent-item ${data[c.key] ? 'checked' : ''}`}>
-              <input type="checkbox" checked={data[c.key] ?? false} onChange={e => onChange({ ...data, [c.key]: e.target.checked })} />
+              <input type="checkbox" checked={data[c.key] ?? false}
+                onChange={e => onChange({ ...data, [c.key]: e.target.checked })} />
               <div className="pif-consent-item__checkbox">{data[c.key] ? '✓' : ''}</div>
               <div>
                 <strong>{c.title}</strong>
@@ -375,7 +418,7 @@ function Step5({ data, onChange }: {
   )
 }
 
-// ─── Step 6: المؤشرات التشغيلية ──────────────────────────────────────────────
+// ─── Step 6 ───────────────────────────────────────────────────────────────────
 function Step6({ data, onChange }: {
   data: ReturnType<typeof useIntake>['formData']['step6']
   onChange: (d: typeof data) => void
@@ -394,7 +437,8 @@ function Step6({ data, onChange }: {
           <div key={f.key} className={`pif-flag-card pif-flag-card--${f.color} ${data[f.key] ? 'active' : ''}`}>
             <div className="pif-flag-card__top">
               <label className="pif-toggle">
-                <input type="checkbox" checked={data[f.key] ?? false} onChange={e => onChange({ ...data, [f.key]: e.target.checked })} />
+                <input type="checkbox" checked={data[f.key] ?? false}
+                  onChange={e => onChange({ ...data, [f.key]: e.target.checked })} />
                 <span className="pif-toggle__slider" />
               </label>
               <span className={`pif-flag-card__icon pif-flag-card__icon--${f.color}`}>{f.icon}</span>
@@ -430,7 +474,7 @@ function SuccessScreen({ result, onReset }: {
   )
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Main ─────────────────────────────────────────────────────────────────────
 export default function PatientIntakeFlow() {
   const navigate = useNavigate()
   const {
@@ -442,7 +486,7 @@ export default function PatientIntakeFlow() {
   if (submitResult) return <SuccessScreen result={submitResult} onReset={reset} />
 
   const canGoNext = () => {
-    if (currentStep === 1) return !!(formData.step1.fullName && formData.step1.nationalId && formData.step1.phone)
+    if (currentStep === 1) return !!(formData.step1.fullName && formData.step1.medicalNumber && formData.step1.nationalId && formData.step1.phone)
     if (currentStep === 2) return !!(formData.step2.emergencyContactName && formData.step2.emergencyPhone)
     if (currentStep === 3) return !!(formData.step3.departmentId)
     if (currentStep === 5) return !!(formData.step5.consentToTreatment && formData.step5.privacyConsent)
@@ -451,7 +495,6 @@ export default function PatientIntakeFlow() {
 
   return (
     <div className="pif-wrap" dir="rtl">
-      {/* Header */}
       <header className="pif-header">
         <button className="pif-header__back" onClick={() => navigate('/dashboard')}>
           ← نظام إدارة المرضى
@@ -459,16 +502,13 @@ export default function PatientIntakeFlow() {
       </header>
 
       <div className="pif-body">
-        {/* Title */}
         <div className="pif-title">
           <h1>تسجيل المريض</h1>
           <p>الرجاء إدخال البيانات الشخصية للمريض بدقة لضمان تكامل السجل الطبي.</p>
         </div>
 
-        {/* Stepper */}
         <Stepper current={currentStep} />
 
-        {/* Step Content */}
         {isLoadingLookups && currentStep === 3 ? (
           <div className="pif-loading">جارٍ تحميل البيانات...</div>
         ) : (
@@ -482,10 +522,8 @@ export default function PatientIntakeFlow() {
           </>
         )}
 
-        {/* Error */}
         {error && <div className="pif-error">{error}</div>}
 
-        {/* Navigation */}
         <div className="pif-nav">
           <button className="pif-btn pif-btn--ghost" onClick={() => navigate('/dashboard')} disabled={isSubmitting}>
             إلغاء

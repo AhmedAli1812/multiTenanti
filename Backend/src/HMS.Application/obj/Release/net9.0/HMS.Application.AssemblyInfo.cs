@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HMS.Application")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+18a95367a0cb21e0600a20e3a24817fedbb3a778")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1057e85ac000bcf629a95729f000852c99aeb02c")]
 [assembly: System.Reflection.AssemblyProductAttribute("HMS.Application")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HMS.Application")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

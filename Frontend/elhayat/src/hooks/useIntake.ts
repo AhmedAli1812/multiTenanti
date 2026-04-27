@@ -1,18 +1,13 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   intakeService,
   type IntakeFormData,
-  type IntakeStep1,
-  type IntakeStep2,
-  type IntakeStep3,
-  type IntakeStep4,
-  type IntakeStep5,
-  type IntakeStep6,
   type Department,
   type Doctor,
   type Room,
   type IntakeSubmitResponse,
 } from '../services/intakeService'
+import { decodeToken } from '../utils/auth'
 
 const INITIAL_FORM: IntakeFormData = {
   step1: {},
@@ -23,6 +18,11 @@ const INITIAL_FORM: IntakeFormData = {
   step6: {},
 }
 
+function getTenantId(): string {
+  const token = localStorage.getItem('token') ?? localStorage.getItem('accessToken') ?? ''
+  return decodeToken(token)?.orgId ?? ''
+}
+
 export function useIntake() {
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<IntakeFormData>(INITIAL_FORM)
@@ -31,7 +31,6 @@ export function useIntake() {
   const [submitResult, setSubmitResult] = useState<IntakeSubmitResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Lookup data
   const [departments, setDepartments] = useState<Department[]>([])
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [rooms, setRooms] = useState<Room[]>([])
@@ -64,46 +63,59 @@ export function useIntake() {
   const goPrev = useCallback(() => setCurrentStep(s => Math.max(s - 1, 1)), [])
   const goToStep = useCallback((step: number) => setCurrentStep(step), [])
 
-  // بناء payload مجمع من كل الـ steps
-  const buildPayload = useCallback(() => {
+  const buildSubmitPayload = useCallback((id: string) => {
     const { step1, step2, step3, step4, step5, step6 } = formData
+    const tenantId = getTenantId()
+
     return {
-      // Step 1
-      fullName: step1.fullName,
-      nationalId: step1.nationalId,
-      dateOfBirth: step1.dateOfBirth,
-      gender: step1.gender,
-      nationality: step1.nationality,
-      phone: step1.phone,
-      email: step1.email,
-      idDocumentUrl: step1.idDocumentUrl,
-      // Step 2
-      emergencyContactName: step2.emergencyContactName,
-      emergencyRelation: step2.emergencyRelation,
-      emergencyPhone: step2.emergencyPhone,
-      preferredContact: step2.preferredContact,
-      // Step 3
-      departmentId: step3.departmentId,
-      visitType: step3.visitType,
-      doctorId: step3.doctorId,
-      roomId: step3.roomId,
-      priority: step3.priority,
-      arrivalMethod: step3.arrivalMethod,
-      chiefComplaint: step3.chiefComplaint,
-      // Step 4
-      paymentType: step4.paymentType,
-      insuranceCompany: step4.insuranceCompany,
-      policyNumber: step4.policyNumber,
-      coverageClass: step4.coverageClass,
-      // Step 5
-      consentToTreatment: step5.consentToTreatment,
-      privacyConsent: step5.privacyConsent,
-      insuranceDataSharing: step5.insuranceDataSharing,
-      // Step 6
-      needsTranslator: step6.needsTranslator,
-      isVip: step6.isVip,
-      needsMobilityAssistance: step6.needsMobilityAssistance,
-      behavioralAlert: step6.behavioralAlert,
+      intakeId: id,
+      tenantId,
+      personalInfo: {
+        fullName: step1.fullName ?? '',
+        medicalNumber: step1.medicalNumber ?? '',
+        nationalId: step1.nationalId ?? '',
+        dateOfBirth: step1.dateOfBirth ?? '',
+        gender: step1.gender ?? '',
+        phone: step1.phone ?? '',
+        email: step1.email ?? '',
+        idCardFrontUrl: step1.idDocumentUrl ?? '',
+      },
+      emergencyContact: {
+        name: step2.emergencyContactName ?? '',
+        relation: step2.emergencyRelation ?? '',
+        phone: step2.emergencyPhone ?? '',
+      },
+      contactPreferences: {
+        whatsApp: step2.preferredContact === 'WhatsApp',
+        sms: step2.preferredContact === 'SMS',
+        email: step2.preferredContact === 'Email',
+      },
+      visitInfo: {
+        branchId: step3.departmentId ?? '',
+        visitType: step3.visitType === 'Inpatient' ? 1 : step3.visitType === 'Emergency' ? 2 : 3,
+        arrivalMethod: step3.arrivalMethod ?? '',
+        priority: step3.priority ?? '',
+        chiefComplaint: step3.chiefComplaint ?? '',
+        doctorId: step3.doctorId || null,
+        roomId: step3.roomId || null,
+      },
+      payment: {
+        paymentType: step4.paymentType ?? 'Cash',
+        company: step4.insuranceCompany ?? '',
+        policyNumber: step4.policyNumber ?? '',
+        class: step4.coverageClass ?? '',
+      },
+      consent: {
+        treatment: step5.consentToTreatment ?? false,
+        privacy: step5.privacyConsent ?? false,
+        insuranceShare: step5.insuranceDataSharing ?? false,
+      },
+      flags: {
+        needsTranslator: step6.needsTranslator ?? false,
+        isVip: step6.isVip ?? false,
+        needsAssistance: step6.needsMobilityAssistance ?? false,
+        behavioralAlert: step6.behavioralAlert ?? false,
+      },
     }
   }, [formData])
 
@@ -111,18 +123,34 @@ export function useIntake() {
     setIsSubmitting(true)
     setError(null)
     try {
-      const payload = buildPayload()
+      // Step 1: إنشاء intake draft والحصول على id
+      let id = intakeId
+      if (!id) {
+        const created = await intakeService.createIntake({
+          tenantId: getTenantId(),
+        })
+        id = created.id
+        setIntakeId(id)
+      }
+
+      // Step 2: submit مع الـ intakeId
+      const payload = buildSubmitPayload(id)
       const result = printBracelet
         ? await intakeService.submitAndPrint(payload)
         : await intakeService.submitIntake(payload)
+
       setSubmitResult(result)
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'حدث خطأ أثناء الإرسال'
-      setError(msg)
+      const axiosErr = err as any
+      const serverErrors = axiosErr?.response?.data?.errors
+      const serverMsg = serverErrors
+        ? Object.values(serverErrors).flat().join(' | ')
+        : axiosErr?.response?.data?.title ?? 'حدث خطأ أثناء الإرسال'
+      setError(serverMsg)
     } finally {
       setIsSubmitting(false)
     }
-  }, [buildPayload])
+  }, [intakeId, buildSubmitPayload])
 
   const reset = useCallback(() => {
     setCurrentStep(1)
