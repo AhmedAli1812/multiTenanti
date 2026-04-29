@@ -1,4 +1,4 @@
-﻿using HMS.Application.Features.Branches.CreateBranch;
+using HMS.Application.Features.Branches.CreateBranch;
 using HMS.Application.Features.Branches.GetBranches;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -26,9 +26,9 @@ public class BranchesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get()
+    public async Task<IActionResult> Get([FromQuery] GetBranchesQuery query)
     {
-        var result = await _mediator.Send(new GetBranchesQuery());
+        var result = await _mediator.Send(query);
         return Ok(result);
     }
 }

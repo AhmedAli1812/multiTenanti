@@ -1,5 +1,13 @@
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { 
+  User, Phone, Mail, UploadCloud, AlertCircle, MessageSquare, Hospital, 
+  UserCheck, DoorOpen, Check, CreditCard, Coins, ShieldCheck, CheckCircle2, 
+  Globe, Star, Accessibility, Printer, ChevronLeft, ChevronRight, X
+} from 'lucide-react'
 import { useIntake } from '../../hooks/useIntake'
+import SearchableSelect from '../../components/SearchableSelect'
+import WristbandPrint from '../../components/WristbandPrint'
 import './PatientIntakeFlow.css'
 
 const STEPS = [
@@ -11,18 +19,30 @@ const STEPS = [
   { num: 6, label: 'المؤشرات التشغيلية' },
 ]
 
-function Stepper({ current }: { current: number }) {
+function Stepper({ current, onStepClick, isValid }: { 
+  current: number; 
+  onStepClick: (n: number) => void;
+  isValid: (n: number) => boolean;
+}) {
   return (
     <div className="pif-stepper">
-      {[...STEPS].reverse().map((s, idx, arr) => (
-        <div key={s.num} className="pif-stepper__item">
-          <div className={`pif-stepper__circle ${current === s.num ? 'active' : current > s.num ? 'done' : ''}`}>
-            {current > s.num ? '✓' : s.num}
-          </div>
-          <span className={`pif-stepper__label ${current === s.num ? 'active' : ''}`}>{s.label}</span>
-          {idx < arr.length - 1 && <div className={`pif-stepper__line ${current > s.num ? 'done' : ''}`} />}
-        </div>
-      ))}
+      {STEPS.map((s, idx, arr) => {
+        const isDone = isValid(s.num);
+        return (
+          <button 
+            key={s.num} 
+            type="button"
+            className={`pif-stepper__item ${current === s.num ? 'active' : ''}`}
+            onClick={() => onStepClick(s.num)}
+          >
+            <div className={`pif-stepper__circle ${current === s.num ? 'active' : isDone ? 'done' : ''}`}>
+              {isDone ? <Check size={14} /> : s.num}
+            </div>
+            <span className={`pif-stepper__label ${current === s.num ? 'active' : ''}`}>{s.label}</span>
+            {idx < arr.length - 1 && <div className={`pif-stepper__line ${isDone ? 'done' : ''}`} />}
+          </button>
+        );
+      })}
     </div>
   )
 }
@@ -36,7 +56,7 @@ function Step1({ data, onChange }: {
     <div className="pif-step-content">
       <div className="pif-card">
         <div className="pif-card__header">
-          <span className="pif-card__icon">👤</span>
+          <span className="pif-card__icon"><User size={20} /></span>
           <h3>المعلومات الشخصية</h3>
         </div>
         <div className="pif-grid pif-grid--2">
@@ -82,7 +102,7 @@ function Step1({ data, onChange }: {
                 <label key={g} className={`pif-radio-card ${data.gender === g ? 'selected' : ''}`}>
                   <input type="radio" name="gender" value={g} checked={data.gender === g}
                     onChange={() => onChange({ ...data, gender: g })} />
-                  {g === 'Male' ? '🧔 ذكر' : '👩 أنثى'}
+                  {g === 'Male' ? 'ذكر' : 'أنثى'}
                 </label>
               ))}
             </div>
@@ -92,7 +112,7 @@ function Step1({ data, onChange }: {
 
       <div className="pif-card">
         <div className="pif-card__header">
-          <span className="pif-card__icon">📞</span>
+          <span className="pif-card__icon"><Phone size={20} /></span>
           <h3>معلومات التواصل</h3>
         </div>
         <div className="pif-grid pif-grid--2">
@@ -116,11 +136,11 @@ function Step1({ data, onChange }: {
 
       <div className="pif-card">
         <div className="pif-card__header">
-          <span className="pif-card__icon">🪪</span>
+          <span className="pif-card__icon"><UserCheck size={20} /></span>
           <h3>التحقق من الهوية</h3>
         </div>
         <div className="pif-upload-zone">
-          <span className="pif-upload-zone__icon">☁️</span>
+          <span className="pif-upload-zone__icon"><UploadCloud size={32} /></span>
           <p>اسحب الملف أو اضغط للرفع</p>
           <span className="pif-upload-zone__hint">يدعم صيغ JPG، PNG، PDF (بحد أقصى 5MB)</span>
           <input type="file" accept=".jpg,.jpeg,.png,.pdf" className="pif-upload-zone__input"
@@ -133,7 +153,7 @@ function Step1({ data, onChange }: {
           <div className="pif-upload-preview">
             <span>📄 {data.idDocumentUrl}</span>
             <button className="pif-upload-preview__remove"
-              onClick={() => onChange({ ...data, idDocumentUrl: undefined })}>✕</button>
+              onClick={() => onChange({ ...data, idDocumentUrl: undefined })}><X size={16} /></button>
           </div>
         )}
       </div>
@@ -150,7 +170,7 @@ function Step2({ data, onChange }: {
     <div className="pif-step-content">
       <div className="pif-card">
         <div className="pif-card__header">
-          <span className="pif-card__icon pif-card__icon--red">🚨</span>
+          <span className="pif-card__icon pif-card__icon--red"><AlertCircle size={20} /></span>
           <h3>جهة اتصال الطوارئ <span className="pif-required">إلزامي</span></h3>
         </div>
         <div className="pif-grid pif-grid--3">
@@ -183,20 +203,26 @@ function Step2({ data, onChange }: {
 
       <div className="pif-card">
         <div className="pif-card__header">
-          <span className="pif-card__icon">💬</span>
+          <span className="pif-card__icon"><MessageSquare size={20} /></span>
           <h3>تفضيلات التواصل</h3>
         </div>
-        <div className="pif-contact-options">
-          {([
-            { value: 'WhatsApp', label: 'واتساب (WhatsApp)', icon: '📱' },
-            { value: 'Email', label: 'البريد الإلكتروني', icon: '📧' },
-            { value: 'SMS', label: 'رسائل قصيرة (SMS)', icon: '💬' },
-          ] as const).map(opt => (
-            <label key={opt.value} className={`pif-contact-option ${data.preferredContact === opt.value ? 'selected' : ''}`}>
-              <input type="radio" name="contact" value={opt.value}
-                checked={data.preferredContact === opt.value}
-                onChange={() => onChange({ ...data, preferredContact: opt.value })} />
-              <span>{opt.icon} {opt.label}</span>
+        <div className="pif-radio-group">
+          {[
+            { id: 'WhatsApp', label: 'واتساب (WhatsApp)', icon: <MessageSquare size={18} /> },
+            { id: 'Email', label: 'البريد الإلكتروني', icon: <Mail size={18} /> },
+            { id: 'SMS', label: 'رسائل قصيرة (SMS)', icon: <Phone size={18} /> },
+          ].map((opt) => (
+            <label key={opt.id} className={`pif-radio-card ${data.preferredContact === opt.id ? 'selected' : ''}`}>
+              <input 
+                type="radio" 
+                name="preferredContact" 
+                value={opt.id} 
+                checked={data.preferredContact === opt.id} 
+                onChange={() => onChange({ ...data, preferredContact: opt.id as any })} 
+              />
+              <span className="pif-radio-card__icon">{opt.icon}</span>
+              <span className="pif-radio-card__label">{opt.label}</span>
+              {data.preferredContact === opt.id && <Check className="pif-radio-card__check" size={14} />}
             </label>
           ))}
         </div>
@@ -217,17 +243,20 @@ function Step3({ data, onChange, departments, doctors, rooms }: {
     <div className="pif-step-content">
       <div className="pif-card">
         <div className="pif-card__header">
-          <span className="pif-card__icon">🏥</span>
+          <span className="pif-card__icon"><Hospital size={20} /></span>
           <h3>معلومات الحجز</h3>
         </div>
         <div className="pif-grid pif-grid--2">
           <div className="pif-field">
-            <label>القسم <span className="pif-required">*</span></label>
-            <select className="pif-input" value={data.departmentId ?? ''}
-              onChange={e => onChange({ ...data, departmentId: e.target.value })}>
-              <option value="">اختر القسم</option>
-              {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-            </select>
+            <SearchableSelect
+              label="القسم"
+              required
+              placeholder="اختر القسم"
+              value={data.departmentId ?? ''}
+              options={departments.map(d => ({ id: d.id, label: d.name }))}
+              onChange={val => onChange({ ...data, departmentId: val })}
+              icon={<Hospital size={16} />}
+            />
           </div>
           <div className="pif-field">
             <label>نوع الزيارة</label>
@@ -245,33 +274,42 @@ function Step3({ data, onChange, departments, doctors, rooms }: {
               ))}
             </div>
           </div>
-          <div className="pif-field">
-            <label>الدكتور</label>
-            <select className="pif-input" value={data.doctorId ?? ''}
-              onChange={e => onChange({ ...data, doctorId: e.target.value })}>
-              <option value="">اختر الدكتور</option>
-              {doctors.map(d => <option key={d.id} value={d.id}>د. {d.name}</option>)}
-            </select>
-          </div>
-          <div className="pif-field">
-            <label>الغرفة</label>
-            <select className="pif-input" value={data.roomId ?? ''}
-              onChange={e => onChange({ ...data, roomId: e.target.value })}>
-              <option value="">اختر الغرفة</option>
-              {rooms.filter(r => r.isAvailable).map(r => <option key={r.id} value={r.id}>{r.roomNumber}</option>)}
-            </select>
-          </div>
+          {data.visitType === 'Inpatient' && (
+            <>
+              <div className="pif-field">
+                <SearchableSelect
+                  label="الدكتور"
+                  placeholder="اختر الدكتور"
+                  value={data.doctorId ?? ''}
+                  options={doctors.map(d => ({ id: d.id, label: `د. ${d.name}` }))}
+                  onChange={val => onChange({ ...data, doctorId: val })}
+                  icon={<UserCheck size={16} />}
+                />
+              </div>
+              <div className="pif-field">
+                <SearchableSelect
+                  label="الغرفة"
+                  placeholder="اختر الغرفة"
+                  value={data.roomId ?? ''}
+                  options={rooms.filter(r => r.isAvailable).map(r => ({ id: r.id, label: `غرفة ${r.roomNumber}` }))}
+                  onChange={val => onChange({ ...data, roomId: val })}
+                  icon={<DoorOpen size={16} />}
+                />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="pif-field pif-field--full" style={{ marginTop: '1.5rem' }}>
           <label>مستوى الأولوية</label>
           <div className="pif-priority-group">
             {([
-              { value: 'Routine', label: 'روتيني', icon: '✓', cls: 'routine' },
-              { value: 'Urgent', label: 'عاجل', icon: '⚠', cls: 'urgent' },
-              { value: 'Emergency', label: 'طارئ', icon: '!', cls: 'emergency' },
+              { value: 'Normal', label: 'اعتيادي', icon: <CheckCircle2 size={14} />, cls: 'routine' },
+              { value: 'Urgent', label: 'عاجل', icon: <AlertCircle size={14} />, cls: 'urgent' },
+              { value: 'Emergency', label: 'طارئ للغاية', icon: <AlertCircle size={14} />, cls: 'emergency' },
             ] as const).map(p => (
               <button key={p.value}
+                type="button"
                 className={`pif-priority-btn pif-priority-btn--${p.cls} ${data.priority === p.value ? 'active' : ''}`}
                 onClick={() => onChange({ ...data, priority: p.value })}>
                 <span>{p.icon}</span> {p.label}
@@ -283,15 +321,21 @@ function Step3({ data, onChange, departments, doctors, rooms }: {
         <div className="pif-field pif-field--full" style={{ marginTop: '1.5rem' }}>
           <label>وسيلة الوصول</label>
           <div className="pif-radio-group">
-            {([
-              { value: 'Walk-in', label: '🚶 مشياً (تلقائي)' },
-              { value: 'Ambulance', label: '🚑 إسعاف' },
-            ] as const).map(a => (
-              <label key={a.value} className={`pif-radio-card ${data.arrivalMethod === a.value ? 'selected' : ''}`}>
-                <input type="radio" name="arrival" value={a.value}
-                  checked={data.arrivalMethod === a.value}
-                  onChange={() => onChange({ ...data, arrivalMethod: a.value })} />
-                {a.label}
+            {[
+              { id: 'WalkIn', label: 'سيراً (Walk-in)', icon: <UserCheck size={18} /> },
+              { id: 'Ambulance', label: 'إسعاف (Ambulance)', icon: <Accessibility size={18} /> },
+            ].map((opt) => (
+              <label key={opt.id} className={`pif-radio-card ${data.arrivalMethod === opt.id ? 'selected' : ''}`}>
+                <input 
+                  type="radio" 
+                  name="arrivalMethod" 
+                  value={opt.id} 
+                  checked={data.arrivalMethod === opt.id} 
+                  onChange={() => onChange({ ...data, arrivalMethod: opt.id as any })} 
+                />
+                <span className="pif-radio-card__icon">{opt.icon}</span>
+                <span className="pif-radio-card__label">{opt.label}</span>
+                {data.arrivalMethod === opt.id && <Check className="pif-radio-card__check" size={14} />}
               </label>
             ))}
           </div>
@@ -318,31 +362,39 @@ function Step4({ data, onChange }: {
     <div className="pif-step-content">
       <div className="pif-card">
         <div className="pif-card__header">
-          <span className="pif-card__icon">💳</span>
+          <span className="pif-card__icon"><CreditCard size={20} /></span>
           <h3>نوع السداد</h3>
         </div>
         <div className="pif-payment-group">
-          <label className={`pif-payment-card ${data.paymentType === 'Cash' ? 'selected' : ''}`}>
-            <input type="radio" name="payment" checked={data.paymentType === 'Cash'}
-              onChange={() => onChange({ ...data, paymentType: 'Cash', insuranceCompany: undefined, policyNumber: undefined, coverageClass: undefined })} />
-            <span className="pif-payment-card__icon">🪙</span>
-            <strong>نقدي (Cash)</strong>
-            <small>دفع ذاتي مباشر</small>
-          </label>
-          <label className={`pif-payment-card ${data.paymentType === 'Insurance' ? 'selected' : ''}`}>
-            <input type="radio" name="payment" checked={data.paymentType === 'Insurance'}
-              onChange={() => onChange({ ...data, paymentType: 'Insurance' })} />
-            <span className="pif-payment-card__icon">🛡️</span>
-            <strong>تأمين صحي</strong>
-            <small>شركات التأمين المتعاقدة</small>
-          </label>
+          {[
+            { id: 'Cash', label: 'نقدي (Cash)', sub: 'دفع ذاتي مباشر', icon: <Coins size={24} />, reset: true },
+            { id: 'Insurance', label: 'تأمين صحي', sub: 'شركات التأمين المتعاقدة', icon: <ShieldCheck size={24} />, reset: false },
+            { id: 'Referral', label: 'تحويل طبي', sub: 'حالات تحويل الأطباء', icon: <UserCheck size={24} />, reset: true },
+          ].map((opt) => (
+            <label key={opt.id} className={`pif-payment-card ${data.paymentType === opt.id ? 'selected' : ''}`}>
+              <input 
+                type="radio" 
+                name="paymentType" 
+                checked={data.paymentType === opt.id}
+                onChange={() => onChange({ 
+                  ...data, 
+                  paymentType: opt.id as any, 
+                  ...(opt.reset ? { insuranceCompany: undefined, policyNumber: undefined, coverageClass: undefined } : {}) 
+                })} 
+              />
+              <span className="pif-payment-card__icon">{opt.icon}</span>
+              <strong>{opt.label}</strong>
+              <small>{opt.sub}</small>
+              {data.paymentType === opt.id && <CheckCircle2 className="pif-payment-card__check" size={16} />}
+            </label>
+          ))}
         </div>
       </div>
 
       {data.paymentType === 'Insurance' && (
         <div className="pif-card pif-card--animate">
           <div className="pif-card__header">
-            <span className="pif-card__icon">📄</span>
+            <span className="pif-card__icon"><CreditCard size={20} /></span>
             <h3>تفاصيل الوثيقة</h3>
           </div>
           <div className="pif-grid pif-grid--2">
@@ -369,9 +421,10 @@ function Step4({ data, onChange }: {
             <div className="pif-coverage-group">
               {(['VIP', 'A', 'B'] as const).map(cls => (
                 <button key={cls}
+                  type="button"
                   className={`pif-coverage-btn ${data.coverageClass === cls ? 'active' : ''}`}
                   onClick={() => onChange({ ...data, coverageClass: cls })}>
-                  {cls === 'VIP' && '⭐ '}فئة {cls}
+                  {cls === 'VIP' && <Star size={14} style={{ marginLeft: 6 }} />} فئة {cls}
                 </button>
               ))}
             </div>
@@ -397,7 +450,7 @@ function Step5({ data, onChange }: {
     <div className="pif-step-content">
       <div className="pif-card">
         <div className="pif-card__header">
-          <span className="pif-card__icon">✅</span>
+          <span className="pif-card__icon"><CheckCircle2 size={20} /></span>
           <h3>إقرارات المريض</h3>
         </div>
         <div className="pif-consents">
@@ -405,7 +458,7 @@ function Step5({ data, onChange }: {
             <label key={c.key} className={`pif-consent-item ${data[c.key] ? 'checked' : ''}`}>
               <input type="checkbox" checked={data[c.key] ?? false}
                 onChange={e => onChange({ ...data, [c.key]: e.target.checked })} />
-              <div className="pif-consent-item__checkbox">{data[c.key] ? '✓' : ''}</div>
+              <div className="pif-consent-item__checkbox">{data[c.key] ? <Check size={14} /> : ''}</div>
               <div>
                 <strong>{c.title}</strong>
                 <p>{c.desc}</p>
@@ -424,10 +477,10 @@ function Step6({ data, onChange }: {
   onChange: (d: typeof data) => void
 }) {
   const flags = [
-    { key: 'needsTranslator' as const, label: 'مترجم لغة', desc: 'المريض بحاجة لمترجم (الإنجليزية / الأردية).', icon: '🌐', color: 'blue' },
-    { key: 'isVip' as const, label: 'مريض VIP', desc: 'توفير رعاية متميزة وخصوصية إضافية للمريض.', icon: '⭐', color: 'amber' },
-    { key: 'needsMobilityAssistance' as const, label: 'مساعدة حركية', desc: 'المريض يحتاج لكرسي متحرك أو مساعدة في التنقل.', icon: '♿', color: 'orange' },
-    { key: 'behavioralAlert' as const, label: 'تنبيه سلوكي', desc: 'تاريخ من السلوك العدواني أو عدم الامتثال.', icon: '⚠', color: 'red' },
+    { key: 'needsTranslator' as const, label: 'مترجم لغة', desc: 'المريض بحاجة لمترجم (الإنجليزية / الأردية).', icon: <Globe size={20} />, color: 'blue' },
+    { key: 'isVip' as const, label: 'مريض VIP', desc: 'توفير رعاية متميزة وخصوصية إضافية للمريض.', icon: <Star size={20} />, color: 'amber' },
+    { key: 'needsMobilityAssistance' as const, label: 'مساعدة حركية', desc: 'المريض يحتاج لكرسي متحرك أو مساعدة في التنقل.', icon: <Accessibility size={20} />, color: 'orange' },
+    { key: 'behavioralAlert' as const, label: 'تنبيه سلوكي', desc: 'تاريخ من السلوك العدواني أو عدم الامتثال.', icon: <AlertCircle size={20} />, color: 'red' },
   ]
 
   return (
@@ -454,17 +507,17 @@ function Step6({ data, onChange }: {
 
 // ─── Success Screen ───────────────────────────────────────────────────────────
 function SuccessScreen({ result, onReset }: {
-  result: NonNullable<ReturnType<typeof useIntake>['submitResult']>
+  result: NonNullable<ReturnType<typeof useIntake>['wristbandData']>
   onReset: () => void
 }) {
   const navigate = useNavigate()
   return (
     <div className="pif-success">
-      <div className="pif-success__icon">✅</div>
+      <div className="pif-success__icon"><CheckCircle2 size={64} /></div>
       <h2>تم تسجيل المريض بنجاح</h2>
       <div className="pif-success__info">
         <div><span>الرقم الطبي</span><strong>{result.medicalNumber}</strong></div>
-        <div><span>رقم الزيارة</span><strong>{result.visitId}</strong></div>
+        <div><span>رقم الغرفة</span><strong>{result.roomNumber ?? '—'}</strong></div>
       </div>
       <div className="pif-success__actions">
         <button className="pif-btn pif-btn--primary" onClick={() => navigate('/dashboard')}>العودة للداشبورد</button>
@@ -475,39 +528,55 @@ function SuccessScreen({ result, onReset }: {
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
-export default function PatientIntakeFlow() {
+export default function PatientIntakeFlow({ onClose }: { onClose?: () => void }) {
   const navigate = useNavigate()
+  const [showPrintModal, setShowPrintModal] = useState(false)
   const {
-    currentStep, formData, isSubmitting, submitResult, error,
+    currentStep, formData, isSubmitting, wristbandData, error,
     departments, doctors, rooms, isLoadingLookups,
-    updateStep, goNext, goPrev, handleSubmit, reset,
+    updateStep, goNext, goPrev, setStep, handleSubmit, reset,
   } = useIntake()
 
-  if (submitResult) return <SuccessScreen result={submitResult} onReset={reset} />
+  const handleFinalSubmit = async (print: boolean) => {
+    await handleSubmit(print)
+    if (print) setShowPrintModal(true)
+  }
 
-  const canGoNext = () => {
-    if (currentStep === 1) return !!(formData.step1.fullName && formData.step1.medicalNumber && formData.step1.nationalId && formData.step1.phone)
-    if (currentStep === 2) return !!(formData.step2.emergencyContactName && formData.step2.emergencyPhone)
-    if (currentStep === 3) return !!(formData.step3.departmentId)
-    if (currentStep === 5) return !!(formData.step5.consentToTreatment && formData.step5.privacyConsent)
+  if (wristbandData && !showPrintModal) {
+    return <SuccessScreen result={wristbandData} onReset={() => { reset(); onClose?.(); }} />
+  }
+
+  const isStepValid = (step: number) => {
+    if (step === 1) return !!(formData.step1.fullName && formData.step1.medicalNumber && formData.step1.nationalId && formData.step1.phone)
+    if (step === 2) return !!(formData.step2.emergencyContactName && formData.step2.emergencyPhone)
+    if (step === 3) return !!(formData.step3.departmentId)
+    if (step === 5) return !!(formData.step5.consentToTreatment && formData.step5.privacyConsent)
     return true
   }
 
+  const canGoNext = () => isStepValid(currentStep)
+
+  const isModal = !!onClose
+
   return (
-    <div className="pif-wrap" dir="rtl">
-      <header className="pif-header">
-        <button className="pif-header__back" onClick={() => navigate('/dashboard')}>
-          ← نظام إدارة المرضى
-        </button>
-      </header>
+    <div className={`pif-wrap ${isModal ? 'pif-wrap--modal' : ''}`} dir="rtl">
+      {!isModal && (
+        <header className="pif-header">
+          <button className="pif-header__back" onClick={() => navigate('/dashboard')}>
+            <ChevronRight size={18} /> نظام إدارة المرضى
+          </button>
+        </header>
+      )}
 
       <div className="pif-body">
-        <div className="pif-title">
-          <h1>تسجيل المريض</h1>
-          <p>الرجاء إدخال البيانات الشخصية للمريض بدقة لضمان تكامل السجل الطبي.</p>
-        </div>
+        {!isModal && (
+          <div className="pif-title">
+            <h1>تسجيل المريض</h1>
+            <p>الرجاء إدخال البيانات الشخصية للمريض بدقة لضمان تكامل السجل الطبي.</p>
+          </div>
+        )}
 
-        <Stepper current={currentStep} />
+        <Stepper current={currentStep} onStepClick={setStep} isValid={isStepValid} />
 
         {isLoadingLookups && currentStep === 3 ? (
           <div className="pif-loading">جارٍ تحميل البيانات...</div>
@@ -524,33 +593,41 @@ export default function PatientIntakeFlow() {
 
         {error && <div className="pif-error">{error}</div>}
 
-        <div className="pif-nav">
-          <button className="pif-btn pif-btn--ghost" onClick={() => navigate('/dashboard')} disabled={isSubmitting}>
-            إلغاء
-          </button>
-          <div className="pif-nav__right">
-            {currentStep > 1 && (
-              <button className="pif-btn pif-btn--outline" onClick={goPrev} disabled={isSubmitting}>
-                ← السابق
+      </div>
+
+      <div className="pif-nav">
+        <button className="pif-btn pif-btn--ghost" onClick={() => isModal ? onClose() : navigate('/dashboard')} disabled={isSubmitting}>
+          إلغاء
+        </button>
+        <div className="pif-nav__right">
+          {currentStep > 1 && (
+            <button className="pif-btn pif-btn--outline" onClick={goPrev} disabled={isSubmitting}>
+              <ChevronRight size={18} /> السابق
+            </button>
+          )}
+          {currentStep < 6 ? (
+            <button className="pif-btn pif-btn--primary" onClick={goNext} disabled={!canGoNext()}>
+              التالي <ChevronLeft size={18} />
+            </button>
+          ) : (
+            <div className="pif-submit-group">
+              <button className="pif-btn pif-btn--outline" onClick={() => handleFinalSubmit(false)} disabled={isSubmitting}>
+                {isSubmitting ? '...' : 'حفظ بدون طباعة'}
               </button>
-            )}
-            {currentStep < 6 ? (
-              <button className="pif-btn pif-btn--primary" onClick={goNext} disabled={!canGoNext()}>
-                التالي →
+              <button className="pif-btn pif-btn--primary" onClick={() => handleFinalSubmit(true)} disabled={isSubmitting}>
+                {isSubmitting ? 'جارٍ الإرسال...' : <><Printer size={18} /> إرسال وطباعة السوار</>}
               </button>
-            ) : (
-              <div className="pif-submit-group">
-                <button className="pif-btn pif-btn--outline" onClick={() => handleSubmit(false)} disabled={isSubmitting}>
-                  {isSubmitting ? '...' : 'حفظ بدون طباعة'}
-                </button>
-                <button className="pif-btn pif-btn--primary" onClick={() => handleSubmit(true)} disabled={isSubmitting}>
-                  {isSubmitting ? 'جارٍ الإرسال...' : '🖨 إرسال وطباعة السوار'}
-                </button>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {showPrintModal && wristbandData && (
+        <WristbandPrint
+          data={wristbandData}
+          onClose={() => { setShowPrintModal(false); onClose?.(); }}
+        />
+      )}
     </div>
   )
 }

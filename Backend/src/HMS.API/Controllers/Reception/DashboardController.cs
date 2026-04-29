@@ -22,10 +22,21 @@ public class DashboardController : ControllerBase
     public async Task<IActionResult> GetReceptionDashboard(
         [FromQuery] GetReceptionDashboardQuery query)
     {
-        query.TenantId = Guid.Parse(User.FindFirst("tenantId")!.Value);
+        // FIX: JWT emits tenantId under claim key "orgId" (set by JwtService).
+        // Previously used "tenantId" which was always null → NullReferenceException.
+        // Try all possible claim keys in the same priority order as TenantProvider.
+        var tenantRaw =
+            User.FindFirst("orgId")?.Value ??
+            User.FindFirst("tenantId")?.Value ??
+            User.FindFirst("tenant_id")?.Value ??
+            User.FindFirst("TenantId")?.Value;
+
+        if (string.IsNullOrEmpty(tenantRaw) || !Guid.TryParse(tenantRaw, out var tenantId))
+            return Unauthorized("TenantId claim is missing or invalid in the token.");
+
+        query.TenantId = tenantId;
 
         var result = await _mediator.Send(query);
-
         return Ok(result);
     }
 }

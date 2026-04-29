@@ -1,4 +1,7 @@
-﻿using HMS.Application.Features.Visits.GetVisits;
+using HMS.Application.Features.Visits.GetVisits;
+using HMS.Application.Features.Visits.Commands.DeleteVisit;
+using HMS.Application.Features.Visits.Commands.FinishVisit;
+using HMS.Application.Features.Visits.UpdateVisitStatus;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,8 +15,6 @@ public class VisitsController : ControllerBase
     {
         _mediator = mediator;
     }
-
-   
 
     // ✅ Get Visits (Pagination + Search + Status)
     [HttpGet]
@@ -37,6 +38,13 @@ public class VisitsController : ControllerBase
     public async Task<IActionResult> Finish(Guid id)
     {
         await _mediator.Send(new FinishVisitCommand { VisitId = id });
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        await _mediator.Send(new DeleteVisitCommand { VisitId = id });
         return NoContent();
     }
 }

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>HMS.Notifications</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HMS.Notifications.Application\HMS.Notifications.Application.csproj" />
+    <ProjectReference Include="..\..\..\SharedKernel\HMS.SharedKernel.Infrastructure\HMS.SharedKernel.Infrastructure.csproj" />
+    <!-- DashboardHub + NotificationHub live in legacy HMS.Infrastructure -->
+    <ProjectReference Include="..\..\..\HMS.Infrastructure\HMS.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="MediatR" Version="12.1.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+  </ItemGroup>
+</Project>

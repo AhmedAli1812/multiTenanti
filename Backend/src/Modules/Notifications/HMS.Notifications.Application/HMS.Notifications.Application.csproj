@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>HMS.Notifications</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HMS.Notifications.Domain\HMS.Notifications.Domain.csproj" />
+    <ProjectReference Include="..\..\..\SharedKernel\HMS.SharedKernel.Application\HMS.SharedKernel.Application.csproj" />
+    <!-- Needs VisitCreatedEvent from Visits.Domain -->
+    <ProjectReference Include="..\..\Visits\HMS.Visits.Domain\HMS.Visits.Domain.csproj" />
+    <!-- Needs RoomAssignedEvent from Rooms.Domain -->
+    <ProjectReference Include="..\..\Rooms\HMS.Rooms.Domain\HMS.Rooms.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="12.1.1" />
+  </ItemGroup>
+</Project>

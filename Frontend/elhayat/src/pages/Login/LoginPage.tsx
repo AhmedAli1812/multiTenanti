@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom'
 import { useLogin } from '../../hooks/useLogin'
+import { 
+  Hospital, Mail, Lock, Eye, EyeOff, User, 
+  ChevronLeft, Moon, Sun, Globe, CheckCircle2, AlertCircle
+} from 'lucide-react'
 import './LoginPage.css'
 import { useTheme } from '../../context/ThemeContext'
 import { useLanguage } from '../../context/LanguageContext'
@@ -17,26 +21,27 @@ export default function LoginPage() {
     <div className="login-page" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       {/* Controls */}
       <div className="login-controls">
-        <button className="login-controls__btn" onClick={toggleLanguage}>
-          {language === 'ar' ? 'EN' : 'عربي'}
+        <button className="login-controls__btn" onClick={toggleLanguage} title={language === 'ar' ? 'English' : 'العربية'}>
+          <Globe size={16} />
+          <span>{language === 'ar' ? 'EN' : 'AR'}</span>
         </button>
-        <button className="login-controls__btn" onClick={toggleTheme}>
-          {theme === 'light' ? '🌙' : '☀️'}
+        <button className="login-controls__btn" onClick={toggleTheme} title={theme === 'light' ? 'Dark Mode' : 'Light Mode'}>
+          {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
         </button>
       </div>
 
       <div className="login-panel login-panel--hero">
         <div className="login-hero__brand">
           <span className="login-hero__brand-text">MedScope</span>
-          <span className="login-hero__brand-icon">🏥</span>
+          <Hospital size={32} color="#fff" strokeWidth={2.5} />
         </div>
         <div className="login-hero__badge">{t.badge}</div>
         <h2 className="login-hero__headline">{t.headline}</h2>
         <p className="login-hero__sub">{t.sub}</p>
         <div className="login-hero__trust">
           <div className="login-hero__avatars">
-            <span className="login-hero__avatar">👨‍⚕️</span>
-            <span className="login-hero__avatar">👩‍⚕️</span>
+            <span className="login-hero__avatar"><User size={16} /></span>
+            <span className="login-hero__avatar"><User size={16} /></span>
           </div>
           <div className="login-hero__trust-text">
             <strong>{t.trusted}</strong>
@@ -64,7 +69,7 @@ export default function LoginPage() {
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                   disabled={isLoading}
                 />
-                <span className="login-field__icon">✉️</span>
+                <Mail className="login-field__icon" size={18} />
               </div>
             </div>
 
@@ -81,9 +86,9 @@ export default function LoginPage() {
                   disabled={isLoading}
                 />
                 <button type="button" className="login-field__toggle" onClick={togglePassword}>
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
-                <span className="login-field__icon login-field__icon--lock">🔒</span>
+                <Lock className="login-field__icon login-field__icon--lock" size={18} />
               </div>
             </div>
 
@@ -104,14 +109,16 @@ export default function LoginPage() {
             {/* ✅ Success Message */}
             {successMessage && (
               <div className="login-form__success" role="status">
-                {successMessage}
+                <CheckCircle2 size={18} />
+                <span>{successMessage}</span>
               </div>
             )}
 
             {/* ❌ Error Message */}
             {error && (
               <div className="login-form__error" role="alert">
-                ⚠️ {t.errorInvalid}
+                <AlertCircle size={18} />
+                <span>{t.errorInvalid}</span>
               </div>
             )}
 
@@ -123,11 +130,11 @@ export default function LoginPage() {
               {isLoading ? (
                 <span className="login-form__spinner" />
               ) : successMessage ? (
-                <span>✅</span>
+                <CheckCircle2 size={24} />
               ) : (
                 <>
                   <span>{t.submit}</span>
-                  <span>←</span>
+                  {language === 'ar' ? <ChevronLeft size={20} /> : <ChevronLeft size={20} style={{ transform: 'rotate(180deg)' }} />}
                 </>
               )}
             </button>

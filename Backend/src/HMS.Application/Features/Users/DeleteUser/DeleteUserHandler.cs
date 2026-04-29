@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Persistence;
+using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.Tenant;
 using HMS.Application.Abstractions.CurrentUser;
 using HMS.Application.Abstractions.Caching;
@@ -34,12 +34,16 @@ public class DeleteUserHandler : IRequestHandler<DeleteUserCommand, Result>
         // =========================
         // 🔍 Get User (حتى لو deleted)
         // =========================
-        var user = await _context.Users
+        var query = _context.Users
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(x =>
-                x.Id == request.Id &&
-                x.TenantId == tenantId,
-                cancellationToken);
+            .Where(x => x.Id == request.Id);
+
+        if (!_tenantProvider.IsSuperAdmin())
+        {
+            query = query.Where(x => x.TenantId == tenantId);
+        }
+
+        var user = await query.FirstOrDefaultAsync(cancellationToken);
 
         if (user == null)
             return Result.Failure("User not found");

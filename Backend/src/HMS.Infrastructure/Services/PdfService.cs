@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Services;
+using HMS.Application.Abstractions.Services;
 using HMS.Application.Dtos;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -10,73 +10,57 @@ public class PdfService : IPdfService
 {
     public byte[] GenerateWristbandPdf(WristbandDto data)
     {
+        // ─────────────────────────────────────────────────────────────────
+        // QuestPDF - Wristband Design (Optimized for 25mm x 250mm or thermal)
+        // ─────────────────────────────────────────────────────────────────
         return Document.Create(container =>
         {
             container.Page(page =>
             {
-                // ✅ حجم أكبر عشان الـ content يتناسب
-                page.Size(250, 100);
-                page.Margin(0);
+                // Standard wristband size (approx 3.5" x 1")
+                page.Size(280, 90);
+                page.Margin(2);
 
                 page.Content().Element(root =>
                 {
                     root
-                        .Background(Colors.Blue.Lighten3)
-                        .Padding(3)
-                        .Element(inner =>
+                        .Border(2)
+                        .BorderColor("#4099ff") // Professional blue border
+                        .Background(Colors.White)
+                        .Padding(4)
+                        .Row(row =>
                         {
-                            inner
-                                .Background(Colors.White)
-                                .Padding(6)
-                                .Row(row =>
+                            // Left: Patient Details
+                            row.RelativeItem().Column(col =>
+                            {
+                                // Name in Parentheses
+                                col.Item().Text($"({data.PatientName})")
+                                    .FontSize(13)
+                                    .ExtraBold()
+                                    .FontColor(Colors.Black);
+
+                                col.Item().PaddingTop(2);
+
+                                // Medical Number
+                                col.Item().Text(t =>
                                 {
-                                    // ======================
-                                    // 🧾 TEXT
-                                    // ======================
-                                    row.RelativeItem().Column(col =>
-                                    {
-                                        col.Item().Text(t =>
-                                        {
-                                            t.Span("اسم المريض: ")
-                                                .SemiBold()
-                                                .FontSize(9);
-                                            t.Span(data.PatientName ?? "-")
-                                                .Bold()
-                                                .FontSize(9);
-                                        });
-
-                                        col.Item().PaddingTop(3);
-
-                                        col.Item().Text(t =>
-                                        {
-                                            t.Span("الرقم الطبي: ")
-                                                .SemiBold()
-                                                .FontSize(8);
-                                            t.Span(data.MedicalNumber ?? "-")
-                                                .FontSize(8);
-                                        });
-
-                                        col.Item().PaddingTop(3);
-
-                                        col.Item().Text(t =>
-                                        {
-                                            t.Span("رقم الغرفة: ")
-                                                .SemiBold()
-                                                .FontSize(8);
-                                            t.Span(data.RoomNumber ?? "-")
-                                                .Bold()
-                                                .FontSize(12);
-                                        });
-                                    });
-
-                                    // ======================
-                                    // 🔳 QR
-                                    // ======================
-                                    row.ConstantItem(70)
-                                        .AlignMiddle()
-                                        .AlignCenter()
-                                        .Image(data.QrCode, ImageScaling.FitArea);
+                                    t.Span($"{data.MedicalNumber}").FontSize(10).SemiBold();
+                                    t.Span(" : الرقم الطبي").FontSize(10);
                                 });
+
+                                // Room Number
+                                col.Item().Text(t =>
+                                {
+                                    t.Span($"{data.RoomNumber ?? "-"}").FontSize(11).Bold();
+                                    t.Span(" : رقم الغرفة").FontSize(10);
+                                });
+                            });
+
+                            // Right: QR Code
+                            row.ConstantItem(65)
+                                .AlignMiddle()
+                                .AlignCenter()
+                                .Image(data.QrCode, ImageScaling.FitArea);
                         });
                 });
             });

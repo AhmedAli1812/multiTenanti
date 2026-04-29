@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>HMS.Intake</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HMS.Intake.Domain\HMS.Intake.Domain.csproj" />
+    <ProjectReference Include="..\..\Patients\HMS.Patients.Domain\HMS.Patients.Domain.csproj" />
+    <ProjectReference Include="..\..\..\SharedKernel\HMS.SharedKernel.Application\HMS.SharedKernel.Application.csproj" />
+    <ProjectReference Include="..\..\..\SharedKernel\HMS.SharedKernel.Infrastructure\HMS.SharedKernel.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="MediatR" Version="12.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+  </ItemGroup>
+</Project>

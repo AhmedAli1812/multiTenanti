@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Persistence;
+using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.Tenant;
 using HMS.Application.Dtos;
 using MediatR;
@@ -28,16 +28,25 @@ public class GetFloorsByBranchHandler : IRequestHandler<GetFloorsByBranchQuery, 
             throw new ArgumentException("Invalid branch");
 
         var tenantId = _tenant.GetTenantId();
+        var isSuperAdmin = _tenant.IsSuperAdmin();
 
         // =========================
-        // 🔥 Ensure branch belongs to tenant
+        // 🔥 Ensure branch belongs to tenant (unless super admin)
         // =========================
-        var branchExists = await _context.Branches
-            .AsNoTracking()
-            .AnyAsync(b => b.Id == request.BranchId && b.TenantId == tenantId, cancellationToken);
+        var branchQuery = _context.Branches.AsNoTracking();
+        
+        if (!isSuperAdmin)
+        {
+            branchQuery = branchQuery.Where(b => b.TenantId == tenantId);
+        }
 
-        if (!branchExists)
+        var branch = await branchQuery
+            .FirstOrDefaultAsync(b => b.Id == request.BranchId, cancellationToken);
+
+        if (branch == null)
             throw new InvalidOperationException("Branch not found");
+
+        var effectiveTenantId = branch.TenantId;
 
         // =========================
         // 🔥 Get Floors
@@ -46,7 +55,7 @@ public class GetFloorsByBranchHandler : IRequestHandler<GetFloorsByBranchQuery, 
             .AsNoTracking() // ⚡ performance
             .Where(f =>
                 f.BranchId == request.BranchId &&
-                f.TenantId == tenantId // 💣 مهم جدًا
+                f.TenantId == effectiveTenantId // 💣 مهم جدًا
             )
             .OrderBy(f => f.Number)
             .Select(f => new FloorDto

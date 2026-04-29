@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HMS.IntegrationTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5feb52782ef16ebff2f7ab3008654257ef885611")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6eea44fa2af2104f70079217346cfd5a34ddecbc")]
 [assembly: System.Reflection.AssemblyProductAttribute("HMS.IntegrationTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HMS.IntegrationTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,230 +1,284 @@
-﻿using HMS.API.Middlewares;
-using HMS.Application.Abstractions.Caching;
-using HMS.Application.Abstractions.CurrentUser;
-using HMS.Application.Abstractions.Security;
-using HMS.Application.Abstractions.Services;
-using HMS.Application.Features.Auth.Login;
-using HMS.Infrastructure.Caching;
-using HMS.Infrastructure.CurrentUser;
-using HMS.Infrastructure.DependencyInjection;
-using HMS.Infrastructure.Persistence;
-using HMS.Infrastructure.Persistence.Seed;
-using HMS.Infrastructure.RealTime;
-using HMS.Infrastructure.Security;
-using HMS.Infrastructure.Services;
+// ─────────────────────────────────────────────────────────────────────────────
+// HMS.API — Program.cs  (Modular Monolith entry point)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Legacy namespace imports (kept during transition) ─────────────────────────
+using HMS.API.Middleware;
+using HMS.API.Middlewares;                                  // AuditMiddleware, ExceptionMiddleware
+using HMS.Application.Abstractions.Caching;                // IPermissionCacheService
+using HMS.Application.Abstractions.CurrentUser;            // ICurrentUser, ICurrentUserService
+using HMS.Application.Abstractions.Security;               // IRefreshTokenHasher
+using HMS.Application.Abstractions.Services;               // IAssignmentService, INotificationService
+using HMS.Application.Features.Auth.Login;                 // LoginHandler (legacy MediatR scan root)
+using HMS.Application.Features.PatientIntake.Services;     // PatientIntakeService
+using HMS.Infrastructure.Caching;                          // PermissionCacheService
+using HMS.Infrastructure.CurrentUser;                      // CurrentUser, CurrentUserService
+using HMS.Infrastructure.DependencyInjection;              // AddInfrastructure()
+using HMS.Infrastructure.Persistence;                      // ApplicationDbContext
+using HMS.Infrastructure.Persistence.Seed;                 // PermissionSeeder
+using HMS.Infrastructure.RealTime;                         // NotificationHub, DashboardHub, DashboardNotifier
+using HMS.Infrastructure.Security;                         // RefreshTokenHasher
+using HMS.Infrastructure.Services;                         // AuditLogService, AssignmentService, etc.
+using HMS.Notifications.Infrastructure;                    // AddNotificationsModule()
+using HMS.Persistence;                                     // AddHmsPersistence()
+using HMS.SharedKernel.Application.Behaviors;              // LoggingBehavior, ValidationBehavior
+
+// ── Framework imports ─────────────────────────────────────────────────────────
+using FluentValidation;
+
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using QuestPDF.Infrastructure;
+using Serilog;
 using System.Security.Claims;
 using System.Text;
 
-var builder = WebApplication.CreateBuilder(args);
+// ── Serilog bootstrap ─────────────────────────────────────────────────────────
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console(outputTemplate:
+        "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File("logs/hms-.txt",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 14)
+    .CreateLogger();
 
-QuestPDF.Settings.License = LicenseType.Community;
-
-// =====================
-// 🔥 Services
-// =====================
-
-builder.Services.AddControllers();
-
-// =====================
-// 🌐 CORS
-// =====================
-
-builder.Services.AddCors(options =>
+try
 {
-    options.AddPolicy("AllowFrontend", policy =>
+    var builder = WebApplication.CreateBuilder(args);
+    builder.Host.UseSerilog();
+
+    QuestPDF.Settings.License = LicenseType.Community;
+
+    // ── Controllers ───────────────────────────────────────────────────────────
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddMemoryCache();
+
+    // ── CORS ──────────────────────────────────────────────────────────────────
+    builder.Services.AddCors(options =>
+        options.AddPolicy("AllowFrontend", policy =>
+            policy.WithOrigins(
+                    "http://localhost:5173",  "https://localhost:5173",
+                    "http://localhost:5174",  "https://localhost:5174")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials()));
+
+    // ── Legacy Infrastructure (kept during transition) ────────────────────────
+    builder.Services.AddInfrastructure(builder.Configuration);
+
+    // ── MediatR — scans ALL assemblies (legacy + new modules) ─────────────────
+    builder.Services.AddMediatR(cfg =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5174")
+        // Legacy
+        cfg.RegisterServicesFromAssembly(typeof(LoginHandler).Assembly);
 
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });
-});
+        // SharedKernel behaviors
+        cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+        cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
-// Infrastructure (DB + Services)
-builder.Services.AddInfrastructure(builder.Configuration);
-
-builder.Services.AddScoped<INotificationService, NotificationService>();
-
-// 🔥 MediatR
-builder.Services.AddMediatR(cfg =>
-cfg.RegisterServicesFromAssembly(typeof(LoginHandler).Assembly));
-
-builder.Services.AddSignalR();
-builder.Services.AddScoped<IQrCodeService, QrCodeService>();
-builder.Services.AddScoped<IDashboardNotifier, DashboardNotifier>();
-builder.Services.AddScoped<IRealTimeNotifier, SignalRNotifier>();
-builder.Services.AddScoped<IPdfService, PdfService>();
-
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-
-// =====================
-// 🔐 JWT Authentication
-// =====================
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        NameClaimType = ClaimTypes.Name,
-        RoleClaimType = ClaimTypes.Role,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(
-    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
-    };
-});
-
-// =====================
-// 🔐 Authorization (Permissions)
-// =====================
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("ViewAuditLogs", policy =>
-    {
-        policy.RequireClaim("permission", "audit_logs.view");
-    });
-});
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("DashboardReceptionView", policy =>
-    {
-        policy.RequireClaim("permission", "dashboard.reception.view");
+        // New module application assemblies
+        cfg.RegisterServicesFromAssembly(
+            typeof(HMS.Identity.Application.Features.Auth.Login.LoginCommandHandler).Assembly);
+        cfg.RegisterServicesFromAssembly(
+            typeof(HMS.Visits.Application.Features.Visits.EventHandlers.IntakeSubmittedEventHandler).Assembly);
+        cfg.RegisterServicesFromAssembly(
+            typeof(HMS.Notifications.Application.EventHandlers.VisitCreatedNotificationHandler).Assembly);
     });
 
-});
+    // FluentValidation — scan new module assemblies
+    builder.Services.AddValidatorsFromAssembly(
+        typeof(HMS.Identity.Application.Features.Auth.Login.LoginCommandHandler).Assembly);
 
-// =====================
-// 🧾 Swagger
-// =====================
+    // ── SignalR ───────────────────────────────────────────────────────────────
+    builder.Services.AddSignalR();
 
-builder.Services.AddEndpointsApiExplorer();
+    // ── New Modular Persistence (HmsDbContext + all module IDbContext mappings) ─
+    builder.Services.AddHmsPersistence(builder.Configuration);
 
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Elhaya Hospital API",
-        Version = "v1",
-        Description = "Internal Hospital Management System API"
-    });
+    // ── Notifications module ───────────────────────────────────────────────────
+    builder.Services.AddNotificationsModule();
 
-    // 🔐 JWT
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Enter: Bearer {token}"
-    });
+    // ── Legacy services ────────────────────────────────────────────────────────
+    builder.Services.AddScoped<INotificationService, NotificationService>();
+    builder.Services.AddScoped<IQrCodeService, QrCodeService>();
+    builder.Services.AddScoped<IDashboardNotifier, DashboardNotifier>();
+    builder.Services.AddScoped<IRealTimeNotifier, SignalRNotifier>();
+    builder.Services.AddScoped<IPdfService, PdfService>();
+    builder.Services.AddScoped<AuditLogService>();
+    builder.Services.AddScoped<IPermissionCacheService, PermissionCacheService>();
+    builder.Services.AddScoped<IRefreshTokenHasher, RefreshTokenHasher>();
+    builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+    builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+    builder.Services.AddScoped<IAssignmentService, AssignmentService>();
+    builder.Services.AddScoped<IRequestInfoProvider, RequestInfoProvider>();
 
-    // 🏢 Tenant Header (🔥 GLOBAL)
-    options.AddSecurityDefinition("Tenant", new OpenApiSecurityScheme
-    {
-        Name = "X-Tenant-Id",
-        Type = SecuritySchemeType.ApiKey,
-        In = ParameterLocation.Header,
-        Description = "Tenant Id for switching (Super Admin)"
-    });
+    // ── New module: Identity infra services ───────────────────────────────────
+    builder.Services.AddScoped<HMS.Identity.Application.Abstractions.IPasswordHasher,
+                               HMS.Identity.Infrastructure.Authentication.PasswordHasher>();
+    builder.Services.AddScoped<HMS.Identity.Application.Abstractions.IJwtService,
+                               HMS.Identity.Infrastructure.Authentication.JwtService>();
 
-    // 🔥 Apply JWT + Tenant globally
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+    // ── JWT Authentication ─────────────────────────────────────────────────────
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
         {
-            new OpenApiSecurityScheme
+            options.TokenValidationParameters = new TokenValidationParameters
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        },
-        {
-            new OpenApiSecurityScheme
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+                ValidateIssuer   = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                NameClaimType    = ClaimTypes.Name,
+                RoleClaimType    = ClaimTypes.Role,
+            };
+
+            // Support JWT in SignalR query-string
+            options.Events = new JwtBearerEvents
             {
-                Reference = new OpenApiReference
+                OnMessageReceived = ctx =>
                 {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Tenant"
+                    var token = ctx.Request.Query["access_token"];
+                    if (!string.IsNullOrEmpty(token) &&
+                        ctx.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                        ctx.Token = token;
+                    return Task.CompletedTask;
                 }
-            },
-            Array.Empty<string>()
-        }
+            };
+        });
+
+    // ── Authorization policies ─────────────────────────────────────────────────
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy("ViewAuditLogs",
+            p => p.RequireClaim("permission", "audit_logs.view"));
+
+        options.AddPolicy("DashboardReceptionView",
+            p => p.RequireClaim("permission", "dashboard.reception.view"));
+
+        options.AddPolicy("ManagePatients",
+            p => p.RequireClaim("permission", "patients.manage"));
+
+        options.AddPolicy("ManageRooms",
+            p => p.RequireClaim("permission", "rooms.manage"));
     });
-});
 
-// =====================
-// 🔧 DI
-// =====================
+    // ── Swagger ────────────────────────────────────────────────────────────────
+    builder.Services.AddSwaggerGen(options =>
+    {
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title       = "HMS — Hospital Management System API",
+            Version     = "v1",
+            Description = "Modular Monolith — Clean Architecture + DDD"
+        });
 
-builder.Services.AddScoped<AuditLogService>();
-builder.Services.AddMemoryCache();
-builder.Services.AddScoped<IPermissionCacheService, PermissionCacheService>();
-builder.Services.AddScoped<IRefreshTokenHasher, RefreshTokenHasher>();
-builder.Services.AddScoped<ICurrentUser, CurrentUser>();
-builder.Services.AddScoped<IAssignmentService, AssignmentService>();
-builder.Services.AddScoped<IRequestInfoProvider, RequestInfoProvider>();
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Name          = "Authorization",
+            Type          = SecuritySchemeType.Http,
+            Scheme        = "bearer",
+            BearerFormat  = "JWT",
+            In            = ParameterLocation.Header,
+            Description   = "Enter: Bearer {token}"
+        });
 
-// =====================
-// 🚀 Build
-// =====================
+        options.AddSecurityDefinition("Tenant", new OpenApiSecurityScheme
+        {
+            Name        = "X-Tenant-Id",
+            Type        = SecuritySchemeType.ApiKey,
+            In          = ParameterLocation.Header,
+            Description = "Tenant Id header (Super Admin override)"
+        });
 
-var app = builder.Build();
+        options.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                        { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+                },
+                []
+            },
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                        { Type = ReferenceType.SecurityScheme, Id = "Tenant" }
+                },
+                []
+            }
+        });
+    });
 
-// =====================
-// 🔥 Middleware
-// =====================
+    // ── Health checks ──────────────────────────────────────────────────────────
+    builder.Services.AddHealthChecks()
+        .AddDbContextCheck<ApplicationDbContext>(
+            name: "database",
+            tags: ["db", "sql"]);
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    // ─────────────────────────────────────────────────────────────────────────
+    var app = builder.Build();
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── Global exception handler (must be FIRST in pipeline) ─────────────────
+    app.UseMiddleware<GlobalExceptionMiddleware>();
+
+    // ── Swagger ────────────────────────────────────────────────────────────────
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "HMS API v1");
+            c.RoutePrefix = "swagger";
+        });
+    }
+
+    // ── CORS (must be before Auth) ─────────────────────────────────────────────
+    app.UseCors("AllowFrontend");
+
+    app.UseSerilogRequestLogging();
+    app.UseStaticFiles();
+
+    // ── Auth ──────────────────────────────────────────────────────────────────
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    // ── Legacy middleware ──────────────────────────────────────────────────────
+    app.UseMiddleware<AuditMiddleware>();
+
+    // ── Endpoints ─────────────────────────────────────────────────────────────
+    app.MapControllers();
+    app.MapHub<NotificationHub>("/hubs/notifications");
+    app.MapHub<DashboardHub>("/hubs/dashboard");
+    app.MapHealthChecks("/health");
+
+    // ── Database seed ──────────────────────────────────────────────────────────
+    using (var scope = app.Services.CreateScope())
+    {
+        var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await PermissionSeeder.SeedAsync(ctx);
+        await TenantSeeder.SeedAsync(ctx, CancellationToken.None);
+    }
+
+    Log.Information("HMS API starting on {Environment}", app.Environment.EnvironmentName);
+    app.Run();
 }
-
-// ✅ CORS أول حاجة — قبل كل حاجة
-app.UseCors("AllowFrontend");
-
-app.MapHub<NotificationHub>("/hubs/notifications");
-app.UseStaticFiles();
-
-// 🔐 Auth
-app.UseAuthentication();
-app.UseAuthorization();
-
-// 🔥 Audit Logging
-app.UseMiddleware<AuditMiddleware>();
-app.UseMiddleware<ExceptionMiddleware>();
-
-app.MapControllers();
-
-// =====================
-// 💣 Seed Data
-// =====================
-
-using (var scope = app.Services.CreateScope())
+catch (Exception ex)
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await PermissionSeeder.SeedAsync(context);
+    Log.Fatal(ex, "HMS API failed to start");
 }
-
-var hash = BCrypt.Net.BCrypt.HashPassword("Zxx020508@");
-Console.WriteLine(hash);
-
-app.MapHub<DashboardHub>("/hubs/dashboard");
-
-app.Run();
+finally
+{
+    Log.CloseAndFlush();
+}

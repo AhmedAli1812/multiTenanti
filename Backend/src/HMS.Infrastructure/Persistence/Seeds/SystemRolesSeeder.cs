@@ -18,7 +18,7 @@ public static class SystemRolesSeeder
 
         var systemRoles = new List<Role>
         {
-            new() { Id = SUPER_ADMIN_ROLE_ID, Name = "SuperAdmin", IsSystem = true },
+            new() { Id = SUPER_ADMIN_ROLE_ID, Name = "Super Admin", IsSystem = true },
             new() { Id = ADMIN_ROLE_ID, Name = "Admin", IsSystem = true },
             new() { Id = DOCTOR_ROLE_ID, Name = "Doctor", IsSystem = true },
             new() { Id = PATIENT_ROLE_ID, Name = "Patient", IsSystem = true }

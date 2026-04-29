@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 
 namespace HMS.Application.Features.Users.CreateUser;
 
@@ -13,5 +13,6 @@ public class CreateUserCommand : IRequest<Guid>
     public string? NationalId { get; set; }    // ✅ أضف دي
     public Guid? DepartmentId { get; set; }
     public Guid? BranchId { get; set; }
+    public Guid? TenantId { get; set; }
     public List<Guid> RoleIds { get; set; } = new();
 }

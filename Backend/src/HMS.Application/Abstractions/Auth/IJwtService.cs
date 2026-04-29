@@ -1,4 +1,4 @@
-﻿using HMS.Domain.Entities.Identity;
+using HMS.Domain.Entities.Identity; 
 
 namespace HMS.Application.Abstractions.Auth;
 
@@ -8,9 +8,11 @@ public interface IJwtService
     public string GenerateToken(
      Guid userId,
      Guid? tenantId,
+     string? tenantName,
      List<string>? roles,
      List<string>? permissions,
-     Guid? branchId, // 🔥 قبل user
+     Guid? branchId,
+     string? branchName,
      User user
     );
 

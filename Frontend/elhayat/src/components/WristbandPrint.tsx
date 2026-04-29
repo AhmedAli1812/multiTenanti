@@ -130,111 +130,69 @@ function WristbandCard({ data }: { data: WristbandData }) {
         .wb-card {
           font-family: 'Cairo', sans-serif;
           direction: rtl;
-          background: linear-gradient(135deg, #e8f4fd 0%, #d0e8f7 100%);
-          border: 2px dashed #5ba3d9;
-          border-radius: 12px;
-          padding: 14px 16px;
+          background: #fff;
+          border: 3px solid #4099ff;
+          border-radius: 8px;
+          padding: 16px;
           display: flex;
           align-items: center;
-          gap: 14px;
-          width: 380px;
+          gap: 20px;
+          width: 420px;
           margin: 0 auto;
-          box-shadow: 0 2px 12px rgba(26,95,170,0.12);
         }
         .wb-card__info {
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 6px;
-        }
-        .wb-card__hospital {
-          font-size: 10px;
-          color: #5ba3d9;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-          margin-bottom: 2px;
+          gap: 8px;
         }
         .wb-card__name {
-          font-size: 20px;
+          font-size: 22px;
           font-weight: 900;
-          color: #1a3a5c;
-          line-height: 1.2;
-        }
-        .wb-card__row {
-          display: flex;
-          gap: 16px;
-          align-items: center;
+          color: #000;
+          margin-bottom: 4px;
         }
         .wb-card__field {
           display: flex;
-          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
         }
         .wb-card__label {
-          font-size: 9px;
-          color: #5ba3d9;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.3px;
+          font-weight: 700;
+          color: #333;
         }
         .wb-card__value {
-          font-size: 13px;
-          font-weight: 700;
-          color: #1a3a5c;
+          font-weight: 600;
+          color: #000;
         }
         .wb-card__room-value {
           font-size: 20px;
           font-weight: 900;
           color: #1a5faa;
         }
-        .wb-card__divider {
-          width: 1px;
-          height: 30px;
-          background: #5ba3d9;
-          opacity: 0.3;
-        }
         .wb-card__qr {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 4px;
           flex-shrink: 0;
         }
         .wb-card__qr img {
-          width: 72px;
-          height: 72px;
-          border-radius: 6px;
-          border: 1px solid #c0d8ee;
-        }
-        .wb-card__qr-label {
-          font-size: 9px;
-          color: #5ba3d9;
-          font-weight: 600;
+          width: 85px;
+          height: 85px;
+          border: 1px solid #eee;
         }
       `}</style>
 
       <div className="wb-card">
         <div className="wb-card__info">
-          <div className="wb-card__hospital">🏥 MedScope — نظام إدارة المستشفى</div>
-          <div className="wb-card__name">{data.patientName}</div>
-          <div className="wb-card__row">
-            <div className="wb-card__field">
-              <span className="wb-card__label">الاسم الكامل</span>
-              <span className="wb-card__value">{data.patientName}</span>
-            </div>
-            <div className="wb-card__divider" />
-            <div className="wb-card__field">
-              <span className="wb-card__label">رقم الملف الطبي</span>
-              <span className="wb-card__value">{data.medicalNumber}</span>
-            </div>
-            {data.roomNumber && data.roomNumber !== '-' && (
-              <>
-                <div className="wb-card__divider" />
-                <div className="wb-card__field">
-                  <span className="wb-card__label">رقم الغرفة</span>
-                  <span className="wb-card__room-value">{data.roomNumber}</span>
-                </div>
-              </>
-            )}
+          <div className="wb-card__name">({data.patientName})</div>
+          
+          <div className="wb-card__field">
+            <span className="wb-card__value">{data.medicalNumber}</span>
+            <span className="wb-card__label">: الرقم الطبي</span>
+          </div>
+
+          <div className="wb-card__field">
+            <span className="wb-card__room-value">{data.roomNumber || '-'}</span>
+            <span className="wb-card__label">: رقم الغرفة</span>
           </div>
         </div>
 
@@ -243,7 +201,6 @@ function WristbandCard({ data }: { data: WristbandData }) {
             src={`data:image/png;base64,${data.qrCode}`}
             alt="QR Code"
           />
-          <span className="wb-card__qr-label">{data.medicalNumber}</span>
         </div>
       </div>
     </>

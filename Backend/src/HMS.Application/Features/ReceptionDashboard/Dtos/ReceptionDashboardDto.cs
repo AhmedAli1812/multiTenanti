@@ -1,4 +1,4 @@
-﻿namespace HMS.Application.Features.ReceptionDashboard.Dtos;
+namespace HMS.Application.Features.ReceptionDashboard.Dtos;
 
 public class ReceptionDashboardDto
 {
@@ -8,6 +8,7 @@ public class ReceptionDashboardDto
 
     public List<RoomStatusDto> Rooms { get; set; } = new();
 
+    public List<string> Departments { get; set; } = new();
     public int TotalCount { get; set; }
     public int Page { get; set; }
     public int PageSize { get; set; }
@@ -28,13 +29,23 @@ public class PreviousPatientDto
     public string? DoctorName { get; set; }
     public DateTime? AdmissionDate { get; set; }
     public DateTime? DischargeDate { get; set; }
+    public string DepartmentName { get; set; } = string.Empty;
+    public string Diagnosis { get; set; } = string.Empty;
+    public int Age { get; set; }
+    public string Gender { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
 }
 
 public class RoomStatusDto
 {
+    public Guid VisitId { get; set; }
     public string RoomName { get; set; } = string.Empty;
     public string PatientName { get; set; } = string.Empty;
+    public string PatientMedicalNumber { get; set; } = string.Empty;
     public string DoctorName { get; set; } = string.Empty;
+    public string DepartmentName { get; set; } = string.Empty;
+    public string Diagnosis { get; set; } = string.Empty;
+    public int Age { get; set; }
+    public string Gender { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
 }

@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 
 namespace HMS.Application.Features.Rooms.CreateRoom;
 
@@ -8,4 +8,5 @@ public class CreateRoomCommand : IRequest<Guid>
     public int Capacity { get; set; }
     public Guid FloorId { get; set; }
     public Guid BranchId { get; set; }
+    public Guid? TenantId { get; set; }
 }

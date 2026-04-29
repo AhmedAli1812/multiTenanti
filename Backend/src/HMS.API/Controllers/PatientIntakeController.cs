@@ -1,4 +1,5 @@
-﻿using HMS.Application.Features.PatientIntake.Commands.SubmitIntake;
+using HMS.Application.Features.PatientIntake.Commands.SubmitIntake;
+using HMS.Application.Features.PatientIntake.Queries.GetWristband;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using HMS.Application.Abstractions.Services;
@@ -50,5 +51,14 @@ public class PatientIntakeController : ControllerBase
         var pdf = _pdfService.GenerateWristbandPdf(result);
 
         return File(pdf, "application/pdf", "wristband.pdf");
+    }
+
+    // 🖨️ Get Wristband PDF for existing intake
+    [HttpGet("{id}/print-wristband")]
+    public async Task<IActionResult> GetWristbandPdf(Guid id)
+    {
+        var result = await _mediator.Send(new GetWristbandQuery { IntakeId = id });
+        var pdf = _pdfService.GenerateWristbandPdf(result);
+        return File(pdf, "application/pdf", $"wristband_{id}.pdf");
     }
 }

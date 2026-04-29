@@ -1,0 +1,343 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<style>
+body { font-family: 'Calibri', sans-serif; font-size: 12pt; direction: rtl; }
+h1 { color: #1F3864; font-size: 22pt; text-align: center; border-bottom: 3px solid #1F3864; }
+h2 { color: #2E75B6; font-size: 16pt; border-bottom: 1px solid #2E75B6; margin-top: 30px; }
+h3 { color: #2F5496; font-size: 13pt; }
+table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+th { background: #1F3864; color: white; padding: 8px; text-align: right; }
+td { border: 1px solid #ccc; padding: 7px; text-align: right; }
+tr:nth-child(even) { background: #EBF3FB; }
+.box { background: #EBF3FB; border-right: 4px solid #2E75B6; padding: 10px; margin: 10px 0; }
+.warn { background: #FFF3CD; border-right: 4px solid #FFC107; padding: 8px; margin: 8px 0; }
+.ok { background: #D4EDDA; border-right: 4px solid #28A745; padding: 8px; margin: 8px 0; }
+code { background: #F4F4F4; padding: 2px 6px; font-family: Consolas; font-size: 10pt; }
+pre { background: #1E1E1E; color: #D4D4D4; padding: 12px; font-family: Consolas; font-size: 10pt; direction: ltr; border-radius: 4px; }
+.cover { text-align: center; padding: 60px 0; }
+.cover h1 { font-size: 28pt; border: none; }
+.cover p { font-size: 14pt; color: #555; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <h1>ðŸ¥ Hospital Management System</h1>
+  <h1>ØªÙ‚Ø±ÙŠØ± ØªÙ‚Ù†ÙŠ Ø´Ø§Ù…Ù„</h1>
+  <p>Modular Monolith Architecture â€” .NET 9 + EF Core 9 + MediatR 12</p>
+  <p>ØªØ§Ø±ÙŠØ® Ø§Ù„ØªÙ‚Ø±ÙŠØ±: 28 Ø£Ø¨Ø±ÙŠÙ„ 2026</p>
+  <p>Ø§Ù„Ø¥ØµØ¯Ø§Ø±: 2.0 â€” Ø§Ù„Ù†Ø¸Ø§Ù… Ø§Ù„Ù…Ø¹Ù…Ø§Ø±ÙŠ Ø§Ù„Ø¬Ø¯ÙŠØ¯</p>
+</div>
+
+<hr style="page-break-after:always">
+
+<h1>1. Ù†Ø¸Ø±Ø© Ø¹Ø§Ù…Ø© Ø¹Ù„Ù‰ Ø§Ù„Ù†Ø¸Ø§Ù…</h1>
+
+<p>Ù†Ø¸Ø§Ù… Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø³ØªØ´ÙÙŠØ§Øª (HMS) Ù‡Ùˆ Ù†Ø¸Ø§Ù… Ù…ØªØ¹Ø¯Ø¯ Ø§Ù„Ù…Ø³ØªØ£Ø¬Ø±ÙŠÙ† (Multi-Tenant) Ù…Ø¨Ù†ÙŠ Ø¨Ø§Ø³ØªØ®Ø¯Ø§Ù… <strong>Modular Monolith Architecture</strong> Ù…Ø¹ ØªØ·Ø¨ÙŠÙ‚ Ù…Ø¨Ø§Ø¯Ø¦ <strong>Clean Architecture</strong> Ùˆ <strong>Domain-Driven Design (DDD)</strong>. Ø§Ù„Ù†Ø¸Ø§Ù… ÙŠØ¯ÙŠØ± Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª Ø§Ù„ÙƒØ§Ù…Ù„Ø© Ù„Ù„Ù…Ø³ØªØ´ÙÙ‰ Ù…Ù† Ø§Ø³ØªÙ‚Ø¨Ø§Ù„ Ø§Ù„Ù…Ø±Ø¶Ù‰ Ø­ØªÙ‰ Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„ØºØ±Ù ÙˆØ§Ù„Ø²ÙŠØ§Ø±Ø§Øª.</p>
+
+<div class="ok">
+  âœ… <strong>Ø­Ø§Ù„Ø© Ø§Ù„Ø¨Ù†Ø§Ø¡ Ø§Ù„Ø­Ø§Ù„ÙŠØ©:</strong> Build Succeeded â€” 0 Errors Ø¹Ø¨Ø± Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…Ø´Ø§Ø±ÙŠØ¹ Ø§Ù„Ù€ 34
+</div>
+
+<h2>1.1 Ø§Ù„ØªÙ‚Ù†ÙŠØ§Øª Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…Ø©</h2>
+<table>
+<tr><th>Ø§Ù„ØªÙ‚Ù†ÙŠØ©</th><th>Ø§Ù„Ø¥ØµØ¯Ø§Ø±</th><th>Ø§Ù„ØºØ±Ø¶</th></tr>
+<tr><td>.NET</td><td>9.0</td><td>Ø¥Ø·Ø§Ø± Ø§Ù„Ø¹Ù…Ù„ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠ</td></tr>
+<tr><td>Entity Framework Core</td><td>9.0</td><td>ORM Ù„Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª</td></tr>
+<tr><td>MediatR</td><td>12.1.1</td><td>CQRS + Domain Events</td></tr>
+<tr><td>FluentValidation</td><td>12.1.1</td><td>Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† ØµØ­Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª</td></tr>
+<tr><td>JWT Bearer</td><td>9.0</td><td>Ø§Ù„Ù…ØµØ§Ø¯Ù‚Ø© ÙˆØ§Ù„ØªÙÙˆÙŠØ¶</td></tr>
+<tr><td>SignalR</td><td>ASP.NET Core</td><td>Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ø§Ù„ÙÙˆØ±ÙŠØ©</td></tr>
+<tr><td>Serilog</td><td>Latest</td><td>ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø£Ø­Ø¯Ø§Ø«</td></tr>
+<tr><td>SQL Server</td><td>2022</td><td>Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª</td></tr>
+<tr><td>QuestPDF</td><td>Community</td><td>Ø¥Ù†Ø´Ø§Ø¡ Ù…Ù„ÙØ§Øª PDF</td></tr>
+</table>
+
+<h1>2. Ø§Ù„Ø¨Ù†ÙŠØ© Ø§Ù„Ù…Ø¹Ù…Ø§Ø±ÙŠØ©</h1>
+
+<h2>2.1 Modular Monolith Pattern</h2>
+<p>Ø§Ù„Ù†Ø¸Ø§Ù… ÙŠØ¹Ù…Ù„ ÙƒÙ€ <strong>Monolith ÙˆØ§Ø­Ø¯</strong> Ù„ÙƒÙ†Ù‡ Ù…Ù‚Ø³Ù… Ø¯Ø§Ø®Ù„ÙŠØ§Ù‹ Ø¥Ù„Ù‰ <strong>ÙˆØ­Ø¯Ø§Øª (Modules) Ù…Ø³ØªÙ‚Ù„Ø©</strong> Ù„ÙƒÙ„ Ù†Ø·Ø§Ù‚ Ø¹Ù…Ù„ (Bounded Context). ÙƒÙ„ ÙˆØ­Ø¯Ø© Ù„Ù‡Ø§ Ø­Ø¯ÙˆØ¯Ù‡Ø§ Ø§Ù„Ø®Ø§ØµØ© ÙˆÙ„Ø§ ØªØªÙˆØ§ØµÙ„ Ù…Ø¹ ØºÙŠØ±Ù‡Ø§ Ù…Ø¨Ø§Ø´Ø±Ø© â€” Ø¨Ù„ Ø¹Ø¨Ø± <strong>Domain Events</strong>.</p>
+
+<div class="box">
+  <strong>Ø§Ù„ÙØ±Ù‚ Ø¹Ù† Microservices:</strong> Ø§Ù„ÙƒÙˆØ¯ ÙŠØ¹Ù…Ù„ ÙÙŠ Ø¹Ù…Ù„ÙŠØ© ÙˆØ§Ø­Ø¯Ø© (Process ÙˆØ§Ø­Ø¯) Ù…Ù…Ø§ ÙŠØªØ¬Ù†Ø¨ ØªØ¹Ù‚ÙŠØ¯Ø§Øª Ø§Ù„Ø´Ø¨ÙƒØ©ØŒ Ù„ÙƒÙ† Ø§Ù„ÙƒÙˆØ¯ Ù…Ù†Ø¸Ù… Ù…Ø«Ù„ Ø§Ù„Ù€ Microservices ØªÙ…Ø§Ù…Ø§Ù‹.
+</div>
+
+<h2>2.2 Ø·Ø¨Ù‚Ø§Øª Clean Architecture Ù„ÙƒÙ„ ÙˆØ­Ø¯Ø©</h2>
+<pre>
+/Module
+â”œâ”€â”€ Domain/          â† Ù‚ÙˆØ§Ø¹Ø¯ Ø§Ù„Ø£Ø¹Ù…Ø§Ù„ Ø§Ù„ØµØ§ÙÙŠØ© (Ù„Ø§ EFØŒ Ù„Ø§ Framework)
+â”œâ”€â”€ Application/     â† Ø­Ø§Ù„Ø§Øª Ø§Ù„Ø§Ø³ØªØ®Ø¯Ø§Ù… (MediatR Commands/Queries)
+â”œâ”€â”€ Infrastructure/  â† Ø§Ù„ØªÙ†ÙÙŠØ° Ø§Ù„ØªÙ‚Ù†ÙŠ (EF ConfigsØŒ Services)
+â””â”€â”€ API/             â† Controllers + Endpoints
+</pre>
+
+<h2>2.3 Ù‡ÙŠÙƒÙ„ Ø§Ù„Ù…Ø´Ø§Ø±ÙŠØ¹ Ø§Ù„ÙƒØ§Ù…Ù„</h2>
+<table>
+<tr><th>Ø§Ù„Ù…Ø³Ø§Ø±</th><th>Ø§Ù„Ù†ÙˆØ¹</th><th>Ø§Ù„ÙˆØ¸ÙŠÙØ©</th></tr>
+<tr><td>src/HMS.API</td><td>ðŸš€ Entry Point</td><td>Ù†Ù‚Ø·Ø© Ø¯Ø®ÙˆÙ„ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ â€” Program.cs + Controllers</td></tr>
+<tr><td>src/HMS.Persistence</td><td>ðŸ—„ï¸ Composition Root</td><td>HmsDbContext Ø§Ù„Ù…ÙˆØ­Ø¯ + EF Migrations</td></tr>
+<tr><td>src/SharedKernel/Domain</td><td>âš™ï¸ Primitives</td><td>BaseEntityØŒ TenantEntityØŒ IDomainEventØŒ DomainException</td></tr>
+<tr><td>src/SharedKernel/Application</td><td>âš™ï¸ Behaviors</td><td>LoggingBehaviorØŒ ValidationBehavior (MediatR Pipeline)</td></tr>
+<tr><td>src/SharedKernel/Infrastructure</td><td>âš™ï¸ Base Infra</td><td>ApplicationDbContextBaseØŒ AuditInterceptorØŒ TenantProvider</td></tr>
+<tr><td>src/Modules/Identity/*</td><td>ðŸ” Module</td><td>Ø§Ù„Ù…ØµØ§Ø¯Ù‚Ø©: UsersØŒ RolesØŒ PermissionsØŒ JWT</td></tr>
+<tr><td>src/Modules/Patients/*</td><td>ðŸ‘¤ Module</td><td>Ø¥Ø¯Ø§Ø±Ø© Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ø±Ø¶Ù‰</td></tr>
+<tr><td>src/Modules/Rooms/*</td><td>ðŸ  Module</td><td>Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„ØºØ±Ù ÙˆØªØ®ØµÙŠØµÙ‡Ø§</td></tr>
+<tr><td>src/Modules/Intake/*</td><td>ðŸ“‹ Module</td><td>Ø§Ù„Ø§Ø³ØªÙ‚Ø¨Ø§Ù„ ÙˆØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù„Ù„Ù…Ø±Ø¶Ù‰</td></tr>
+<tr><td>src/Modules/Visits/*</td><td>ðŸ©º Module</td><td>Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø²ÙŠØ§Ø±Ø§Øª Ø§Ù„Ø·Ø¨ÙŠØ©</td></tr>
+<tr><td>src/Modules/Notifications/*</td><td>ðŸ”” Module</td><td>Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ø§Ù„ÙÙˆØ±ÙŠØ© Ø¹Ø¨Ø± SignalR</td></tr>
+<tr><td>src/HMS.Infrastructure (Legacy)</td><td>âš ï¸ Legacy</td><td>Ø§Ù„ÙƒÙˆØ¯ Ø§Ù„Ù‚Ø¯ÙŠÙ… â€” Ø¬Ø§Ø±ÙŠ Ø§Ø³ØªØ¨Ø¯Ø§Ù„Ù‡ ØªØ¯Ø±ÙŠØ¬ÙŠØ§Ù‹</td></tr>
+<tr><td>src/HMS.Application (Legacy)</td><td>âš ï¸ Legacy</td><td>Handlers Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø© â€” Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø§Ø³ØªØ¨Ø¯Ø§Ù„</td></tr>
+</table>
+
+<h1>3. Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª ÙˆØ§Ù„Ù€ Multi-Tenancy</h1>
+
+<h2>3.1 Ø§Ø³ØªØ±Ø§ØªÙŠØ¬ÙŠØ© Ø§Ù„ØªØ¹Ø¯Ø¯ (Multi-Tenancy)</h2>
+<p>Ø§Ù„Ù†Ø¸Ø§Ù… ÙŠØ³ØªØ®Ø¯Ù… <strong>Shared Database + Shared Schema</strong> Ù…Ø¹ ØªÙ…ÙŠÙŠØ² Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø¹Ø¨Ø± Ø¹Ù…ÙˆØ¯ <code>TenantId</code> ÙÙŠ ÙƒÙ„ Ø¬Ø¯ÙˆÙ„. ÙƒÙ„ Ø·Ù„Ø¨ ÙŠØ­Ù…Ù„ Ù‡ÙˆÙŠØ© Ø§Ù„Ù…Ø³ØªØ£Ø¬Ø± (Tenant) Ø¹Ø¨Ø±:</p>
+
+<table>
+<tr><th>Ø§Ù„Ù…ØµØ¯Ø±</th><th>Ø§Ù„Ø£ÙˆÙ„ÙˆÙŠØ©</th><th>Ø§Ù„ØªÙØ§ØµÙŠÙ„</th></tr>
+<tr><td>JWT Claim: <code>orgId</code></td><td>1 (Ø§Ù„Ø£Ø¹Ù„Ù‰)</td><td>Ù„Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† Ø§Ù„Ø¹Ø§Ø¯ÙŠÙŠÙ†</td></tr>
+<tr><td>Header: <code>X-Tenant-Id</code></td><td>2</td><td>Ù„Ù„Ù€ Super Admin ÙÙ‚Ø·</td></tr>
+<tr><td>Request Body TenantId</td><td>3</td><td>ÙƒÙ€ Override Ù„Ù„Ù€ Super Admin</td></tr>
+</table>
+
+<div class="box">
+  <strong>Global Query Filters:</strong> ÙƒÙ„ Entity ÙŠØ±Ø« Ù…Ù† <code>TenantEntity</code> Ù„Ù‡ ÙÙ„ØªØ± ØªÙ„Ù‚Ø§Ø¦ÙŠ ÙÙŠ EF Core ÙŠØ¶ÙŠÙ <code>WHERE TenantId = @currentTenantId</code> Ø¹Ù„Ù‰ ÙƒÙ„ Ø§Ø³ØªØ¹Ù„Ø§Ù…. Ù‡Ø°Ø§ ÙŠÙ…Ù†Ø¹ ØªØ³Ø±Ø¨ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ø³ØªØ£Ø¬Ø±ÙŠÙ†.
+</div>
+
+<h2>3.2 Ù…Ø®Ø·Ø· Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª (Schemas)</h2>
+<table>
+<tr><th>Schema</th><th>Ø§Ù„Ø¬Ø¯Ø§ÙˆÙ„</th><th>Ø§Ù„ÙˆØ­Ø¯Ø© Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„Ø©</th></tr>
+<tr><td><code>identity.*</code></td><td>Users, Roles, Permissions, UserRoles, RolePermissions, RefreshTokens, UserSessions</td><td>Identity Module</td></tr>
+<tr><td><code>patients.*</code></td><td>Patients</td><td>Patients Module</td></tr>
+<tr><td><code>rooms.*</code></td><td>Rooms, RoomAssignments</td><td>Rooms Module</td></tr>
+<tr><td><code>intake.*</code></td><td>Intakes, IntakeEmergencyContacts, IntakeInsurance, IntakeFlags</td><td>Intake Module</td></tr>
+<tr><td><code>visits.*</code></td><td>Visits</td><td>Visits Module</td></tr>
+<tr><td><code>shared.*</code></td><td>__EFMigrationsHistory</td><td>HMS.Persistence</td></tr>
+</table>
+
+<h2>3.3 HmsDbContext â€” Ù‚Ù„Ø¨ Ø§Ù„Ù†Ø¸Ø§Ù…</h2>
+<p>Ø§Ù„Ù…Ù„Ù: <code>src/HMS.Persistence/HmsDbContext.cs</code></p>
+<p>Ù‡Ø°Ø§ Ø§Ù„Ù€ DbContext Ø§Ù„ÙˆØ­ÙŠØ¯ ÙÙŠ Ø§Ù„Ù†Ø¸Ø§Ù…. ÙŠØ·Ø¨Ù‚ <strong>Ø¬Ù…ÙŠØ¹</strong> ÙˆØ§Ø¬Ù‡Ø§Øª Ø§Ù„ÙˆØ­Ø¯Ø§Øª:</p>
+<pre>
+public sealed class HmsDbContext :
+    ApplicationDbContextBase,     // Global filters + Audit
+    IIdentityDbContext,           // ÙˆØ§Ø¬Ù‡Ø© ÙˆØ­Ø¯Ø© Identity
+    IVisitsDbContext,             // ÙˆØ§Ø¬Ù‡Ø© ÙˆØ­Ø¯Ø© Visits
+    IRoomsDbContext,              // ÙˆØ§Ø¬Ù‡Ø© ÙˆØ­Ø¯Ø© Rooms
+    IIntakeDbContext              // ÙˆØ§Ø¬Ù‡Ø© ÙˆØ­Ø¯Ø© Intake
+</pre>
+
+<div class="box">
+  <strong>Ù„Ù…Ø§Ø°Ø§ DbContext ÙˆØ§Ø­Ø¯ØŸ</strong> Ù„Ø£Ù† Ø¬Ù…ÙŠØ¹ Ø§Ù„ÙˆØ­Ø¯Ø§Øª ÙÙŠ Ù†ÙØ³ Ø§Ù„Ø¹Ù…Ù„ÙŠØ© ÙˆÙ‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª. Ø§Ø³ØªØ®Ø¯Ø§Ù… DbContext Ù…Ù†ÙØµÙ„ Ù„ÙƒÙ„ ÙˆØ­Ø¯Ø© Ø³ÙŠØ¤Ø¯ÙŠ Ø¥Ù„Ù‰ Ù…Ø´Ø§ÙƒÙ„ ÙÙŠ Ø§Ù„Ù€ Transactions Ø¹Ø¨Ø± Ø§Ù„ÙˆØ­Ø¯Ø§Øª.
+</div>
+
+<h1>4. ØªØ¯ÙÙ‚ Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©</h1>
+
+<h2>4.1 ØªØ¯ÙÙ‚ ØªØ³Ø¬ÙŠÙ„ Ø¯Ø®ÙˆÙ„ Ù…Ø±ÙŠØ¶ (Intake Submission)</h2>
+<pre>
+1. Client â†’ POST /api/intake/submit
+2. SubmitIntakeCommandHandler ÙŠÙÙ†ÙÙŽÙ‘Ø°
+3. ÙŠØªÙ… Ø¥Ù†Ø´Ø§Ø¡/ØªØ­Ø¯ÙŠØ« Patient
+4. PatientIntake.Submit() ÙŠÙØºÙŠÙ‘Ø± Ø§Ù„Ø­Ø§Ù„Ø© Ù„Ù€ Submitted
+5. IntakeSubmittedEvent ÙŠÙØ±ÙØ¹ (Domain Event)
+6. AuditAndDomainEventInterceptor ÙŠÙ„ØªÙ‚Ø· Ø§Ù„Ù€ Event Ø¨Ø¹Ø¯ SaveChanges
+7. MediatR ÙŠÙÙˆØ¬Ù‘Ù‡ Ø§Ù„Ù€ Event Ù„Ù€ IntakeSubmittedEventHandler (ÙÙŠ Visits Module)
+8. IntakeSubmittedEventHandler:
+   â”œâ”€â”€ ÙŠØ­Ø¬Ø² ØºØ±ÙØ© Ø¨Ù€ UPDLOCK (Ù…Ù†Ø¹ Ø§Ù„ØªØ²Ø§Ù…Ù†)
+   â”œâ”€â”€ ÙŠØ®ØªØ§Ø± Ø¯ÙƒØªÙˆØ± Ø£Ù‚Ù„ Ø­Ù…Ù„
+   â”œâ”€â”€ ÙŠÙÙ†Ø´Ø¦ Visit Ø¬Ø¯ÙŠØ¯Ø©
+   â”œâ”€â”€ ÙŠÙÙ†Ø´Ø¦ RoomAssignment
+   â””â”€â”€ ÙŠÙØ­Ø¯Ù‘Ø« Ø§Ù„Ù€ Intake Ù„Ù€ ConvertedToVisit
+9. VisitCreatedEvent ÙŠÙØ±ÙØ¹
+10. VisitCreatedNotificationHandler â†’ SignalR â†’ Dashboard ÙŠØªØ­Ø¯Ø« ÙÙˆØ±Ø§Ù‹
+</pre>
+
+<h2>4.2 Ù…Ø¹Ø§Ù„Ø¬Ø© Ø§Ù„ØªØ²Ø§Ù…Ù† (Concurrency)</h2>
+<p>Ù…Ø´ÙƒÙ„Ø©: Ù…Ø±ÙŠØ¶Ø§Ù† ÙÙŠ Ù†ÙØ³ Ø§Ù„Ù„Ø­Ø¸Ø© Ù‚Ø¯ ÙŠÙØ®ØµÙŽÙ‘Øµ Ù„Ù‡Ù…Ø§ Ù†ÙØ³ Ø§Ù„ØºØ±ÙØ©.</p>
+<p>Ø§Ù„Ø­Ù„ Ø§Ù„Ù…Ø·Ø¨Ù‚: <strong>Pessimistic Locking Ø¹Ø¨Ø± SQL UPDLOCK</strong></p>
+<pre>
+SELECT TOP 1 r.* FROM rooms.Rooms r WITH (UPDLOCK, ROWLOCK)
+WHERE r.TenantId = {0}
+  AND r.IsOccupied = 0
+  AND r.IsDeleted  = 0
+ORDER BY r.RoomNumber
+</pre>
+<p>Ø¨Ø§Ù„Ø¥Ø¶Ø§ÙØ©: <code>Room.RowVersion</code> ÙƒÙ€ Optimistic Concurrency Token ÙƒØ®Ø· Ø¯ÙØ§Ø¹ Ø«Ø§Ù†Ù.</p>
+
+<h1>5. Ù†Ù…Ø· CQRS Ùˆ Domain Events</h1>
+
+<h2>5.1 CQRS Pattern</h2>
+<table>
+<tr><th>Ø§Ù„Ù†ÙˆØ¹</th><th>Ø§Ù„ÙˆØ§Ø¬Ù‡Ø©</th><th>Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬</th><th>Ù…Ø«Ø§Ù„</th></tr>
+<tr><td>Command</td><td>ICommand&lt;TResult&gt;</td><td>ICommandHandler&lt;TCommand, TResult&gt;</td><td>SubmitIntakeCommand</td></tr>
+<tr><td>Query</td><td>IQuery&lt;TResult&gt;</td><td>IQueryHandler&lt;TQuery, TResult&gt;</td><td>GetVisitsQuery</td></tr>
+<tr><td>Domain Event</td><td>IDomainEvent</td><td>INotificationHandler&lt;TEvent&gt;</td><td>IntakeSubmittedEvent</td></tr>
+</table>
+
+<h2>5.2 MediatR Pipeline</h2>
+<pre>
+Request â†’ LoggingBehavior â†’ ValidationBehavior â†’ Handler â†’ Response
+</pre>
+<ul>
+<li><strong>LoggingBehavior:</strong> ÙŠØ³Ø¬Ù„ ÙƒÙ„ Ø·Ù„Ø¨ Ù…Ø¹ ÙˆÙ‚Øª Ø§Ù„ØªÙ†ÙÙŠØ°</li>
+<li><strong>ValidationBehavior:</strong> ÙŠÙØ´ØºÙ‘Ù„ FluentValidation Ù‚Ø¨Ù„ Ø§Ù„Ù€ Handler â€” ÙŠØ±ÙØ¹ ValidationException ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹</li>
+</ul>
+
+<h2>5.3 Domain Events Flow</h2>
+<pre>
+Domain Entity (e.g. PatientIntake.Submit())
+    â””â”€â”€ RaiseDomainEvent(new IntakeSubmittedEvent(...))
+         â””â”€â”€ Ù…Ø®Ø²Ù† ÙÙŠ List&lt;IDomainEvent&gt; Ø¯Ø§Ø®Ù„ BaseEntity
+
+EF Core SaveChanges()
+    â””â”€â”€ AuditAndDomainEventInterceptor.SavedChangesAsync()
+         â””â”€â”€ ÙŠØ¬Ù…Ø¹ ÙƒÙ„ Events Ù…Ù† ÙƒÙ„ Entities
+              â””â”€â”€ IPublisher.Publish(event) â†’ MediatR ÙŠÙˆØ²Ù‘Ø¹Ù‡Ø§ Ù„Ù„Ù€ Handlers
+</pre>
+
+<h1>6. Ù†Ø¸Ø§Ù… Ø§Ù„Ø£Ù…Ø§Ù† ÙˆØ§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª</h1>
+
+<h2>6.1 JWT Authentication</h2>
+<table>
+<tr><th>Ø§Ù„Ù€ Claim</th><th>Ø§Ù„Ù…Ø­ØªÙˆÙ‰</th></tr>
+<tr><td><code>sub</code></td><td>UserId</td></tr>
+<tr><td><code>orgId</code></td><td>TenantId (Ø§Ù„Ù…Ø³ØªØ£Ø¬Ø±)</td></tr>
+<tr><td><code>email</code></td><td>Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ</td></tr>
+<tr><td><code>roles</code></td><td>Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø£Ø¯ÙˆØ§Ø±</td></tr>
+<tr><td><code>permissions</code></td><td>Ø§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©</td></tr>
+</table>
+
+<div class="warn">
+  âš ï¸ <strong>Ù…Ù„Ø§Ø­Ø¸Ø© Ù…Ù‡Ù…Ø©:</strong> Claim Ø§Ø³Ù…Ù‡ <code>orgId</code> ÙˆÙ„ÙŠØ³ <code>tenantId</code>. Ù‡Ø°Ø§ Ù…ÙˆØ­Ù‘Ø¯ ÙÙŠ Ø¬Ù…ÙŠØ¹ Ø£Ø¬Ø²Ø§Ø¡ Ø§Ù„Ù†Ø¸Ø§Ù… Ø§Ù„Ø¬Ø¯ÙŠØ¯. Legacy code ÙƒØ§Ù† ÙŠØ³ØªØ®Ø¯Ù… <code>tenantId</code> â€” ØªÙ… ØªØµØ­ÙŠØ­Ù‡.
+</div>
+
+<h2>6.2 Ù†Ø¸Ø§Ù… Ø§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª</h2>
+<pre>
+User â”€â”€â†’ UserRole â”€â”€â†’ Role â”€â”€â†’ RolePermission â”€â”€â†’ Permission
+</pre>
+<p>ÙŠØªÙ… ØªØ®Ø²ÙŠÙ† Ø§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª ÙÙŠ Cache (IPermissionCacheService) Ù„ØªØ¬Ù†Ø¨ Ø§Ø³ØªØ¹Ù„Ø§Ù…Ø§Øª Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª ÙÙŠ ÙƒÙ„ Ø·Ù„Ø¨.</p>
+
+<h1>7. ÙˆØ­Ø¯Ø© Notifications ÙˆØ§Ù„Ù€ SignalR</h1>
+
+<h2>7.1 Ø¢Ù„ÙŠØ© Ø§Ù„Ø¹Ù…Ù„</h2>
+<pre>
+Domain Event ÙŠÙØ±ÙØ¹ (Ù…Ø«Ù„ VisitCreatedEvent)
+    â””â”€â”€ VisitCreatedNotificationHandler ÙŠÙØ´ØºÙŽÙ‘Ù„
+         â””â”€â”€ INotificationsService.BroadcastToTenantAsync()
+              â””â”€â”€ SignalRNotificationsService
+                   â”œâ”€â”€ DashboardHub â†’ Ù…Ø¬Ù…ÙˆØ¹Ø© "tenant-{TenantId}"
+                   â””â”€â”€ NotificationHub â†’ Ù…Ø¬Ù…ÙˆØ¹Ø© "tenant-{TenantId}"
+</pre>
+
+<h2>7.2 Hubs Ø§Ù„Ù…ØªØ§Ø­Ø©</h2>
+<table>
+<tr><th>Hub</th><th>Ø§Ù„Ù…Ø³Ø§Ø±</th><th>Ø§Ù„ØºØ±Ø¶</th></tr>
+<tr><td>DashboardHub</td><td>/hubs/dashboard</td><td>ØªØ­Ø¯ÙŠØ«Ø§Øª Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ… Ø§Ù„ÙÙˆØ±ÙŠØ©</td></tr>
+<tr><td>NotificationHub</td><td>/hubs/notifications</td><td>Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ø§Ù„Ø¹Ø§Ù…Ø©</td></tr>
+</table>
+
+<h1>8. Ø§Ù„Ù€ EF Core Migration</h1>
+
+<h2>8.1 Migration Ø§Ù„Ù…ÙÙ†Ø´Ø£Ø©</h2>
+<div class="ok">
+  âœ… ØªÙ… Ø¥Ù†Ø´Ø§Ø¡: <code>20260428033725_InitialModularSchema</code> â€” Ø­Ø¬Ù… Ø§Ù„Ù…Ù„Ù: 33KB
+</div>
+
+<h2>8.2 ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„Ù€ Migration Ø¹Ù„Ù‰ Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª</h2>
+<pre>
+dotnet ef database update \
+  --project src/HMS.Persistence/HMS.Persistence.csproj \
+  --startup-project src/HMS.API/HMS.API.csproj
+</pre>
+
+<h2>8.3 DesignTimeDbContextFactory</h2>
+<p>Ø§Ù„Ù…Ù„Ù: <code>src/HMS.Persistence/HmsDbContextDesignTimeFactory.cs</code></p>
+<p>ÙŠÙÙ…ÙƒÙ‘Ù† EF Core Ù…Ù† Ø¥Ù†Ø´Ø§Ø¡ DbContext ÙˆÙ‚Øª Ø§Ù„ØªØ·ÙˆÙŠØ± (Design Time) Ø¨Ø¯ÙˆÙ† ØªØ´ØºÙŠÙ„ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„ÙƒØ§Ù…Ù„. ÙŠÙ‚Ø±Ø£ Connection String Ù…Ù† <code>HMS.API/appsettings.json</code>.</p>
+
+<h1>9. Ø§Ù„ÙƒÙˆØ¯ Ø§Ù„Ù‚Ø¯ÙŠÙ… (Legacy) ÙˆØ§Ù„ØªØ­ÙˆÙ„ Ø§Ù„ØªØ¯Ø±ÙŠØ¬ÙŠ</h1>
+
+<div class="warn">
+  âš ï¸ <strong>ØªØ­Ø°ÙŠØ±:</strong> Ø§Ù„Ù…Ø´Ø§Ø±ÙŠØ¹ Ø§Ù„ØªØ§Ù„ÙŠØ© Ù„Ø§ ØªØ²Ø§Ù„ Ù…ÙˆØ¬ÙˆØ¯Ø© Ù„Ù„ØªÙˆØ§ÙÙ‚ Ø§Ù„Ø®Ù„ÙÙŠ (Backward Compatibility) ÙˆÙŠØ¬Ø¨ Ø¥Ø²Ø§Ù„ØªÙ‡Ø§ ØªØ¯Ø±ÙŠØ¬ÙŠØ§Ù‹:
+  <ul>
+    <li><code>src/HMS.Application</code> â€” Handlers Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø©</li>
+    <li><code>src/HMS.Infrastructure</code> â€” Services Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø©</li>
+    <li><code>src/HMS.Domain</code> â€” Entities Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø©</li>
+  </ul>
+</div>
+
+<h2>9.1 Ø®Ø·Ø© Ø¥Ø²Ø§Ù„Ø© Ø§Ù„ÙƒÙˆØ¯ Ø§Ù„Ù‚Ø¯ÙŠÙ…</h2>
+<table>
+<tr><th>Ø§Ù„Ø®Ø·ÙˆØ©</th><th>Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡</th><th>Ø§Ù„Ø£ÙˆÙ„ÙˆÙŠØ©</th></tr>
+<tr><td>1</td><td>ØªØ·Ø¨ÙŠÙ‚ Migration Ø¹Ù„Ù‰ Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª</td><td>ðŸ”´ ÙÙˆØ±ÙŠØ©</td></tr>
+<tr><td>2</td><td>Ø§Ø®ØªØ¨Ø§Ø± Login + Intake Submit Ù…Ù† Ø§Ù„Ù†Ù‡Ø§ÙŠØ© Ù„Ù„Ù†Ù‡Ø§ÙŠØ©</td><td>ðŸ”´ ÙÙˆØ±ÙŠØ©</td></tr>
+<tr><td>3</td><td>Ù†Ù‚Ù„ Controllers Ù„Ù„Ù€ Modules Ø§Ù„Ø¬Ø¯ÙŠØ¯Ø©</td><td>ðŸŸ¡ Ù…ØªÙˆØ³Ø·Ø©</td></tr>
+<tr><td>4</td><td>Ø­Ø°Ù HMS.Application Ø§Ù„Ù‚Ø¯ÙŠÙ…</td><td>ðŸŸ¡ Ù…ØªÙˆØ³Ø·Ø©</td></tr>
+<tr><td>5</td><td>Ø­Ø°Ù HMS.Infrastructure Ø§Ù„Ù‚Ø¯ÙŠÙ…</td><td>ðŸŸ¢ Ù…Ø³ØªÙ‚Ø¨Ù„ÙŠØ©</td></tr>
+</table>
+
+<h1>10. Ù†Ù‚Ø§Ø· Ø§Ù„Ù‚ÙˆØ© ÙˆØ§Ù„Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø§Ù„Ù…Ø¹Ù…Ø§Ø±ÙŠØ©</h1>
+
+<h2>10.1 Ù‚Ø±Ø§Ø±Ø§Øª Ù…Ø¹Ù…Ø§Ø±ÙŠØ© Ù…Ù‡Ù…Ø©</h2>
+<table>
+<tr><th>Ø§Ù„Ù‚Ø±Ø§Ø±</th><th>Ø§Ù„Ø³Ø¨Ø¨</th></tr>
+<tr><td>DbContext ÙˆØ§Ø­Ø¯ Ù…ÙˆØ­Ù‘Ø¯</td><td>Transactions Ø¹Ø¨Ø± Ø§Ù„ÙˆØ­Ø¯Ø§ØªØŒ Ø£Ø¯Ø§Ø¡ Ø£ÙØ¶Ù„</td></tr>
+<tr><td>Domain Events Ø¨Ø¯Ù„Ø§Ù‹ Ù…Ù† Direct Service Calls</td><td>ÙØµÙ„ Intake Ø¹Ù† Visits â€” ÙƒÙ„ ÙˆØ­Ø¯Ø© Ù…Ø³ØªÙ‚Ù„Ø©</td></tr>
+<tr><td>UPDLOCK SQL Ø¨Ø¯Ù„Ø§Ù‹ Ù…Ù† Lock() ÙÙŠ Ø§Ù„ÙƒÙˆØ¯</td><td>Ø§Ù„Ø£Ù…Ø§Ù† Ù…Ù† Race Conditions Ø¹Ù„Ù‰ Ù…Ø³ØªÙˆÙ‰ Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª</td></tr>
+<tr><td>FluentValidation ÙÙŠ MediatR Pipeline</td><td>Validation Ù…Ø±ÙƒØ²ÙŠ â€” Ù„Ø§ ØªÙƒØ±Ø§Ø± ÙÙŠ ÙƒÙ„ Handler</td></tr>
+<tr><td>RowVersion Ø¹Ù„Ù‰ Room</td><td>Ø·Ø¨Ù‚Ø© Ø«Ø§Ù†ÙŠØ© Ù…Ù† Ø§Ù„Ø­Ù…Ø§ÙŠØ© Ø¶Ø¯ Double Booking</td></tr>
+<tr><td>orgId ÙÙŠ JWT Ø¨Ø¯Ù„Ø§Ù‹ Ù…Ù† tenantId</td><td>ØªÙˆØ­ÙŠØ¯ Ø§Ù„Ù…Ø¹ÙŠØ§Ø± â€” Ù…Ù†Ø¹ Ø§Ù„Ø§Ø±ØªØ¨Ø§Ùƒ ÙÙŠ Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø£Ù…Ø§ÙƒÙ†</td></tr>
+</table>
+
+<h2>10.2 Ù…Ø³Ø§Ø± API Ø§Ù„ÙƒØ§Ù…Ù„ Ù„Ù„Ù€ Endpoints</h2>
+<table>
+<tr><th>Endpoint</th><th>Method</th><th>Ø§Ù„ÙˆØ¸ÙŠÙØ©</th><th>Ø§Ù„Ù€ Handler</th></tr>
+<tr><td>/api/auth/login</td><td>POST</td><td>ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„</td><td>LoginCommandHandler (Identity)</td></tr>
+<tr><td>/api/auth/refresh</td><td>POST</td><td>ØªØ¬Ø¯ÙŠØ¯ Ø§Ù„ØªÙˆÙƒÙ†</td><td>Legacy Handler</td></tr>
+<tr><td>/api/intake/submit</td><td>POST</td><td>ØªØ³Ø¬ÙŠÙ„ Ù…Ø±ÙŠØ¶</td><td>SubmitIntakeCommandHandler</td></tr>
+<tr><td>/api/visits</td><td>GET</td><td>Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø²ÙŠØ§Ø±Ø§Øª</td><td>GetVisitsQueryHandler</td></tr>
+<tr><td>/api/patients</td><td>CRUD</td><td>Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø±Ø¶Ù‰</td><td>Legacy Handlers</td></tr>
+<tr><td>/api/rooms</td><td>CRUD</td><td>Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„ØºØ±Ù</td><td>Legacy + AssignRoomCommand</td></tr>
+<tr><td>/health</td><td>GET</td><td>ÙØ­Øµ ØµØ­Ø© Ø§Ù„ØªØ·Ø¨ÙŠÙ‚</td><td>Health Checks</td></tr>
+<tr><td>/swagger</td><td>GET</td><td>ØªÙˆØ«ÙŠÙ‚ API</td><td>Swagger UI</td></tr>
+<tr><td>/hubs/dashboard</td><td>WS</td><td>Dashboard SignalR</td><td>DashboardHub</td></tr>
+<tr><td>/hubs/notifications</td><td>WS</td><td>Ø¥Ø´Ø¹Ø§Ø±Ø§Øª SignalR</td><td>NotificationHub</td></tr>
+</table>
+
+<h1>11. Ø§Ù„Ø®Ø·ÙˆØ§Øª Ø§Ù„ØªØ§Ù„ÙŠØ© Ø§Ù„ÙÙˆØ±ÙŠØ©</h1>
+
+<div class="ok">
+<strong>Ø§Ù„Ø®Ø·ÙˆØ© 1 â€” ØªØ·Ø¨ÙŠÙ‚ Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª (Ø¶Ø±ÙˆØ±ÙŠ Ø§Ù„Ø¢Ù†):</strong>
+<pre>
+dotnet ef database update --project src\HMS.Persistence --startup-project src\HMS.API
+</pre>
+</div>
+
+<div class="box">
+<strong>Ø§Ù„Ø®Ø·ÙˆØ© 2 â€” ØªØ´ØºÙŠÙ„ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚:</strong>
+<pre>
+cd src\HMS.API
+dotnet run
+</pre>
+Ø«Ù… Ø§Ø®ØªØ¨Ø§Ø±: <code>POST /api/auth/login</code> Ø¨Ù€ <code>{"email":"...", "password":"..."}</code>
+</div>
+
+<div class="box">
+<strong>Ø§Ù„Ø®Ø·ÙˆØ© 3 â€” Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ØªØ¯ÙÙ‚ Ø§Ù„ÙƒØ§Ù…Ù„:</strong>
+<ol>
+<li>Login â†’ Ø§Ø­ØµÙ„ Ø¹Ù„Ù‰ JWT Token</li>
+<li>POST /api/intake/submit â†’ ÙŠÙÙ†Ø´Ø¦ Ù…Ø±ÙŠØ¶ + Intake + Visit + Room Assignment</li>
+<li>ØªØ­Ù‚Ù‚ Ù…Ù† Dashboard Ø¹Ø¨Ø± SignalR ÙŠØªØ­Ø¯Ø« ÙÙˆØ±Ø§Ù‹</li>
+<li>GET /api/visits â†’ ØªØ£ÙƒØ¯ Ø£Ù† Ø§Ù„Ø²ÙŠØ§Ø±Ø© Ù…ÙˆØ¬ÙˆØ¯Ø©</li>
+</ol>
+</div>
+
+<hr>
+<p style="text-align:center; color:#888; font-size:10pt">
+HMS Technical Report v2.0 | Modular Monolith Architecture | Generated 2026-04-28
+</p>
+
+</body>
+</html>

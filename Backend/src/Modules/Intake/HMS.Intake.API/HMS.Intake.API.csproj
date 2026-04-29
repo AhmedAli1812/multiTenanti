@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>HMS.Intake</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HMS.Intake.Domain\HMS.Intake.Domain.csproj" />
+    <ProjectReference Include="..\HMS.Intake.Application\HMS.Intake.Application.csproj" />
+  </ItemGroup>
+
+</Project>

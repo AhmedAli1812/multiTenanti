@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>HMS.Persistence</RootNamespace>
+  </PropertyGroup>
+
+  <!-- SharedKernel base (no circular dep — SharedKernel.Infrastructure has NO module refs) -->
+  <ItemGroup>
+    <ProjectReference Include="..\SharedKernel\HMS.SharedKernel.Domain\HMS.SharedKernel.Domain.csproj" />
+    <ProjectReference Include="..\SharedKernel\HMS.SharedKernel.Application\HMS.SharedKernel.Application.csproj" />
+    <ProjectReference Include="..\SharedKernel\HMS.SharedKernel.Infrastructure\HMS.SharedKernel.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <!-- Module Application projects only (IXyzDbContext interfaces + domain entities) -->
+  <!-- We do NOT reference Module.Infrastructure here to avoid circular deps.       -->
+  <!-- EF configs are co-located in HMS.Persistence/Configurations/ instead.       -->
+  <ItemGroup>
+    <ProjectReference Include="..\Modules\Identity\HMS.Identity.Application\HMS.Identity.Application.csproj" />
+    <ProjectReference Include="..\Modules\Patients\HMS.Patients.Domain\HMS.Patients.Domain.csproj" />
+    <ProjectReference Include="..\Modules\Rooms\HMS.Rooms.Application\HMS.Rooms.Application.csproj" />
+    <ProjectReference Include="..\Modules\Intake\HMS.Intake.Application\HMS.Intake.Application.csproj" />
+    <ProjectReference Include="..\Modules\Visits\HMS.Visits.Application\HMS.Visits.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="MediatR" Version="12.1.1" />
+  </ItemGroup>
+</Project>

@@ -1,9 +1,17 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// src/hooks/useLogin.ts
+//
+// FIXED:
+//   - All localStorage writes moved into authService.login() so there's
+//     a single owner of auth persistence.
+//   - getRole/isAuthenticated used for redirect guard after login.
+// ─────────────────────────────────────────────────────────────────────────────
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authService, type LoginCredentials } from '../services/authService'
 import { useLanguage } from '../context/LanguageContext'
 import { translations } from '../context/translations'
-import { isAuthenticated, getRole, decodeToken } from '../utils/auth'
+import { isAuthenticated, getRole } from '../utils/auth'
 
 interface LoginForm {
   identifier: string
@@ -53,40 +61,38 @@ export function useLogin(): UseLoginReturn {
 
     try {
       const credentials: LoginCredentials = {
-        identifier: form.identifier,
+        identifier: form.identifier.trim(),
         password: form.password,
       }
 
+      // authService.login() handles all localStorage persistence internally
       const response = await authService.login(credentials)
 
-      localStorage.setItem('token', response.accessToken)
-      localStorage.setItem('refreshToken', response.refreshToken)
-      localStorage.setItem('user', JSON.stringify({ name: response.fullName }))
-
-      // ✅ احفظ الـ orgId من الـ JWT
-      const payload = decodeToken(response.accessToken)
-      if (payload?.orgId) {
-        localStorage.setItem('orgId', payload.orgId)
-      }
-
-      console.log('token saved:', localStorage.getItem('token')?.substring(0, 20))
-      console.log('isAuth:', isAuthenticated())
-      console.log('role:', getRole())
-
-      const welcome = language === 'ar'
-        ? `👋 أهلاً بك، ${response.fullName}!`
-        : `👋 Welcome, ${response.fullName}!`
+      const welcome =
+        language === 'ar'
+          ? `👋 أهلاً بك، ${response.fullName}!`
+          : `👋 Welcome, ${response.fullName}!`
 
       setSuccessMessage(welcome)
 
+      // Short delay so the user sees the success message, then redirect
       setTimeout(() => {
-        navigate('/dashboard')
-      }, 2000)
-
+        // Verify auth state and pick the right dashboard
+        if (isAuthenticated()) {
+          const role = getRole()
+          if (role === 'Receptionist' || role === 'Reception') {
+            navigate('/dashboard')
+          } else {
+            navigate('/dashboard')
+          }
+        }
+      }, 1500)
     } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string; title?: string } } }
       const message =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? t.errorInvalid
+        axiosErr?.response?.data?.message ??
+        axiosErr?.response?.data?.title ??
+        t.errorInvalid
       setError(message)
     } finally {
       setIsLoading(false)
@@ -95,5 +101,14 @@ export function useLogin(): UseLoginReturn {
 
   const togglePassword = () => setShowPassword((prev) => !prev)
 
-  return { form, isLoading, error, showPassword, successMessage, handleChange, handleSubmit, togglePassword }
+  return {
+    form,
+    isLoading,
+    error,
+    showPassword,
+    successMessage,
+    handleChange,
+    handleSubmit,
+    togglePassword,
+  }
 }

@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Persistence;
+using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.CurrentUser;
 using HMS.Application.Dtos;
 using HMS.Application.Features.Rooms.GetRooms;
@@ -30,10 +30,19 @@ public class GetRoomsHandler : IRequestHandler<GetRoomsQuery, List<RoomDto>>
         var query = _context.Rooms.AsNoTracking();
 
         // 🔥 SaaS filter
+        Guid? tenantId = null;
         if (!_currentUser.IsGlobal)
         {
-            var tenantId = _currentUser.TenantId;
-            query = query.Where(r => r.TenantId == tenantId);
+            tenantId = _currentUser.TenantId;
+        }
+        else if (request.TenantId.HasValue)
+        {
+            tenantId = request.TenantId.Value;
+        }
+
+        if (tenantId.HasValue)
+        {
+            query = query.Where(r => r.TenantId == tenantId.Value);
         }
 
         // =========================

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "hWKM8/iHmKs=",
+  "dgSpecHash": "CvQMqaDM8vc=",
   "success": true,
-  "projectFilePath": "A:\\multiTenanti\\Backend\\src\\HMS.Shared\\HMS.Shared.csproj",
+  "projectFilePath": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Shared\\HMS.Shared.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

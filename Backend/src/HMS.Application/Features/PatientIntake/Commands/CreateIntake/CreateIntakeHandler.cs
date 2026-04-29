@@ -25,11 +25,7 @@ public class CreateIntakeHandler : IRequestHandler<CreateIntakeCommand, Guid>
         // =========================
         // 💣 Validation
         // =========================
-<<<<<<< HEAD
-        if (request.BranchId == Guid.Empty)
-=======
         if (!request.BranchId.HasValue || request.BranchId.Value == Guid.Empty)
->>>>>>> origin/main
             throw new ArgumentException("Branch is required");
 
         // =========================
@@ -38,19 +34,11 @@ public class CreateIntakeHandler : IRequestHandler<CreateIntakeCommand, Guid>
         var intake = new PatientIntake
         {
             Id = Guid.NewGuid(),
-<<<<<<< HEAD
-            BranchId = request.BranchId, // ✅ مباشر
-            Status = IntakeStatus.Draft,
-            TenantId = tenantId,
-
-            PatientId = null, // 👈 لسه Draft
-=======
             BranchId = request.BranchId.Value,
             Status = IntakeStatus.Draft,
             TenantId = tenantId,
 
-            PatientId = null, // 👈 مهم جدًا
->>>>>>> origin/main
+            PatientId = null, // 👈 لسه Draft
 
             CreatedAt = DateTime.UtcNow,
             CreatedBy = userId

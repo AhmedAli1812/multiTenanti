@@ -34,30 +34,33 @@ namespace HMS.Infrastructure.Services
         }
 
         // =========================
-        // 🏢 IsGlobal 🔥
+        // 🌍 IsGlobal
         // =========================
         public bool IsGlobal =>
             User.FindFirst("isGlobal")?.Value == "true";
 
         // =========================
-        // 🏢 TenantId (SAFE 🔥)
+        // 🏢 TenantId (FIXED 🔥)
         // =========================
         public Guid TenantId
         {
             get
             {
-                var tenantClaim = User.FindFirst("tenantId")
-                                  ?? User.FindFirst("tenant_id")
-                                  ?? User.FindFirst("TenantId")
-                                  ?? User.FindFirst("tid");
+                // 🔥 دعم كل الاحتمالات (بس الأهم orgId)
+                var tenantClaim =
+                    User.FindFirst("orgId") ??   // ✅ الأساسي
+                    User.FindFirst("tenantId") ??
+                    User.FindFirst("tenant_id") ??
+                    User.FindFirst("TenantId") ??
+                    User.FindFirst("tid");
 
-                // ✅ لو مش موجود → Global Admin
+                // ❌ مفيش tenant
                 if (tenantClaim == null || string.IsNullOrWhiteSpace(tenantClaim.Value))
                 {
                     if (IsGlobal)
-                        return Guid.Empty; // 💣 مهم
+                        throw new InvalidOperationException("Global user should not request TenantId");
 
-                    throw new UnauthorizedAccessException("TenantId not found");
+                    throw new UnauthorizedAccessException("TenantId not found in token");
                 }
 
                 if (!Guid.TryParse(tenantClaim.Value, out var tenantId))

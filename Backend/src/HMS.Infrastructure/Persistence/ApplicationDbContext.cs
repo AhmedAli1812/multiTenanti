@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.CurrentUser;
+using HMS.Application.Abstractions.CurrentUser;
 using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.Tenant;
 using HMS.Domain.Entities;
@@ -107,7 +107,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
         modelBuilder.Entity<RoomAssignment>()
             .HasOne(a => a.Visit)
-            .WithMany()
+            .WithMany(v => v.RoomAssignments)
             .HasForeignKey(a => a.VisitId)
             .OnDelete(DeleteBehavior.Restrict);
 
@@ -123,7 +123,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             .WithMany()
             .HasForeignKey(u => u.DepartmentId)
             .OnDelete(DeleteBehavior.Restrict);
-
         ApplyIndexes(modelBuilder);
         ApplyGlobalFilters(modelBuilder);
 
@@ -155,36 +154,46 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     {
         if (typeof(Role).IsAssignableFrom(typeof(TEntity)))
         {
-            // System roles are global - not tenant-specific
+            // System roles: visible to everyone OR tenant-scoped.
+            // NULL-GUARD: only apply tenant filter when a real TenantId exists.
+            // Without this guard, null == null is true in SQL — leaking all tenants.
             modelBuilder.Entity<Role>()
                 .HasQueryFilter(e =>
                     e.IsSystem == true
-                    ||
-                    _tenantProvider.IsSuperAdmin()
-                    ||
-                    EF.Property<Guid?>(e, "TenantId") == _tenantProvider.TryGetTenantId()
+                    || _tenantProvider.IsSuperAdmin()
+                    || (
+                        _tenantProvider.TryGetTenantId() != null
+                        && EF.Property<Guid?>(e, "TenantId") == _tenantProvider.TryGetTenantId()
+                    )
                 );
         }
         else if (typeof(ISoftDeletable).IsAssignableFrom(typeof(TEntity)))
         {
+            // NULL-GUARD: if no tenant is resolved (null), the filter produces
+            // null == null = true, leaking cross-tenant data. We must require
+            // a non-null TenantId before applying the tenant comparison.
             modelBuilder.Entity<TEntity>()
                 .HasQueryFilter(e =>
                     (
                         _tenantProvider.IsSuperAdmin()
-                        ||
-                        EF.Property<Guid?>(e, "TenantId") == _tenantProvider.TryGetTenantId()
+                        || (
+                            _tenantProvider.TryGetTenantId() != null
+                            && EF.Property<Guid?>(e, "TenantId") == _tenantProvider.TryGetTenantId()
+                        )
                     )
-                    &&
-                    EF.Property<bool>(e, "IsDeleted") == false
+                    && EF.Property<bool>(e, "IsDeleted") == false
                 );
         }
         else
         {
+            // NULL-GUARD: same as above — require non-null tenant before comparing.
             modelBuilder.Entity<TEntity>()
                 .HasQueryFilter(e =>
                     _tenantProvider.IsSuperAdmin()
-                    ||
-                    EF.Property<Guid?>(e, "TenantId") == _tenantProvider.TryGetTenantId()
+                    || (
+                        _tenantProvider.TryGetTenantId() != null
+                        && EF.Property<Guid?>(e, "TenantId") == _tenantProvider.TryGetTenantId()
+                    )
                 );
         }
     }

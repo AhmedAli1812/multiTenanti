@@ -1,28 +1,57 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>HMS.API</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-		  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
-		  <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
-		    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		    <PrivateAssets>all</PrivateAssets>
-		  </PackageReference>
-		  <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-		  <PackageReference Include="Microsoft.OpenApi" Version="1.6.14" />
-  </ItemGroup>
-
+  <!-- ── Legacy projects (kept during migration transition) ──────────────── -->
   <ItemGroup>
     <ProjectReference Include="..\HMS.Application\HMS.Application.csproj" />
     <ProjectReference Include="..\HMS.Infrastructure\HMS.Infrastructure.csproj" />
   </ItemGroup>
 
+  <!-- ── SharedKernel ────────────────────────────────────────────────────── -->
   <ItemGroup>
-    <Folder Include="Hubs\" />
+    <ProjectReference Include="..\SharedKernel\HMS.SharedKernel.Domain\HMS.SharedKernel.Domain.csproj" />
+    <ProjectReference Include="..\SharedKernel\HMS.SharedKernel.Application\HMS.SharedKernel.Application.csproj" />
+    <ProjectReference Include="..\SharedKernel\HMS.SharedKernel.Infrastructure\HMS.SharedKernel.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <!-- ── Modules ─────────────────────────────────────────────────────────── -->
+  <ItemGroup>
+    <ProjectReference Include="..\Modules\Identity\HMS.Identity.Infrastructure\HMS.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Identity\HMS.Identity.API\HMS.Identity.API.csproj" />
+    <ProjectReference Include="..\Modules\Patients\HMS.Patients.Infrastructure\HMS.Patients.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Patients\HMS.Patients.API\HMS.Patients.API.csproj" />
+    <ProjectReference Include="..\Modules\Rooms\HMS.Rooms.Infrastructure\HMS.Rooms.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Rooms\HMS.Rooms.API\HMS.Rooms.API.csproj" />
+    <ProjectReference Include="..\Modules\Intake\HMS.Intake.Infrastructure\HMS.Intake.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Intake\HMS.Intake.API\HMS.Intake.API.csproj" />
+    <ProjectReference Include="..\Modules\Visits\HMS.Visits.Infrastructure\HMS.Visits.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Visits\HMS.Visits.API\HMS.Visits.API.csproj" />
+    <ProjectReference Include="..\Modules\Notifications\HMS.Notifications.Infrastructure\HMS.Notifications.Infrastructure.csproj" />
+    <ProjectReference Include="..\HMS.Persistence\HMS.Persistence.csproj" />
+  </ItemGroup>
+
+  <!-- ── Packages ─────────────────────────────────────────────────────────── -->
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageReference Include="Microsoft.OpenApi" Version="1.6.14" />
+    <PackageReference Include="Asp.Versioning.Http" Version="8.1.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="9.0.0" />
   </ItemGroup>
 
 </Project>

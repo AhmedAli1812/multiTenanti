@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Caching;
+using HMS.Application.Abstractions.Caching;
 using HMS.Application.Abstractions.CurrentUser;
 using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Dtos;
@@ -29,10 +29,8 @@ public class GetAllPermissionsHandler
     {
         var userId = _currentUser.UserId;
 
-        // 🔥 Try cache first
-        var cached = await _cache.GetAllPermissionsAsync(userId);
-        if (cached != null && cached.Any())
-            return cached.Select(p => new PermissionDto { Code = p }).ToList();
+        // Removed cache check here because it was returning PermissionDto without IDs, 
+        // causing selection issues in the frontend. We still update the cache below.
 
         // =========================
         // 💾 DB
