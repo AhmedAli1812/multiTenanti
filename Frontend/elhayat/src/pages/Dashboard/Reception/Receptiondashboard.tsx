@@ -2,8 +2,8 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   Bed, Users, Activity, AlertCircle, RefreshCw, Plus, 
-  CheckCircle, Eye, Trash2, LogOut, Calendar, Search, ChevronRight,
-  Hospital, Download, MoreVertical, X
+  CheckCircle, Eye, Trash2, LogOut, Calendar, Search,
+  Hospital, Download, MoreVertical
 } from 'lucide-react'
 import { useDashboard } from '../../../hooks/useDashboard'
 import { getUserName, getRole, getOrgName, getBranchName } from '../../../utils/auth'
