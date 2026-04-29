@@ -1,4 +1,4 @@
-﻿using HMS.Domain.Entities.Rooms;
+using HMS.Domain.Entities.Rooms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -37,7 +37,7 @@ public class RoomConfiguration : IEntityTypeConfiguration<Room>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(r => r.Floor)
-            .WithMany()
+            .WithMany(f => f.Rooms)
             .HasForeignKey(r => r.FloorId)
             .OnDelete(DeleteBehavior.Restrict);
 

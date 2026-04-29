@@ -1,4 +1,4 @@
-﻿using HMS.Domain.Entities.Visits;
+using HMS.Domain.Entities.Visits;
 using HMS.Domain.Entities.Identity;
 using HMS.Domain.Entities.Patients;
 using HMS.Domain.Entities.Branches;
@@ -20,10 +20,11 @@ public class VisitConfiguration : IEntityTypeConfiguration<Visit>
         // 🔗 Relationships
         // =========================
 
-        // Patient (Required)
+        // Patient (Required FK, but optional navigation to suppress global-filter mismatch warning)
         builder.HasOne(v => v.Patient)
-            .WithMany()
+            .WithMany(p => p.Visits)
             .HasForeignKey(v => v.PatientId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
         // Doctor (Optional)
@@ -43,6 +44,9 @@ public class VisitConfiguration : IEntityTypeConfiguration<Visit>
         // =========================
 
         builder.Property(v => v.VisitType).IsRequired();
+        builder.Property(v => v.Priority).IsRequired();
+        builder.Property(v => v.ArrivalMethod).IsRequired();
+        builder.Property(v => v.ChiefComplaint).HasMaxLength(1000).IsRequired(false);
         builder.Property(v => v.PayerType).IsRequired();
         builder.Property(v => v.Status).IsRequired();
         builder.Property(v => v.QueueNumber).IsRequired();

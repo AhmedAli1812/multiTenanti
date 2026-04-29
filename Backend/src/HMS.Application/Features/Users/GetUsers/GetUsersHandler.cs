@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Persistence;
+using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.CurrentUser;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -73,7 +73,8 @@ public class GetUsersHandler : IRequestHandler<GetUsersQuery, PaginatedResult<Us
                 u.Email,
                 u.PhoneNumber,
                 u.Username,
-                u.NationalId
+                u.NationalId,
+                u.CreatedAt
             })
             .ToListAsync(cancellationToken);
 
@@ -114,6 +115,7 @@ public class GetUsersHandler : IRequestHandler<GetUsersQuery, PaginatedResult<Us
             PhoneNumber = u.PhoneNumber,
             Username = u.Username,
             NationalId = u.NationalId,
+            CreatedAt = u.CreatedAt,
 
             Roles = roles
                 .Where(r => r.UserId == u.Id)

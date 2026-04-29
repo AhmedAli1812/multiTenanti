@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Persistence;
+using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.Tenant;
 using HMS.Domain.Entities.Rooms;
 using MediatR;
@@ -21,7 +21,12 @@ public class CreateRoomHandler : IRequestHandler<CreateRoomCommand, Guid>
 
     public async Task<Guid> Handle(CreateRoomCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenant.GetTenantId();
+        var tenantId = (request.TenantId.HasValue && _tenant.IsSuperAdmin())
+            ? request.TenantId.Value
+            : _tenant.GetTenantId();
+
+        if (tenantId == null)
+            throw new ArgumentException("Tenant ID is required");
 
         // =========================
         // 💣 VALIDATION

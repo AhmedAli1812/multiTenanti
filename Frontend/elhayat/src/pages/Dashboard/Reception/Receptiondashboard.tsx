@@ -1,9 +1,18 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { 
+  Bed, Users, Activity, AlertCircle, RefreshCw, Plus, 
+  CheckCircle, Eye, Trash2, LogOut, Calendar, Search, ChevronRight,
+  Hospital, Download, MoreVertical, X
+} from 'lucide-react'
 import { useDashboard } from '../../../hooks/useDashboard'
-import { getUserName } from '../../../utils/auth'
+import { getUserName, getRole, getOrgName, getBranchName } from '../../../utils/auth'
 import { authService } from '../../../services/authService'
 import type { Visit, Patient } from '../../../services/dashboardService'
+import Modal from '../../../components/Modal'
+import ConfirmModal from '../../../components/ConfirmModal'
+import PatientIntakeFlow from '../../Intake/PatientIntakeFlow'
+import ThemeLanguageToggle from '../../../components/ThemeLanguageToggle'
 import './ReceptionDashboard.css'
 
 const PAGE_SIZE = 5
@@ -32,42 +41,70 @@ function deptClass(dept: string) {
   return DEPT_COLORS[dept] ?? 'dept-blue'
 }
 
-const STAGE_CLASS: Record<string, string> = {
-  'ما قبل العملية': 'stage-pre',
-  'قيد العملية': 'stage-in',
-  'ما بعد العملية': 'stage-post',
+const STATUS_MAP: Record<string, { label: string, class: string }> = {
+  'CheckedIn': { label: 'تم الدخول', class: 'stage-active' },
+  'WaitingDoctor': { label: 'انتظار الطبيب', class: 'stage-pre' },
+  'Prepared': { label: 'جاهز', class: 'stage-pre' },
+  'InOp': { label: 'قيد العملية', class: 'stage-in' },
+  'OpCompleted': { label: 'انتهت العملية', class: 'stage-post' },
+  'PostOp': { label: 'ما بعد العملية', class: 'stage-post' },
+  'Completed': { label: 'تم الانتهاء', class: 'stage-post' },
 }
-function stageClass(stage: string) {
-  for (const key of Object.keys(STAGE_CLASS)) {
-    if (stage?.includes(key.split(' ').pop()!)) return STAGE_CLASS[key]
-  }
-  return 'stage-active'
+
+function getStageInfo(stage: string) {
+  return STATUS_MAP[stage] ?? { label: stage ?? 'نشط', class: 'stage-active' }
 }
 
 export default function ReceptionDashboard() {
   const navigate = useNavigate()
   const userName = getUserName()
-  const { overview, visits, patients, isLoadingVisits, isLoadingPatients, errorVisits, errorPatients, refresh } = useDashboard()
+  const roleName = getRole()
+  const orgName = getOrgName()
+  const branchName = getBranchName()
+  const { 
+    overview, visits, patients, isLoadingVisits, isLoadingPatients, 
+    errorVisits, errorPatients, refresh, deleteVisit, finishVisit,
+    availableDepartments 
+  } = useDashboard()
 
   const [activeTab, setActiveTab] = useState<TabType>('rooms')
   const [deptFilter, setDeptFilter] = useState('all')
   const [patientSearch, setPatientSearch] = useState('')
+  const [deptSearch, setDeptSearch] = useState('')
   const [roomsPage, setRoomsPage] = useState(1)
   const [patientsPage, setPatientsPage] = useState(1)
+  const [isIntakeOpen, setIsIntakeOpen] = useState(false)
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean,
+    type: 'delete' | 'finish',
+    id: string,
+    isLoading: boolean
+  }>({ isOpen: false, type: 'finish', id: '', isLoading: false })
 
   const filteredVisits = useMemo(() => {
     if (deptFilter === 'all') return visits
-    return visits.filter(v => (v.department || v.departmentName || '').includes(deptFilter))
+    return visits.filter(v => 
+      (v.departmentName || '').toLowerCase() === deptFilter.toLowerCase() ||
+      (v.department || '').toLowerCase() === deptFilter.toLowerCase()
+    )
   }, [visits, deptFilter])
 
   const filteredPatients = useMemo(() => {
-    if (!patientSearch) return patients
-    const s = patientSearch.toLowerCase()
-    return patients.filter(p =>
-      (p.fullName || '').toLowerCase().includes(s) ||
-      String(p.medicalNumber || '').toLowerCase().includes(s)
-    )
-  }, [patients, patientSearch])
+    let filtered = patients
+    if (patientSearch) {
+      const s = patientSearch.toLowerCase()
+      filtered = filtered.filter(p =>
+        (p.fullName || '').toLowerCase().includes(s) ||
+        String(p.medicalNumber || '').toLowerCase().includes(s)
+      )
+    }
+    if (deptSearch) {
+      filtered = filtered.filter(p => 
+        (p.departmentName || '').toLowerCase() === deptSearch.toLowerCase()
+      )
+    }
+    return filtered
+  }, [patients, patientSearch, deptSearch])
 
   const visitsPage = filteredVisits.slice((roomsPage - 1) * PAGE_SIZE, roomsPage * PAGE_SIZE)
   const patientsPageData = filteredPatients.slice((patientsPage - 1) * PAGE_SIZE, patientsPage * PAGE_SIZE)
@@ -84,16 +121,26 @@ export default function ReceptionDashboard() {
       {/* Topbar */}
       <header className="rd-topbar">
         <div className="rd-topbar__brand">
-          <span className="rd-topbar__logo">🏥</span>
-          <span className="rd-topbar__name">MedScope</span>
+          <span className="rd-topbar__logo"><Hospital size={24} color="var(--accent-color)" /></span>
+          <div className="rd-topbar__org-info">
+            <span className="rd-topbar__name">MedScope</span>
+            {orgName && <span className="rd-topbar__org-name">{orgName} {branchName && <span className="rd-topbar__branch-name">| {branchName}</span>}</span>}
+          </div>
         </div>
         <div className="rd-topbar__center">
+          <Calendar size={14} style={{ marginLeft: 6, verticalAlign: 'middle' }} />
           <span className="rd-topbar__date">{today}</span>
         </div>
-        <div className="rd-topbar__user">
-          <span className="rd-topbar__username">{userName}</span>
-          <span className="rd-topbar__role-badge">استقبال</span>
-          <button className="rd-topbar__logout" onClick={handleLogout}>خروج</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <ThemeLanguageToggle />
+          <div className="rd-topbar__user">
+            <span className="rd-topbar__username">{userName}</span>
+            <span className="rd-topbar__role-badge">{roleName || 'استقبال'}</span>
+            <button className="rd-topbar__logout" onClick={handleLogout}>
+              <LogOut size={14} style={{ marginLeft: 4 }} />
+              خروج
+            </button>
+          </div>
         </div>
       </header>
 
@@ -105,14 +152,14 @@ export default function ReceptionDashboard() {
               className={`rd-nav__item ${activeTab === 'rooms' ? 'active' : ''}`}
               onClick={() => setActiveTab('rooms')}
             >
-              <span className="rd-nav__icon">🗂</span>
+              <Bed size={18} />
               جدول الإشغال
             </button>
             <button
               className={`rd-nav__item ${activeTab === 'patients' ? 'active' : ''}`}
               onClick={() => setActiveTab('patients')}
             >
-              <span className="rd-nav__icon">👥</span>
+              <Users size={18} />
               المرضى السابقين
             </button>
           </nav>
@@ -128,19 +175,31 @@ export default function ReceptionDashboard() {
           {/* Stats */}
           <div className="rd-stats">
             <div className="rd-stat">
-              <span className="rd-stat__label">إجمالي المرضى</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="rd-stat__label">إجمالي المرضى</span>
+                <Users size={20} color="var(--accent-color)" />
+              </div>
               <span className="rd-stat__value">{overview?.totalPatients ?? '—'}</span>
             </div>
             <div className="rd-stat">
-              <span className="rd-stat__label">الغرف المشغولة</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="rd-stat__label">الغرف المشغولة</span>
+                <Bed size={20} color="var(--accent-color)" />
+              </div>
               <span className="rd-stat__value">{overview?.occupiedRooms ?? '—'}</span>
             </div>
             <div className="rd-stat">
-              <span className="rd-stat__label">الزيارات النشطة</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="rd-stat__label">الزيارات النشطة</span>
+                <Activity size={20} color="var(--accent-color)" />
+              </div>
               <span className="rd-stat__value">{overview?.activeVisits ?? '—'}</span>
             </div>
             <div className="rd-stat rd-stat--danger">
-              <span className="rd-stat__label">حالات الطوارئ</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="rd-stat__label">حالات الطوارئ</span>
+                <AlertCircle size={20} color="#d93025" />
+              </div>
               <span className="rd-stat__value">{overview?.emergencyCases ?? '—'}</span>
             </div>
           </div>
@@ -154,22 +213,32 @@ export default function ReceptionDashboard() {
                   <p className="rd-section__sub">نظرة شاملة ومحدّثة على حالة الغرف والمرضى في المستشفى</p>
                 </div>
                 <div className="rd-section__actions">
-                  <button className="rd-btn rd-btn--ghost" onClick={refresh}>تحديث</button>
-                  <button className="rd-btn rd-btn--primary" onClick={() => navigate('/patients/new')}>
-                    + إدخال مريض جديد
+                  <button className="rd-btn rd-btn--ghost" onClick={refresh}>
+                    <RefreshCw size={14} style={{ marginLeft: 6, verticalAlign: 'middle' }} />
+                    تحديث
+                  </button>
+                  <button className="rd-btn rd-btn--primary" onClick={() => setIsIntakeOpen(true)}>
+                    <Plus size={14} style={{ marginLeft: 6, verticalAlign: 'middle' }} />
+                    إدخال مريض جديد
                   </button>
                 </div>
               </div>
 
               <div className="rd-filters">
                 <span className="rd-filters__label">قسم:</span>
-                {['all', 'القلب', 'العظام', 'العناية المركزة', 'الأطفال'].map(d => (
+                <button
+                  className={`rd-filter-btn ${deptFilter === 'all' ? 'active' : ''}`}
+                  onClick={() => { setDeptFilter('all'); setRoomsPage(1) }}
+                >
+                  الكل
+                </button>
+                {availableDepartments.map(d => (
                   <button
                     key={d}
                     className={`rd-filter-btn ${deptFilter === d ? 'active' : ''}`}
                     onClick={() => { setDeptFilter(d); setRoomsPage(1) }}
                   >
-                    {d === 'all' ? 'الكل' : d}
+                    {d}
                   </button>
                 ))}
               </div>
@@ -205,14 +274,43 @@ export default function ReceptionDashboard() {
                               <span className="rd-avatar">{initials(v.patientName ?? '؟')}</span>
                               <div>
                                 <div className="rd-patient-cell__name">{v.patientName ?? '—'}</div>
-                                {v.patientMedicalNumber && <div className="rd-patient-cell__id">ID: #{v.patientMedicalNumber}</div>}
+                                <div className="rd-patient-cell__id">
+                                  {v.gender} · {v.age} عاماً
+                                  {v.patientMedicalNumber && ` · ID: #${v.patientMedicalNumber}`}
+                                </div>
                               </div>
                             </div>
                           </td>
-                          <td className="rd-table__muted">د. {(v.doctorName ?? '—').replace(/^د\.\s*/, '')}</td>
+                          <td className="rd-table__muted">
+                            {(v.doctorName ?? '—').replace(/^د\.\s*/, '').replace(/\s*د\.$/, '')}
+                          </td>
                           <td className="rd-table__muted">{v.diagnosis ?? '—'}</td>
-                          <td><span className={`rd-stage-badge ${stageClass(stage)}`}>{stage}</span></td>
-                          <td><button className="rd-link-btn">عرض</button></td>
+                          <td>
+                            <span className={`rd-stage-badge ${getStageInfo(stage).class}`}>
+                              {getStageInfo(stage).label}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="rd-table-actions">
+                              <button 
+                                className="rd-action-btn rd-action-btn--success" 
+                                title="إنهاء الزيارة"
+                                onClick={() => setConfirmModal({ isOpen: true, type: 'finish', id: v.id, isLoading: false })}
+                              >
+                                <CheckCircle size={16} />
+                              </button>
+                              <button className="rd-action-btn" title="عرض">
+                                <Eye size={16} />
+                              </button>
+                              <button 
+                                className="rd-action-btn rd-action-btn--danger" 
+                                title="مسح"
+                                onClick={() => setConfirmModal({ isOpen: true, type: 'delete', id: v.id, isLoading: false })}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       )
                     })}
@@ -244,28 +342,36 @@ export default function ReceptionDashboard() {
                   <h1 className="rd-section__title">المرضى السابقين</h1>
                 </div>
                 <div className="rd-section__actions">
-                  <button className="rd-btn rd-btn--ghost rd-btn--icon">⬇ تصدير القائمة</button>
-                  <button className="rd-btn rd-btn--primary" onClick={() => navigate('/patients/new')}>
-                    + إضافة مريض جديد
+                  <button className="rd-btn rd-btn--ghost rd-btn--icon"><Download size={14} style={{ marginLeft: 6 }} /> تصدير القائمة</button>
+                  <button className="rd-btn rd-btn--primary" onClick={() => setIsIntakeOpen(true)}>
+                    <Plus size={14} style={{ marginLeft: 6, verticalAlign: 'middle' }} />
+                    إضافة مريض جديد
                   </button>
                 </div>
               </div>
 
               <div className="rd-search-bar">
                 <div className="rd-search-bar__fields">
-                  <input
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <Search size={16} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                    <input
+                      className="rd-input"
+                      style={{ paddingRight: 34 }}
+                      type="text"
+                      placeholder="ابحث بالاسم أو الرقم الطبي..."
+                      value={patientSearch}
+                      onChange={e => { setPatientSearch(e.target.value); setPatientsPage(1) }}
+                    />
+                  </div>
+                  <select 
                     className="rd-input"
-                    type="text"
-                    placeholder="ابحث بالاسم أو الرقم الطبي..."
-                    value={patientSearch}
-                    onChange={e => { setPatientSearch(e.target.value); setPatientsPage(1) }}
-                  />
-                  <select className="rd-input">
-                    <option>جميع الأقسام</option>
-                    <option>القلب</option>
-                    <option>العظام</option>
-                    <option>الباطنة</option>
-                    <option>العناية المركزة</option>
+                    value={deptSearch}
+                    onChange={e => { setDeptSearch(e.target.value); setPatientsPage(1) }}
+                  >
+                    <option value="">جميع الأقسام</option>
+                    {availableDepartments.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
                   </select>
                   <input className="rd-input" type="date" />
                 </div>
@@ -303,13 +409,13 @@ export default function ReceptionDashboard() {
                           <div className="rd-patient-cell__id">{p.gender} · {p.age} عاماً</div>
                         </td>
                         <td className="rd-table__muted">#{p.medicalNumber ?? '—'}</td>
-                        <td><span className={`rd-dept-badge ${deptClass(p.departmentName ?? p.department ?? '')}`}>{p.departmentName ?? p.department ?? '—'}</span></td>
+                        <td><span className={`rd-dept-badge ${deptClass(p.departmentName ?? '')}`}>{p.departmentName ?? '—'}</span></td>
                         <td className="rd-table__muted">{p.lastDiagnosis ?? '—'}</td>
-                        <td className="rd-table__muted">—</td>
+                        <td className="rd-table__muted">{formatDate(p.admissionDate)}</td>
                         <td className="rd-table__muted">{formatDate(p.dischargeDate)}</td>
-                        <td className="rd-table__muted">—</td>
+                        <td className="rd-table__muted">{p.doctorName ?? '—'}</td>
                         <td><span className="rd-stage-badge stage-post">تم الخروج</span></td>
-                        <td><button className="rd-icon-btn">⋮</button></td>
+                        <td><button className="rd-icon-btn"><MoreVertical size={16} /></button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -333,6 +439,40 @@ export default function ReceptionDashboard() {
           )}
         </main>
       </div>
+
+      {/* Intake Modal */}
+      <Modal 
+        isOpen={isIntakeOpen} 
+        onClose={() => { setIsIntakeOpen(false); refresh(); }}
+        title="تسجيل مريض جديد"
+        maxWidth="1000px"
+      >
+        <PatientIntakeFlow onClose={() => { setIsIntakeOpen(false); refresh(); }} />
+      </Modal>
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={async () => {
+          setConfirmModal(prev => ({ ...prev, isLoading: true }))
+          try {
+            if (confirmModal.type === 'delete') await deleteVisit(confirmModal.id)
+            else await finishVisit(confirmModal.id)
+            setConfirmModal(prev => ({ ...prev, isOpen: false }))
+          } catch {
+            setConfirmModal(prev => ({ ...prev, isLoading: false }))
+          }
+        }}
+        isLoading={confirmModal.isLoading}
+        title={confirmModal.type === 'delete' ? 'تأكيد الحذف' : 'إنهاء الزيارة'}
+        message={confirmModal.type === 'delete' 
+          ? 'هل أنت متأكد من مسح هذا التسجيل نهائياً؟ لا يمكن التراجع عن هذا الإجراء.' 
+          : 'هل تريد إنهاء هذه الزيارة ونقل بيانات المريض إلى السجل السابق؟ سيتم إخلاء الغرفة أيضاً.'
+        }
+        variant={confirmModal.type === 'delete' ? 'danger' : 'success'}
+        confirmText={confirmModal.type === 'delete' ? 'حذف نهائي' : 'إنهاء الآن'}
+      />
     </div>
   )
 }

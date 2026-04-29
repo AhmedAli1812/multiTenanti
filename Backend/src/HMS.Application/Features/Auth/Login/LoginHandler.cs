@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Auth;
+using HMS.Application.Abstractions.Auth;
 using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.Security;
 using HMS.Application.Abstractions.Tenant;
@@ -119,8 +119,31 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
         // =========================
         // 🚨 VALIDATION (IMPORTANT)
         // =========================
-        if (!isSuperAdmin && user.BranchId == null)
+        var bypassRoles = new[] { "Admin", "Organization Owner" };
+        var canBypassBranch = isSuperAdmin || roles.Any(r => bypassRoles.Contains(r));
+
+        if (!canBypassBranch && user.BranchId == null)
             throw new Exception("User must be assigned to a branch");
+
+        // Fetch Names for Token
+        string? tenantName = null;
+        if (tenantId.HasValue)
+        {
+            tenantName = await _context.Tenants
+                .Where(t => t.Id == tenantId)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        string? branchName = null;
+        if (user.BranchId.HasValue)
+        {
+            branchName = await _context.Branches
+                .IgnoreQueryFilters()
+                .Where(b => b.Id == user.BranchId)
+                .Select(b => b.Name)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
 
         // =========================
         // 🔐 ACCESS TOKEN (FIXED)
@@ -128,9 +151,11 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
         var accessToken = _jwt.GenerateToken(
             user.Id,
             tenantId,
+            tenantName,
             roles,
             permissions,
-            user.BranchId, // 🔥 لازم نضيف ده
+            user.BranchId,
+            branchName,
             user
         );
 

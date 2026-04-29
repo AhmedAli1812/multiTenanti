@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Auth;
+using HMS.Application.Abstractions.Auth;
 using HMS.Domain.Entities.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -31,9 +31,11 @@ public class JwtService : IJwtService
     public string GenerateToken(
     Guid userId,
     Guid? tenantId,
+    string? tenantName,
     List<string>? roles,
     List<string>? permissions,
     Guid? branchId,
+    string? branchName,
     User user
 )
     {
@@ -52,12 +54,18 @@ public class JwtService : IJwtService
         if (branchId.HasValue)
         {
             claims.Add(new Claim("branchId", branchId.Value.ToString()));
+            if (!string.IsNullOrEmpty(branchName))
+                claims.Add(new Claim("branchName", branchName));
         }
 
-        // 🔥 Tenant
+        // FIX: claim key unified to "orgId" across the entire stack.
+        // Previously "tenantId" — mismatched CurrentUser.cs, TenantProvider,
+        // Reception DashboardController, and frontend auth.ts which all read "orgId".
         if (tenantId.HasValue)
         {
-            claims.Add(new Claim("tenantId", tenantId.Value.ToString()));
+            claims.Add(new Claim("orgId", tenantId.Value.ToString()));
+            if (!string.IsNullOrEmpty(tenantName))
+                claims.Add(new Claim("orgName", tenantName));
         }
         else
         {

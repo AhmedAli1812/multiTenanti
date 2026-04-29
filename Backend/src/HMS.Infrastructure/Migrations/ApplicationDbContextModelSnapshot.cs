@@ -480,7 +480,7 @@ namespace HMS.Infrastructure.Migrations
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid?>("UpdatedBy")
@@ -810,7 +810,9 @@ namespace HMS.Infrastructure.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Intakes");
+                    b.HasIndex("TenantId", "Status");
+
+                    b.ToTable("Intakes", (string)null);
                 });
 
             modelBuilder.Entity("HMS.Domain.Entities.Patients.Patient", b =>
@@ -878,7 +880,7 @@ namespace HMS.Infrastructure.Migrations
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid?>("UpdatedBy")
@@ -925,9 +927,6 @@ namespace HMS.Infrastructure.Migrations
                     b.Property<Guid>("FloorId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("FloorId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -961,8 +960,6 @@ namespace HMS.Infrastructure.Migrations
                     b.HasIndex("BranchId");
 
                     b.HasIndex("FloorId");
-
-                    b.HasIndex("FloorId1");
 
                     b.HasIndex("RoomNumber", "BranchId", "TenantId")
                         .IsUnique()
@@ -1002,8 +999,15 @@ namespace HMS.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("ArrivalMethod")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("BranchId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ChiefComplaint")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
@@ -1029,10 +1033,10 @@ namespace HMS.Infrastructure.Migrations
                     b.Property<Guid>("PatientId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("PatientId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("PayerType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Priority")
                         .HasColumnType("int");
 
                     b.Property<int>("QueueNumber")
@@ -1066,8 +1070,6 @@ namespace HMS.Infrastructure.Migrations
                     b.HasIndex("DoctorId");
 
                     b.HasIndex("PatientId");
-
-                    b.HasIndex("PatientId1");
 
                     b.HasIndex("Status");
 
@@ -1197,7 +1199,7 @@ namespace HMS.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("HMS.Domain.Entities.Visits.Visit", "Visit")
-                        .WithMany()
+                        .WithMany("RoomAssignments")
                         .HasForeignKey("VisitId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1216,14 +1218,10 @@ namespace HMS.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("Floor", "Floor")
-                        .WithMany()
+                        .WithMany("Rooms")
                         .HasForeignKey("FloorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("Floor", null)
-                        .WithMany("Rooms")
-                        .HasForeignKey("FloorId1");
 
                     b.Navigation("Branch");
 
@@ -1244,14 +1242,9 @@ namespace HMS.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("HMS.Domain.Entities.Patients.Patient", "Patient")
-                        .WithMany()
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("HMS.Domain.Entities.Patients.Patient", null)
                         .WithMany("Visits")
-                        .HasForeignKey("PatientId1");
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Branch");
 
@@ -1292,6 +1285,11 @@ namespace HMS.Infrastructure.Migrations
             modelBuilder.Entity("HMS.Domain.Entities.Patients.Patient", b =>
                 {
                     b.Navigation("Visits");
+                });
+
+            modelBuilder.Entity("HMS.Domain.Entities.Visits.Visit", b =>
+                {
+                    b.Navigation("RoomAssignments");
                 });
 #pragma warning restore 612, 618
         }

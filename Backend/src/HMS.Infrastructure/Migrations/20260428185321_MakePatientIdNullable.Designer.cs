@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HMS.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260427161314_MakePatientIdNullableInIntake")]
-    partial class MakePatientIdNullableInIntake
+    [Migration("20260428185321_MakePatientIdNullable")]
+    partial class MakePatientIdNullable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -483,7 +483,7 @@ namespace HMS.Infrastructure.Migrations
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid?>("UpdatedBy")
@@ -813,7 +813,9 @@ namespace HMS.Infrastructure.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Intakes");
+                    b.HasIndex("TenantId", "Status");
+
+                    b.ToTable("Intakes", (string)null);
                 });
 
             modelBuilder.Entity("HMS.Domain.Entities.Patients.Patient", b =>
@@ -881,7 +883,7 @@ namespace HMS.Infrastructure.Migrations
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid?>("UpdatedBy")
@@ -928,9 +930,6 @@ namespace HMS.Infrastructure.Migrations
                     b.Property<Guid>("FloorId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("FloorId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -964,8 +963,6 @@ namespace HMS.Infrastructure.Migrations
                     b.HasIndex("BranchId");
 
                     b.HasIndex("FloorId");
-
-                    b.HasIndex("FloorId1");
 
                     b.HasIndex("RoomNumber", "BranchId", "TenantId")
                         .IsUnique()
@@ -1032,9 +1029,6 @@ namespace HMS.Infrastructure.Migrations
                     b.Property<Guid>("PatientId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("PatientId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("PayerType")
                         .HasColumnType("int");
 
@@ -1069,8 +1063,6 @@ namespace HMS.Infrastructure.Migrations
                     b.HasIndex("DoctorId");
 
                     b.HasIndex("PatientId");
-
-                    b.HasIndex("PatientId1");
 
                     b.HasIndex("Status");
 
@@ -1219,14 +1211,10 @@ namespace HMS.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("Floor", "Floor")
-                        .WithMany()
+                        .WithMany("Rooms")
                         .HasForeignKey("FloorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("Floor", null)
-                        .WithMany("Rooms")
-                        .HasForeignKey("FloorId1");
 
                     b.Navigation("Branch");
 
@@ -1247,14 +1235,9 @@ namespace HMS.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("HMS.Domain.Entities.Patients.Patient", "Patient")
-                        .WithMany()
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("HMS.Domain.Entities.Patients.Patient", null)
                         .WithMany("Visits")
-                        .HasForeignKey("PatientId1");
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Branch");
 

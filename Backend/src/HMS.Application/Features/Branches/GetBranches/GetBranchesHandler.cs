@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Persistence;
+using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.Tenant;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -20,12 +20,19 @@ public class GetBranchesHandler : IRequestHandler<GetBranchesQuery, List<BranchD
 
     public async Task<List<BranchDto>> Handle(GetBranchesQuery request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantProvider.GetTenantId();
+        var tenantId = (request.TenantId.HasValue && _tenantProvider.IsSuperAdmin())
+            ? request.TenantId.Value
+            : _tenantProvider.GetTenantId();
 
-        var branches = await _context.Branches
-            .AsNoTracking() // ⚡ performance
-            .Where(b => b.TenantId == tenantId) // 💣 multi-tenant isolation
-            .OrderBy(b => b.Name) // 👌 UI friendly
+        var query = _context.Branches.AsNoTracking();
+
+        if (tenantId.HasValue)
+        {
+            query = query.Where(b => b.TenantId == tenantId);
+        }
+
+        var branches = await query
+            .OrderBy(b => b.Name)
             .Select(b => new BranchDto
             {
                 Id = b.Id,

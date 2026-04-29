@@ -69,4 +69,5 @@ public Guid FloorId { get; set; }
 
         return "Available";
     }
+   
 }

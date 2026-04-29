@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Persistence;
+using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Features.ReceptionDashboard.Dtos;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -32,11 +32,16 @@ public class GetReceptionDashboardHandler
         // =============================
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            var search = request.Search.Trim();
+            var search = request.Search.Trim().ToLower();
 
             query = query.Where(v =>
-                v.Patient.FullName.Contains(search) ||
-                v.Patient.MedicalNumber.Contains(search));
+                v.Patient.FullName.ToLower().Contains(search) ||
+                v.Patient.MedicalNumber.ToLower().Contains(search));
+        }
+
+        if (request.DepartmentId.HasValue)
+        {
+            query = query.Where(v => v.Doctor != null && v.Doctor.DepartmentId == request.DepartmentId);
         }
 
         if (request.FromDate.HasValue)
@@ -55,7 +60,9 @@ public class GetReceptionDashboardHandler
             .CountAsync(v => v.Status != VisitStatus.Completed, ct);
 
         var emergencyCount = await query
-            .CountAsync(v => v.VisitType == VisitType.Emergency, ct);
+            .CountAsync(v => 
+                v.VisitType == VisitType.Emergency || 
+                v.Priority == PriorityLevel.Emergency, ct);
 
         // 🔥 occupied rooms من RoomAssignments
         var occupiedRoomsCount = await _context.RoomAssignments
@@ -71,7 +78,7 @@ public class GetReceptionDashboardHandler
                 ct);
 
         // =============================
-        // 📄 PAGINATION
+        // 📄 PAGINATION & DATA FETCH
         // =============================
         var totalCount = await query.CountAsync(ct);
 
@@ -91,47 +98,95 @@ public class GetReceptionDashboardHandler
 
                 PatientName = v.Patient.FullName,
                 MedicalNumber = v.Patient.MedicalNumber,
+                PatientDob = v.Patient.DateOfBirth,
+                PatientGender = v.Patient.Gender,
                 DoctorName = v.Doctor != null ? v.Doctor.FullName : "-",
 
                 // 🔥 Room من RoomAssignments
                 RoomName = _context.RoomAssignments
                     .Where(a => a.VisitId == v.Id && a.IsActive)
                     .Select(a => a.Room.RoomNumber)
-                    .FirstOrDefault()
+                    .FirstOrDefault(),
+
+                DepartmentName = v.Doctor != null && v.Doctor.Department != null ? v.Doctor.Department.Name : "-",
+                ChiefComplaint = v.ChiefComplaint ?? "-"
             })
             .ToListAsync(ct);
+
+        // =============================
+        // 🏥 Rooms (Mapping in-memory)
+        // =============================
+        var today = DateTime.UtcNow;
+        var rooms = pagedVisits
+            .Where(v => v.Status != VisitStatus.Completed)
+            .Select(v => {
+                var age = today.Year - v.PatientDob.Year;
+                if (v.PatientDob > today.AddYears(-age)) age--;
+
+                return new RoomStatusDto
+                {
+                    VisitId = v.Id,
+                    RoomName = v.RoomName ?? "-",
+                    PatientName = v.PatientName ?? "",
+                    PatientMedicalNumber = v.MedicalNumber ?? "",
+                    DoctorName = v.DoctorName ?? "-",
+                    DepartmentName = v.DepartmentName ?? "-",
+                    Diagnosis = v.ChiefComplaint ?? "-",
+                    Age = age,
+                    Gender = v.PatientGender.ToString(),
+                    Status = v.Status.ToString()
+                };
+            })
+            .ToList();
 
         // =============================
         // 👤 Previous Patients
         // =============================
-        var previousPatients = await query
+        var previousPatientsQuery = await query
             .Where(v => v.Status == VisitStatus.Completed)
             .OrderByDescending(v => v.CompletedAt)
             .Take(10)
-            .Select(v => new PreviousPatientDto
+            .Select(v => new 
             {
-                PatientName = v.Patient.FullName,
-                MedicalNumber = v.Patient.MedicalNumber,
+                v.Patient.FullName,
+                v.Patient.MedicalNumber,
                 DoctorName = v.Doctor != null ? v.Doctor.FullName : "-",
                 AdmissionDate = v.VisitDate,
                 DischargeDate = v.CompletedAt,
-                Status = "Discharged"
+                DepartmentName = v.Doctor != null && v.Doctor.Department != null ? v.Doctor.Department.Name : "-",
+                Diagnosis = v.ChiefComplaint ?? "-",
+                v.Patient.DateOfBirth,
+                v.Patient.Gender
             })
             .ToListAsync(ct);
 
-        // =============================
-        // 🏥 Rooms
-        // =============================
-        var rooms = pagedVisits
-            .Where(v => v.RoomName != null && v.Status != VisitStatus.Completed)
-            .Select(v => new RoomStatusDto
+        var previousPatients = previousPatientsQuery.Select(p => {
+            var age = today.Year - p.DateOfBirth.Year;
+            if (p.DateOfBirth > today.AddYears(-age)) age--;
+
+            return new PreviousPatientDto
             {
-                RoomName = v.RoomName ?? "-",
-                PatientName = v.PatientName ?? "",
-                DoctorName = v.DoctorName ?? "-",
-                Status = v.Status.ToString()
-            })
-            .ToList();
+                PatientName = p.FullName,
+                MedicalNumber = p.MedicalNumber,
+                DoctorName = p.DoctorName,
+                AdmissionDate = p.AdmissionDate,
+                DischargeDate = p.DischargeDate,
+                DepartmentName = p.DepartmentName,
+                Diagnosis = p.Diagnosis,
+                Age = age,
+                Gender = p.Gender.ToString(),
+                Status = "Discharged"
+            };
+        }).ToList();
+
+        // =============================
+        // 🏥 Departments (Dynamic)
+        // =============================
+        var departments = await _context.Departments
+            .Where(d => d.TenantId == request.TenantId)
+            .Select(d => d.Name)
+            .Distinct()
+            .ToListAsync(ct);
 
         // =============================
         // 🔥 RESPONSE
@@ -151,7 +206,8 @@ public class GetReceptionDashboardHandler
             },
 
             PreviousPatients = previousPatients,
-            Rooms = rooms
+            Rooms = rooms,
+            Departments = departments
         };
     }
 }

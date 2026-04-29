@@ -1,10 +1,12 @@
-﻿using HMS.Application.Abstractions.Persistence;
+using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.CurrentUser;
 using HMS.Application.Abstractions.Services;
 using HMS.Domain.Entities;
 using HMS.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+
+namespace HMS.Application.Features.Visits.UpdateVisitStatus;
 
 public class UpdateVisitStatusHandler : IRequestHandler<UpdateVisitStatusCommand, Unit>
 {
@@ -88,8 +90,8 @@ public class UpdateVisitStatusHandler : IRequestHandler<UpdateVisitStatusCommand
             await _dashboard.NotifyRoomAssigned(tenantId, visit.BranchId);
         }
 
-        // انتهاء العملية
-        if (request.Status == VisitStatus.OpCompleted)
+        // انتهاء العملية أو انتهاء الزيارة بالكامل
+        if (request.Status == VisitStatus.OpCompleted || request.Status == VisitStatus.Completed)
         {
             if (assignment != null)
             {
@@ -98,14 +100,14 @@ public class UpdateVisitStatusHandler : IRequestHandler<UpdateVisitStatusCommand
                         r.Id == assignment.RoomId &&
                         r.TenantId == tenantId,
                         ct);
-
+ 
                 if (room != null)
                 {
                     room.Release();
-
+ 
                     // 🔥 realtime
                     await _dashboard.NotifyRoomAssigned(tenantId, visit.BranchId);
-
+ 
                     // 💣 cleaning timer
                     _ = Task.Run(async () =>
                     {
@@ -113,7 +115,7 @@ public class UpdateVisitStatusHandler : IRequestHandler<UpdateVisitStatusCommand
                         await _dashboard.NotifyRoomStatusChanged(tenantId, visit.BranchId);
                     });
                 }
-
+ 
                 assignment.IsActive = false;
                 assignment.ReleasedAt = DateTime.UtcNow;
             }

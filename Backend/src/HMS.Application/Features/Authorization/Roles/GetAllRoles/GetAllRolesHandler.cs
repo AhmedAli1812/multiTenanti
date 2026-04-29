@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Persistence;
+using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.Tenant;
 using HMS.Application.Dtos;
 using MediatR;
@@ -24,14 +24,22 @@ public class GetAllRolesHandler
     {
         var tenantId = _tenantProvider.GetTenantId();
 
-        var roles = await _context.Roles
-            .AsNoTracking() // 🔥 performance
-            .Where(r => r.TenantId == tenantId) // 💣 multi-tenant isolation
-            .OrderBy(r => r.Name) // 👌 UX
+        var query = _context.Roles.AsNoTracking();
+
+        if (tenantId.HasValue)
+        {
+            query = query.Where(r => r.TenantId == tenantId);
+        }
+
+        var roles = await query
+            .Include(r => r.RolePermissions)
+                .ThenInclude(rp => rp.Permission)
+            .OrderBy(r => r.Name)
             .Select(r => new RoleDto
             {
                 Id = r.Id,
-                Name = r.Name
+                Name = r.Name,
+                Permissions = r.RolePermissions.Select(rp => rp.Permission.Code).ToList()
             })
             .ToListAsync(cancellationToken);
 

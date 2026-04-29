@@ -1,4 +1,4 @@
-﻿using HMS.API.Filters;
+using HMS.API.Filters;
 using HMS.Application.Features.Authorization.UserRoles.AssignRole;
 using HMS.Application.Features.Users.Create;
 using HMS.Application.Features.Users.CreateUser;
@@ -68,7 +68,7 @@ namespace HMS.API.Controllers.Users
         // 🔥 Assign Multiple Roles
         // =====================================================
         [HttpPost("{id}/roles")]
-        [AuthorizePermission("users.assign-role")]
+        [AuthorizePermission("users.assignRole")]
         public async Task<IActionResult> AssignRoles(Guid id, [FromBody] AssignRolesRequest request)
         {
             if (request.RoleIds == null || !request.RoleIds.Any())

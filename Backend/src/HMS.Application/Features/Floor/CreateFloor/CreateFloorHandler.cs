@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Persistence;
+using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.Tenant;
 using HMS.Domain.Entities;
 using MediatR;
@@ -31,7 +31,13 @@ public class CreateFloorHandler : IRequestHandler<CreateFloorCommand, Guid>
         if (request.BranchId == Guid.Empty)
             throw new ArgumentException("Branch is required");
 
-        var tenantId = _tenant.GetTenantId();
+        var tenantId = (request.TenantId.HasValue && _tenant.IsSuperAdmin())
+            ? request.TenantId.Value
+            : _tenant.GetTenantId();
+
+        if (tenantId == null)
+            throw new ArgumentException("Tenant ID is required");
+
         var name = request.Name.Trim();
 
         // =========================

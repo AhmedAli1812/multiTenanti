@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Auth;
+using HMS.Application.Abstractions.Auth;
 using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.Security;
 using HMS.Application.Features.Auth.Login;
@@ -94,15 +94,37 @@ public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, Result<L
             .Distinct()
             .ToListAsync(cancellationToken);
 
+        // Fetch Names for Token
+        string? tenantName = null;
+        if (user.TenantId.HasValue)
+        {
+            tenantName = await _context.Tenants
+                .Where(t => t.Id == user.TenantId)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        string? branchName = null;
+        if (user.BranchId.HasValue)
+        {
+            branchName = await _context.Branches
+                .IgnoreQueryFilters()
+                .Where(b => b.Id == user.BranchId)
+                .Select(b => b.Name)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
         // =========================
         // 🔐 New Tokens
         // =========================
         var newAccessToken = _jwt.GenerateToken(
             user.Id,
             user.TenantId,
+            tenantName,
             roles,
             permissions,
             user.BranchId,
+            branchName,
             user
         );
 

@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Persistence;
+using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.Tenant;
 using HMS.Domain.Entities.Identity;
 using HMS.Shared.Results;
@@ -33,15 +33,16 @@ namespace HMS.Application.Features.Authorization.UserRoles.AssignRole
                 return Result.Failure("Invalid request");
 
             var tenantId = _tenantProvider.GetTenantId();
+            var isSuperAdmin = _tenantProvider.IsSuperAdmin();
 
             // =========================
             // 🔥 Check User
             // =========================
-            var userExists = await _context.Users
+            var user = await _context.Users
                 .AsNoTracking()
-                .AnyAsync(x => x.Id == request.UserId && x.TenantId == tenantId, cancellationToken);
+                .FirstOrDefaultAsync(x => x.Id == request.UserId && (isSuperAdmin || x.TenantId == tenantId), cancellationToken);
 
-            if (!userExists)
+            if (user == null)
                 return Result.Failure("User not found");
 
             // =========================
@@ -49,7 +50,7 @@ namespace HMS.Application.Features.Authorization.UserRoles.AssignRole
             // =========================
             var roleExists = await _context.Roles
                 .AsNoTracking()
-                .AnyAsync(x => x.Id == request.RoleId && x.TenantId == tenantId, cancellationToken);
+                .AnyAsync(x => x.Id == request.RoleId && (isSuperAdmin || x.TenantId == tenantId), cancellationToken);
 
             if (!roleExists)
                 return Result.Failure("Role not found");
@@ -62,7 +63,7 @@ namespace HMS.Application.Features.Authorization.UserRoles.AssignRole
                 .AnyAsync(x =>
                     x.UserId == request.UserId &&
                     x.RoleId == request.RoleId &&
-                    x.TenantId == tenantId,
+                    (isSuperAdmin || x.TenantId == tenantId),
                     cancellationToken);
 
             if (alreadyAssigned)
@@ -75,7 +76,7 @@ namespace HMS.Application.Features.Authorization.UserRoles.AssignRole
             {
                 UserId = request.UserId,
                 RoleId = request.RoleId,
-                TenantId = tenantId // 💣 FIX مهم جدًا
+                TenantId = user.TenantId // Use the user's tenant ID
             });
 
             await _context.SaveChangesAsync(cancellationToken);

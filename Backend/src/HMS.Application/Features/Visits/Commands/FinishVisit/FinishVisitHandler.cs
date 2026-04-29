@@ -1,9 +1,11 @@
-﻿using HMS.Application.Abstractions.Persistence;
+using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.CurrentUser;
 using HMS.Application.Abstractions.Services;
 using HMS.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+
+namespace HMS.Application.Features.Visits.Commands.FinishVisit;
 
 public class FinishVisitHandler : IRequestHandler<FinishVisitCommand, Unit>
 {

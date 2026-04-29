@@ -1,4 +1,4 @@
-﻿
+
 namespace HMS.Application.Features.Users.GetUsers;
 public class UserDto
 {
@@ -9,6 +9,7 @@ public class UserDto
     public string? PhoneNumber { get; set; }
     public string? Username { get; set; }
     public string? NationalId { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public List<string> Roles { get; set; } = new();
 }

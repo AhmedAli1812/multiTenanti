@@ -1,9 +1,10 @@
-﻿using HMS.Domain.Entities.Base;
+using HMS.Domain.Entities.Base;
 using HMS.Domain.Entities.Branches;
 using HMS.Domain.Entities.Identity;
 using HMS.Domain.Entities.Patients;
 using HMS.Domain.Entities.Rooms;
 using HMS.Domain.Enums;
+using HMS.Domain.Entities.Operations;
 
 namespace HMS.Domain.Entities.Visits;
 
@@ -24,6 +25,7 @@ public class Visit : TenantEntity
     public User? Doctor { get; set; }
     public Guid BranchId { get; set; }
     public Branch Branch { get; set; } = default!;
+    public ICollection<RoomAssignment> RoomAssignments { get; set; } = new List<RoomAssignment>();
 
     // =============================
     // 🔥 Core Data
@@ -31,6 +33,12 @@ public class Visit : TenantEntity
 
     // (Outpatient / ER / Inpatient)
     public VisitType VisitType { get; set; }
+
+    public PriorityLevel Priority { get; set; }
+
+    public ArrivalMethod ArrivalMethod { get; set; }
+
+    public string ChiefComplaint { get; set; } = string.Empty;
 
     public PayerType PayerType { get; set; }
 
@@ -80,20 +88,16 @@ public class Visit : TenantEntity
 
     private static bool IsValidTransition(VisitStatus current, VisitStatus next)
     {
+        if (next == VisitStatus.Completed) return true;
+
         return current switch
         {
             VisitStatus.CheckedIn => next == VisitStatus.WaitingDoctor,
-
             VisitStatus.WaitingDoctor => next == VisitStatus.Prepared,
-
             VisitStatus.Prepared => next == VisitStatus.InOp,
-
             VisitStatus.InOp => next == VisitStatus.OpCompleted,
-
             VisitStatus.OpCompleted => next == VisitStatus.PostOp,
-
             VisitStatus.PostOp => next == VisitStatus.Completed,
-
             _ => false
         };
     }

@@ -1,9 +1,10 @@
-﻿using HMS.Application.Abstractions.Persistence;
+using HMS.Application.Abstractions.Persistence;
 using HMS.Application.Abstractions.CurrentUser;
 using HMS.Domain.Entities.Identity;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using HMS.Application.Abstractions.Caching;
+using HMS.Application.Abstractions.Tenant;
 
 namespace HMS.Application.Features.Permissions;
 
@@ -13,39 +14,40 @@ public class AssignPermissionsToRoleHandler
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUser _currentUser;
     private readonly IPermissionCacheService _cache;
+    private readonly ITenantProvider _tenantProvider;
 
     public AssignPermissionsToRoleHandler(
         IApplicationDbContext context,
         ICurrentUser currentUser,
-        IPermissionCacheService cache)
+        IPermissionCacheService cache,
+        ITenantProvider tenantProvider)
     {
         _context = context;
         _currentUser = currentUser;
         _cache = cache;
+        _tenantProvider = tenantProvider;
     }
 
     public async Task<bool> Handle(
      AssignPermissionsToRoleCommand request,
      CancellationToken cancellationToken)
     {
-        var tenantId = _currentUser.TenantId;
+        var tenantId = _tenantProvider.GetTenantId();
+        var isSuperAdmin = _tenantProvider.IsSuperAdmin();
 
         if (request.RoleId == Guid.Empty)
             throw new ArgumentException("Invalid role");
 
-        if (request.PermissionIds == null || !request.PermissionIds.Any())
-            return true;
-
-        var permissionIds = request.PermissionIds.Distinct().ToList();
+        var permissionIds = (request.PermissionIds ?? new List<Guid>()).Distinct().ToList();
 
         // =========================
         // 🔥 Base Query (Global aware)
         // =========================
         var rolesQuery = _context.Roles.AsNoTracking();
 
-        if (_currentUser.IsGlobal)
+        if (isSuperAdmin)
         {
-            rolesQuery = rolesQuery.IgnoreQueryFilters(); // 💣
+            rolesQuery = rolesQuery.IgnoreQueryFilters();
         }
 
         var role = await rolesQuery
@@ -55,47 +57,56 @@ public class AssignPermissionsToRoleHandler
             throw new InvalidOperationException("Role not found");
 
         // =========================
-        // 🔥 Non-global لازم نفس التينانت
+        // 🔥 Non-global must be same tenant
         // =========================
-        if (!_currentUser.IsGlobal && role.TenantId != tenantId)
+        if (!isSuperAdmin && role.TenantId != tenantId)
             throw new UnauthorizedAccessException("Access denied");
 
         // =========================
-        // 🔥 RolePermissions Query
+        // 🔥 Get existing
         // =========================
-        var rolePermissionsQuery = _context.RolePermissions.AsNoTracking();
+        var rolePermissionsQuery = _context.RolePermissions.AsTracking(); // Using tracking to delete easily
 
-        if (_currentUser.IsGlobal)
+        if (isSuperAdmin)
         {
             rolePermissionsQuery = rolePermissionsQuery.IgnoreQueryFilters();
         }
 
-        var existingPermissionIds = await rolePermissionsQuery
+        var existingEntities = await rolePermissionsQuery
             .Where(rp => rp.RoleId == request.RoleId)
-            .Select(rp => rp.PermissionId)
             .ToListAsync(cancellationToken);
 
+        var existingPermissionIds = existingEntities.Select(rp => rp.PermissionId).ToList();
+
         // =========================
-        // 🔥 Filter new permissions
+        // 🔥 Sync Logic
         // =========================
-        var newPermissions = permissionIds
+        
+        // 1. Remove unselected
+        var toRemove = existingEntities
+            .Where(rp => !permissionIds.Contains(rp.PermissionId))
+            .ToList();
+        
+        if (toRemove.Any())
+        {
+            _context.RolePermissions.RemoveRange(toRemove);
+        }
+
+        // 2. Add new
+        var toAddIds = permissionIds
             .Except(existingPermissionIds)
             .ToList();
 
-        if (!newPermissions.Any())
-            return true;
-
-        // =========================
-        // 🔥 Add batch
-        // =========================
-        var entities = newPermissions.Select(pid => new RolePermission
+        if (toAddIds.Any())
         {
-            RoleId = request.RoleId,
-            PermissionId = pid,
-            TenantId = role.TenantId // 💣 مهم جدًا
-        });
-
-        await _context.RolePermissions.AddRangeAsync(entities, cancellationToken);
+            var newEntities = toAddIds.Select(pid => new RolePermission
+            {
+                RoleId = request.RoleId,
+                PermissionId = pid,
+                TenantId = role.TenantId
+            });
+            await _context.RolePermissions.AddRangeAsync(newEntities, cancellationToken);
+        }
 
         await _context.SaveChangesAsync(cancellationToken);
 

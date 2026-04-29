@@ -1,4 +1,4 @@
-﻿using HMS.Application.Abstractions.Tenant;
+using HMS.Application.Abstractions.Tenant;
 using HMS.Infrastructure.Tenancy;
 using System.Security.Claims;
 
@@ -20,8 +20,9 @@ public class TenantMiddleware
         {
             // 🔥 الأفضل تعتمد على Role
             var isSuperAdmin =
-                context.User.IsInRole("Super Admin") // 👈 الأساسي
-                || context.User.HasClaim("isGlobal", "true"); // 👈 fallback
+                context.User.IsInRole("Super Admin") 
+                || context.User.IsInRole("SuperAdmin")
+                || context.User.HasClaim("isGlobal", "true"); 
 
             // =========================
             // 🧠 Resolve Tenant

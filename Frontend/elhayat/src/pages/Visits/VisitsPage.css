@@ -1,0 +1,221 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   src/pages/Visits/VisitsPage.css
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.visits-page {
+  min-height: 100vh;
+  background: var(--bg, #0f1117);
+  color: var(--text, #e2e8f0);
+  font-family: 'Inter', system-ui, sans-serif;
+  padding: 2rem;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+.visits-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.visits-page__title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+/* ── Controls ───────────────────────────────────────────────────────────────── */
+.visits-controls {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.visits-search {
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  font-size: 0.9rem;
+  min-width: 240px;
+  transition: border-color 0.2s;
+}
+
+.visits-search:focus {
+  outline: none;
+  border-color: #60a5fa;
+}
+
+.visits-filter {
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.visits-refresh-btn {
+  padding: 0.55rem 1.25rem;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.visits-refresh-btn:hover { opacity: 0.85; }
+.visits-refresh-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Table ──────────────────────────────────────────────────────────────────── */
+.visits-table-wrap {
+  overflow-x: auto;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.visits-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.visits-table thead tr {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.visits-table th {
+  padding: 1rem 1.25rem;
+  text-align: left;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.visits-table tbody tr {
+  border-top: 1px solid rgba(148, 163, 184, 0.08);
+  transition: background 0.15s;
+}
+
+.visits-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.visits-table td {
+  padding: 0.9rem 1.25rem;
+  vertical-align: middle;
+}
+
+/* ── Status badge ────────────────────────────────────────────────────────────── */
+.visit-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.visit-status--checkedin      { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+.visit-status--waitingdoctor  { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+.visit-status--prepared       { background: rgba(167, 139, 250, 0.15); color: #a78bfa; }
+.visit-status--inop           { background: rgba(249, 115, 22, 0.15); color: #f97316; }
+.visit-status--completed      { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+.visit-status--default        { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+
+/* ── Action button ───────────────────────────────────────────────────────────── */
+.visit-finish-btn {
+  padding: 0.35rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.visit-finish-btn:hover {
+  background: rgba(52, 211, 153, 0.2);
+  border-color: #34d399;
+}
+
+/* ── States ──────────────────────────────────────────────────────────────────── */
+.visits-empty, .visits-error {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+}
+
+.visits-error { color: #f87171; }
+
+.visits-skeleton td {
+  height: 20px;
+}
+
+.visits-skeleton-cell {
+  display: inline-block;
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.05) 25%,
+    rgba(255,255,255,0.1) 50%,
+    rgba(255,255,255,0.05) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Pagination ──────────────────────────────────────────────────────────────── */
+.visits-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.visits-pagination button {
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.visits-pagination button:hover:not(:disabled) {
+  background: rgba(96, 165, 250, 0.15);
+  border-color: #60a5fa;
+}
+
+.visits-pagination button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.visits-pagination__info {
+  font-size: 0.85rem;
+  color: #64748b;
+}

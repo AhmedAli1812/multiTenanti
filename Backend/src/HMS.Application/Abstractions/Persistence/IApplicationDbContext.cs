@@ -1,18 +1,17 @@
-﻿using HMS.Domain.Entities;
+using HMS.Domain.Entities;
 using HMS.Domain.Entities.Audit;
 using HMS.Domain.Entities.Branches;
+using HMS.Domain.Entities.Departments;
 using HMS.Domain.Entities.Doctors;
 using HMS.Domain.Entities.Identity;
 using HMS.Domain.Entities.Operations;
 using HMS.Domain.Entities.PatientIntake;
 using HMS.Domain.Entities.Patients;
+using HMS.Domain.Entities.Rooms;
 using HMS.Domain.Entities.Tenancy;
 using HMS.Domain.Entities.Visits;
-using HMS.Domain.Entities.Rooms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using HMS.Domain.Entities.Tenancy;
-using HMS.Domain.Entities.Departments;
 
 namespace HMS.Application.Abstractions.Persistence
 {
