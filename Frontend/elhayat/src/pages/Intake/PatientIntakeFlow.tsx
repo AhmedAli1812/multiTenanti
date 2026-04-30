@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { 
   User, Phone, Mail, UploadCloud, AlertCircle, MessageSquare, Hospital, 
   UserCheck, DoorOpen, Check, CreditCard, Coins, ShieldCheck, CheckCircle2, 
-  Globe, Star, Accessibility, Printer, ChevronLeft, ChevronRight, X
+  Globe, Star, Accessibility, Printer, ChevronLeft, ChevronRight, X, Plus
 } from 'lucide-react'
 import { useIntake } from '../../hooks/useIntake'
 import SearchableSelect from '../../components/SearchableSelect'
@@ -456,13 +456,20 @@ function Step5({ data, onChange }: {
         <div className="pif-consents">
           {consents.map(c => (
             <label key={c.key} className={`pif-consent-item ${data[c.key] ? 'checked' : ''}`}>
-              <input type="checkbox" checked={data[c.key] ?? false}
-                onChange={e => onChange({ ...data, [c.key]: e.target.checked })} />
-              <div className="pif-consent-item__checkbox">{data[c.key] ? <Check size={14} /> : ''}</div>
-              <div>
-                <strong>{c.title}</strong>
-                <p>{c.desc}</p>
+              <div className="pif-consent-item__main">
+                <div className={`pif-consent-item__checkbox ${data[c.key] ? 'checked' : ''}`}>
+                  {data[c.key] ? <Check size={16} strokeWidth={3} /> : null}
+                </div>
+                <div className="pif-consent-item__text">
+                  <strong>{c.title}</strong>
+                  <p>{c.desc}</p>
+                </div>
               </div>
+              <input 
+                type="checkbox" 
+                checked={data[c.key] ?? false}
+                onChange={e => onChange({ ...data, [c.key]: e.target.checked })} 
+              />
             </label>
           ))}
         </div>
@@ -506,22 +513,53 @@ function Step6({ data, onChange }: {
 }
 
 // ─── Success Screen ───────────────────────────────────────────────────────────
-function SuccessScreen({ result, onReset }: {
+function SuccessScreen({ result, onReset, onClose }: {
   result: NonNullable<ReturnType<typeof useIntake>['wristbandData']>
   onReset: () => void
+  onClose?: () => void
 }) {
   const navigate = useNavigate()
+  
+  const handleBackToDashboard = () => {
+    if (onClose) {
+      onClose()
+    } else {
+      navigate('/dashboard')
+    }
+  }
+
   return (
     <div className="pif-success">
-      <div className="pif-success__icon"><CheckCircle2 size={64} /></div>
-      <h2>تم تسجيل المريض بنجاح</h2>
-      <div className="pif-success__info">
-        <div><span>الرقم الطبي</span><strong>{result.medicalNumber}</strong></div>
-        <div><span>رقم الغرفة</span><strong>{result.roomNumber ?? '—'}</strong></div>
+      <div className="pif-success__icon">
+        <div className="pif-success__check-wrapper">
+          <CheckCircle2 size={64} strokeWidth={1.5} />
+        </div>
       </div>
+      
+      <div className="pif-success__header">
+        <h2>تم تسجيل المريض بنجاح</h2>
+        <p>تم إنشاء الملف الطبي للمريض وتخصيص الغرفة المطلوبة بنجاح في النظام.</p>
+      </div>
+
+      <div className="pif-success__info">
+        <div className="pif-success__info-card">
+          <span className="pif-success__info-label">الرقم الطبي للمريض</span>
+          <strong className="pif-success__info-value">{result.medicalNumber}</strong>
+        </div>
+        <div className="pif-success__info-card">
+          <span className="pif-success__info-label">رقم الغرفة المخصصة</span>
+          <strong className="pif-success__info-value">{result.roomNumber ?? 'قيد الانتظار'}</strong>
+        </div>
+      </div>
+
       <div className="pif-success__actions">
-        <button className="pif-btn pif-btn--primary" onClick={() => navigate('/dashboard')}>العودة للداشبورد</button>
-        <button className="pif-btn pif-btn--ghost" onClick={onReset}>تسجيل مريض جديد</button>
+        <button className="pif-btn pif-btn--primary pif-btn--lg" onClick={handleBackToDashboard}>
+          العودة للداشبورد
+        </button>
+        <button className="pif-btn pif-btn--outline pif-btn--lg" onClick={onReset}>
+          <Plus size={18} />
+          تسجيل مريض جديد
+        </button>
       </div>
     </div>
   )
@@ -537,13 +575,19 @@ export default function PatientIntakeFlow({ onClose }: { onClose?: () => void })
     updateStep, goNext, goPrev, setStep, handleSubmit, reset,
   } = useIntake()
 
+  // Auto-scroll to top on step change or success
+  React.useEffect(() => {
+    const body = document.querySelector('.pif-body')
+    if (body) body.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [currentStep, wristbandData])
+
   const handleFinalSubmit = async (print: boolean) => {
     await handleSubmit(print)
     if (print) setShowPrintModal(true)
   }
 
   if (wristbandData && !showPrintModal) {
-    return <SuccessScreen result={wristbandData} onReset={() => { reset(); onClose?.(); }} />
+    return <SuccessScreen result={wristbandData} onReset={reset} onClose={onClose} />
   }
 
   const isStepValid = (step: number) => {

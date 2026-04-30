@@ -76,19 +76,19 @@ export function useNurse() {
   const refresh = useCallback(() => { load() }, [load])
 
   // ── Computed alerts ──────────────────────────────────────────────────────
-  const alerts: NurseAlert[] = computeAlerts(state.appointments)
+  const alerts: NurseAlert[] = computeAlerts(state.appointments, state.queue)
 
   return { ...state, alerts, refresh }
 }
 
 // ── Alert computation (client-side) ──────────────────────────────────────────
-function computeAlerts(appointments: TodayAppointment[]): NurseAlert[] {
+function computeAlerts(appointments: TodayAppointment[], queue: QueuePatient[]): NurseAlert[] {
   const now = new Date()
   const alerts: NurseAlert[] = []
 
-  // 1. Late patients — appointments with status "متأخر"
+  // 1. Late patients — appointments with status "متأخر" that are NOT in the queue yet
   appointments
-    .filter(a => a.status === 'متأخر')
+    .filter(a => a.status === 'متأخر' && !queue.some(q => q.visitId === a.visitId || q.patientName === a.patientName))
     .forEach(a => {
       alerts.push({
         id: `late-${a.visitId}`,
@@ -99,9 +99,9 @@ function computeAlerts(appointments: TodayAppointment[]): NurseAlert[] {
       })
     })
 
-  // 2. Upcoming within 10 minutes
+  // 2. Upcoming within 10 minutes that are NOT in the queue yet
   appointments
-    .filter(a => a.status === 'قادم')
+    .filter(a => a.status === 'قادم' && !queue.some(q => q.visitId === a.visitId || q.patientName === a.patientName))
     .forEach(a => {
       const scheduled = new Date(a.scheduledTime)
       const diffMin = (scheduled.getTime() - now.getTime()) / 60_000

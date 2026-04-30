@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using HMS.Application.Abstractions.Services;
 
 namespace HMS.Infrastructure.RealTime;
@@ -25,8 +25,22 @@ public class DashboardNotifier : IDashboardNotifier
     // 🔥 Advanced Events
     public async Task NotifyNewVisit(Guid tenantId, Guid branchId)
     {
+        // Notify Reception
         await _hub.Clients.Group($"Reception_{tenantId}_{branchId}")
             .SendAsync("visitCreated");
+
+        // Notify Nurses (List Update)
+        await _hub.Clients.Group($"Nurses_{tenantId}_{branchId}")
+            .SendAsync("NewPatientAdded");
+
+        // Notify Nurses (Toast/Bell)
+        await _hub.Clients.Group($"Nurses_{tenantId}_{branchId}")
+            .SendAsync("Notification", new
+            {
+                Type = "NEW_PATIENT",
+                Payload = new { patientName = "مريض جديد" },
+                Timestamp = DateTime.UtcNow
+            });
     }
 
     public async Task NotifyDoctorQueue(Guid doctorId)
@@ -42,10 +56,11 @@ public class DashboardNotifier : IDashboardNotifier
     }
     public async Task NotifyRoomStatusChanged(Guid tenantId, Guid branchId)
     {
+        // Notify both sides
         await _hub.Clients.Group($"Nurses_{tenantId}_{branchId}")
-            .SendAsync("roomStatusUpdated", new
-            {
-                timestamp = DateTime.UtcNow
-            });
+            .SendAsync("roomStatusUpdated", new { timestamp = DateTime.UtcNow });
+            
+        await _hub.Clients.Group($"Reception_{tenantId}_{branchId}")
+            .SendAsync("roomStatusUpdated", new { timestamp = DateTime.UtcNow });
     }
 }

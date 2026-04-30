@@ -1,20 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "A:\\multiTenanti\\Backend\\src\\HMS.Application\\HMS.Application.csproj": {}
+    "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Application\\HMS.Application.csproj": {}
   },
   "projects": {
-    "A:\\multiTenanti\\Backend\\src\\HMS.Application\\HMS.Application.csproj": {
+    "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Application\\HMS.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "A:\\multiTenanti\\Backend\\src\\HMS.Application\\HMS.Application.csproj",
+        "projectUniqueName": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Application\\HMS.Application.csproj",
         "projectName": "HMS.Application",
-        "projectPath": "A:\\multiTenanti\\Backend\\src\\HMS.Application\\HMS.Application.csproj",
-        "packagesPath": "C:\\Users\\ahmed\\.nuget\\packages\\",
-        "outputPath": "A:\\multiTenanti\\Backend\\src\\HMS.Application\\obj\\",
+        "projectPath": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Application\\HMS.Application.csproj",
+        "packagesPath": "C:\\Users\\Yathrip\\.nuget\\packages\\",
+        "outputPath": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Application\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\ahmed\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Yathrip\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -28,11 +32,11 @@
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "A:\\multiTenanti\\Backend\\src\\HMS.Domain\\HMS.Domain.csproj": {
-                "projectPath": "A:\\multiTenanti\\Backend\\src\\HMS.Domain\\HMS.Domain.csproj"
+              "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Domain\\HMS.Domain.csproj": {
+                "projectPath": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Domain\\HMS.Domain.csproj"
               },
-              "A:\\multiTenanti\\Backend\\src\\HMS.Shared\\HMS.Shared.csproj": {
-                "projectPath": "A:\\multiTenanti\\Backend\\src\\HMS.Shared\\HMS.Shared.csproj"
+              "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Shared\\HMS.Shared.csproj": {
+                "projectPath": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Shared\\HMS.Shared.csproj"
               }
             }
           }
@@ -47,7 +51,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.200"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net9.0": {
@@ -82,21 +86,25 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.309/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "A:\\multiTenanti\\Backend\\src\\HMS.Domain\\HMS.Domain.csproj": {
+    "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Domain\\HMS.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "A:\\multiTenanti\\Backend\\src\\HMS.Domain\\HMS.Domain.csproj",
+        "projectUniqueName": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Domain\\HMS.Domain.csproj",
         "projectName": "HMS.Domain",
-        "projectPath": "A:\\multiTenanti\\Backend\\src\\HMS.Domain\\HMS.Domain.csproj",
-        "packagesPath": "C:\\Users\\ahmed\\.nuget\\packages\\",
-        "outputPath": "A:\\multiTenanti\\Backend\\src\\HMS.Domain\\obj\\",
+        "projectPath": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Domain\\HMS.Domain.csproj",
+        "packagesPath": "C:\\Users\\Yathrip\\.nuget\\packages\\",
+        "outputPath": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Domain\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\ahmed\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Yathrip\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -122,7 +130,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.200"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net9.0": {
@@ -143,21 +151,25 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.309/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "A:\\multiTenanti\\Backend\\src\\HMS.Shared\\HMS.Shared.csproj": {
+    "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Shared\\HMS.Shared.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "A:\\multiTenanti\\Backend\\src\\HMS.Shared\\HMS.Shared.csproj",
+        "projectUniqueName": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Shared\\HMS.Shared.csproj",
         "projectName": "HMS.Shared",
-        "projectPath": "A:\\multiTenanti\\Backend\\src\\HMS.Shared\\HMS.Shared.csproj",
-        "packagesPath": "C:\\Users\\ahmed\\.nuget\\packages\\",
-        "outputPath": "A:\\multiTenanti\\Backend\\src\\HMS.Shared\\obj\\",
+        "projectPath": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Shared\\HMS.Shared.csproj",
+        "packagesPath": "C:\\Users\\Yathrip\\.nuget\\packages\\",
+        "outputPath": "D:\\multi tenant\\multiTenanti\\Backend\\src\\HMS.Shared\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\ahmed\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Yathrip\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -183,7 +195,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.200"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net9.0": {
@@ -204,7 +216,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.309/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

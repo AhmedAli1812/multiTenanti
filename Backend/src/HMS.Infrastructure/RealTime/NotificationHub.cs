@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 
 namespace HMS.Infrastructure.RealTime;
@@ -15,7 +15,11 @@ public class NotificationHub : Hub
             return;
         }
 
-        var tenantId = user.FindFirst("tenantId")?.Value;
+        var tenantId = 
+            user.FindFirst("orgId")?.Value ?? 
+            user.FindFirst("tenantId")?.Value ??
+            user.FindFirst("tenant_id")?.Value;
+
         var branchId = user.FindFirst("branchId")?.Value;
         var role = user.FindFirst(ClaimTypes.Role)?.Value;
         var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -35,8 +39,8 @@ public class NotificationHub : Hub
         // =========================
         if (!string.IsNullOrEmpty(branchId))
         {
-            // Nurses
-            if (role == "Nurse")
+            // Nurses (and Admin/Reception for testing dashboard)
+            if (role == "Nurse" || role == "Admin" || role == "Reception")
             {
                 await Groups.AddToGroupAsync(
                     Context.ConnectionId,
@@ -44,7 +48,7 @@ public class NotificationHub : Hub
             }
 
             // Reception
-            if (role == "Reception")
+            if (role == "Reception" || role == "Admin")
             {
                 await Groups.AddToGroupAsync(
                     Context.ConnectionId,

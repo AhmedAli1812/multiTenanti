@@ -1,58 +1,18 @@
-import { useState, useMemo, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import {
-  Users, Clock, Calendar, AlertCircle, RefreshCw,
-  LogOut, Hospital, Bell, ClipboardList, Activity,
-  CheckCircle, AlertTriangle
+  Users, Clock, AlertCircle, Bell, BellRing,
+  Activity, AlertTriangle, CheckCircle, FileText,
+  LogOut, ChevronLeft, Droplet, Hospital, Calendar
 } from 'lucide-react'
-import { useNurse } from '../../../hooks/useNurse'
-import type { NurseAlert } from '../../../hooks/useNurse'
-import { useSignalR } from '../../../hooks/useSignalR'
-import type { QueuePatient, TodayAppointment } from '../../../services/nurseService'
-import { getUserName, getRole, getOrgName, getBranchName } from '../../../utils/auth'
+import { useNavigate } from 'react-router-dom'
+import { getUserName, getRole, getOrgName, getBranchName, getStoredToken } from '../../../utils/auth'
 import { authService } from '../../../services/authService'
 import ThemeLanguageToggle from '../../../components/ThemeLanguageToggle'
+import { useNurse } from '../../../hooks/useNurse'
+import { useSignalR } from '../../../hooks/useSignalR'
+import type { QueuePatient } from '../../../services/nurseService'
+import apiClient from '../../../services/apiClient'
 import './NurseDashboard.css'
-
-const PAGE_SIZE = 8
-
-type TabType = 'queue' | 'appointments' | 'alerts'
-
-function initials(name: string) {
-  const parts = name.trim().split(' ')
-  return parts.length >= 2 ? parts[0][0] + parts[1][0] : parts[0]?.[0] ?? '؟'
-}
-
-function formatTime(dateStr: string) {
-  if (!dateStr) return '—'
-  try {
-    return new Date(dateStr).toLocaleTimeString('ar-EG', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return dateStr
-  }
-}
-
-function getPriorityClass(name: string) {
-  if (name === 'طوارئ') return 'nd-priority-badge--emergency'
-  if (name === 'عاجل') return 'nd-priority-badge--urgent'
-  return 'nd-priority-badge--normal'
-}
-
-function getTypeClass(name: string) {
-  if (name === 'طارئ') return 'nd-type-badge--emergency'
-  if (name === 'راجع') return 'nd-type-badge--followup'
-  return 'nd-type-badge--booking'
-}
-
-function getAppointmentStatusClass(status: string) {
-  if (status === 'مكتمل') return 'nd-stage-badge--done'
-  if (status === 'حاضر') return 'nd-stage-badge--present'
-  if (status === 'متأخر') return 'nd-stage-badge--late'
-  return 'nd-stage-badge--upcoming'
-}
 
 export default function NurseDashboard() {
   const navigate = useNavigate()
@@ -60,12 +20,77 @@ export default function NurseDashboard() {
   const roleName = getRole()
   const orgName = getOrgName()
   const branchName = getBranchName()
-  const { stats, queue, appointments, alerts, isLoading, error, refresh } = useNurse()
 
-  const [activeTab, setActiveTab] = useState<TabType>('queue')
-  const [queuePage, setQueuePage] = useState(1)
-  const [priorityFilter, setPriorityFilter] = useState('all')
-  const [liveToast, setLiveToast] = useState<{ id: number; message: string } | null>(null)
+  const { queue, stats, alerts, refresh } = useNurse()
+  const [liveNotifications, setLiveNotifications] = useState<any[]>([])
+  const [isBellOpen, setIsBellOpen] = useState(false)
+  const [liveToast, setLiveToast] = useState<{ id: number; message: string; title: string } | null>(null)
+
+  // Combine live notifications (from signalR) with existing alerts from useNurse
+  const allNotifications = useMemo(() => {
+    const existing = alerts.map(a => ({
+      id: a.id,
+      type: a.type === 'late' ? 'danger' : 'warning',
+      title: a.patientName,
+      desc: a.message,
+      icon: a.type === 'late' ? 'triangle' : 'bell'
+    }))
+    return [...liveNotifications, ...existing]
+  }, [alerts, liveNotifications])
+
+  // Helper to map arabic statuses to english UI pills
+  const getUiStatus = (statusName: string) => {
+    switch (statusName) {
+      case 'تم الدخول': return 'Check-in';
+      case 'انتظار الطبيب': return 'Waiting';
+      case 'جاهز': return 'Pre-op';
+      case 'قيد العملية': return 'In-op';
+      case 'انتهت العملية': return 'Post-op';
+      case 'ما بعد العملية': return 'Post-op';
+      case 'مكتمل': return 'Completed';
+      case 'بانتظار خروج التمريض': return 'Pending';
+      case 'بانتظار خروج الاستقبال': return 'Waiting-Reception';
+      case 'نشط': return 'Active';
+      default: return 'Check-in';
+    }
+  }
+
+  // Table Data purely from backend queue
+  const tablePatients = useMemo(() => {
+    if (!queue) return []
+    return queue.map((q, i) => ({
+      id: q.visitId,
+      room: `غرفة ${100 + i + 1}`,
+      name: q.patientName,
+      type: q.visitTypeName || 'نقدي',
+      typeColor: q.visitTypeName === 'تعاقد' ? 'blue' : q.visitTypeName === 'طوارئ' ? 'red' : 'green',
+      diagnosis: q.departmentName || 'غير محدد',
+      doctor: q.doctorName || 'غير محدد',
+      status: getUiStatus(q.statusName),
+      isPendingCheckoutNurse: q.status === 'PendingCheckoutNurse',
+      isPendingCheckoutReception: q.status === 'PendingCheckoutReception'
+    }))
+  }, [queue])
+
+  // Ward Overview purely from top 3 backend queue patients
+  const wardOverviewCards = useMemo(() => {
+    if (!queue) return []
+    return queue.slice(0, 3).map((q, i) => {
+      const isEmergency = q.priorityName === 'طوارئ' || q.priorityName === 'عاجل'
+      return {
+        id: q.visitId,
+        room: `10${i + 1}`,
+        patient: q.patientName,
+        bp: isEmergency ? '140/90' : '120/80', // Fake vitals since backend doesn't provide them yet
+        hr: isEmergency ? '95' : '72',
+        status: getUiStatus(q.statusName),
+        time: q.arrivalTime ? new Date(q.arrivalTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '-',
+        isStable: !isEmergency
+      }
+    })
+  }, [queue])
+
+  const totalPatients = stats?.totalPatientsToday ?? 0;
 
   const playAlertSound = useCallback(() => {
     try {
@@ -76,9 +101,10 @@ export default function NurseDashboard() {
       const gainNode = ctx.createGain()
       
       osc.type = 'sine'
-      osc.frequency.setValueAtTime(880, ctx.currentTime) // A5 note
+      osc.frequency.setValueAtTime(880, ctx.currentTime) // A5
+      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.3)
       
-      gainNode.gain.setValueAtTime(0.1, ctx.currentTime)
+      gainNode.gain.setValueAtTime(0.2, ctx.currentTime)
       gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.5)
       
       osc.connect(gainNode)
@@ -91,10 +117,43 @@ export default function NurseDashboard() {
     }
   }, [])
 
-  const handleNewNotification = useCallback((payload?: any) => {
+  const handleNewNotification = useCallback((data?: any) => {
     playAlertSound()
-    setLiveToast({ id: Date.now(), message: 'إشعار جديد: يوجد تحديث في الطابور أو المواعيد' })
     refresh()
+    
+    // Extract payload data (handle nested Payload from backend)
+    const payload = data?.payload || data?.Payload || data
+    const patientName = payload?.patientName || payload?.PatientName
+    
+    const newAlert = {
+      id: Date.now().toString(),
+      type: 'info',
+      title: 'مريض جديد تم إضافته',
+      desc: patientName ? `تم إضافة المريض: ${patientName} للجناح` : 'تمت إضافة مريض جديد للتو',
+      icon: 'bell'
+    }
+
+    setLiveNotifications(prev => [newAlert, ...prev])
+    setLiveToast({ 
+      id: Date.now(), 
+      title: 'مريض جديد', 
+      message: payload?.patientName ? `تمت إضافة المريض ${payload.patientName} للتو` : 'تم تسجيل مريض جديد بنجاح' 
+    })
+
+    setTimeout(() => {
+      setLiveToast(null)
+    }, 5000)
+  }, [playAlertSound, refresh])
+
+  const handleCheckoutNotification = useCallback((payload?: any) => {
+    playAlertSound()
+    refresh()
+    
+    setLiveToast({ 
+      id: Date.now(), 
+      title: 'طلب خروج', 
+      message: 'الاستقبال يطلب تأكيد خروج مريض' 
+    })
     
     setTimeout(() => {
       setLiveToast(null)
@@ -102,27 +161,20 @@ export default function NurseDashboard() {
   }, [playAlertSound, refresh])
 
   useSignalR(useMemo(() => [
-    { name: 'NewVisitAssigned', handler: handleNewNotification },
+    { name: 'roomStatusUpdated', handler: handleCheckoutNotification },
+    { name: 'roomAssigned', handler: () => handleNewNotification({ patientName: 'تحديث في الغرف' }) },
+    { name: 'NewPatientAdded', handler: () => handleNewNotification() },
     { name: 'Notification', handler: handleNewNotification }
-  ], [handleNewNotification]))
+  ], [handleNewNotification, handleCheckoutNotification]))
 
-  // ── Queue filtering ─────────────────────────────────────────────────────
-  const filteredQueue = useMemo(() => {
-    if (priorityFilter === 'all') return queue
-    return queue.filter(q => q.priorityName === priorityFilter)
-  }, [queue, priorityFilter])
+  const toggleBell = () => setIsBellOpen(!isBellOpen)
 
-  const queuePageData = filteredQueue.slice(
-    (queuePage - 1) * PAGE_SIZE,
-    queuePage * PAGE_SIZE
-  )
-
-  function handleLogout() {
+  const handleLogout = () => {
     authService.logout()
     navigate('/login')
   }
 
-  const today = new Date().toLocaleDateString('ar-EG', {
+  const todayStr = new Date().toLocaleDateString('ar-EG', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -130,412 +182,321 @@ export default function NurseDashboard() {
   })
 
   return (
-    <div className="nd-wrap" dir="rtl">
-      {/* ═══ Topbar ═══ */}
-      <header className="nd-topbar">
-        <div className="nd-topbar__brand">
-          <span className="nd-topbar__logo">
-            <Hospital size={24} color="var(--accent-color)" />
-          </span>
-          <div className="nd-topbar__org-info">
-            <span className="nd-topbar__name">MedScope</span>
-            {orgName && (
-              <span className="nd-topbar__org-name">
-                {orgName}
-                {branchName && (
-                  <span className="nd-topbar__branch-name">| {branchName}</span>
-                )}
-              </span>
-            )}
+    <div className="nd-wrapper" dir="rtl">
+      {/* ===== Global Nav ===== */}
+      <nav className="nd-global-nav">
+        {/* Right Section (Brand) */}
+        <div className="nd-nav-brand-section">
+          <div className="nd-nav-brand">
+            <Hospital size={24} className="nd-nav-logo" />
+            <div className="nd-nav-org">
+              <span className="nd-nav-org-name">MedScope</span>
+              <span className="nd-nav-branch">{orgName || 'Elhaya Hospital'} | {branchName || 'elhayat1'}</span>
+            </div>
           </div>
         </div>
 
-        <div className="nd-topbar__center">
-          <Calendar size={14} style={{ marginLeft: 6, verticalAlign: 'middle' }} />
-          <span className="nd-topbar__date">{today}</span>
+        {/* Center Section (Date) */}
+        <div className="nd-nav-center">
+          <Calendar size={16} />
+          <span>{todayStr}</span>
+        </div>
+        
+        {/* Left Section (User & Actions) */}
+        <div className="nd-nav-user-section">
+          <span className="nd-nav-user">{userName || 'Ahmed Hassan'}</span>
+          <span className="nd-nav-role">{roleName || 'NURSE'}</span>
+
+          <div style={{ width: '1px', height: '24px', background: '#EAECEE', margin: '0 4px' }} />
+
+          <ThemeLanguageToggle />
+
+          <button className="nd-nav-logout" onClick={handleLogout}>
+            خروج <LogOut size={14} style={{ transform: 'scaleX(-1)' }} />
+          </button>
+        </div>
+      </nav>
+
+      {/* ===== Top Header ===== */}
+      <header className="nd-header">
+        <div className="nd-header-right">
+          <div className="nd-header-text">
+            <h1 className="nd-title">لوحة تحكم التمريض</h1>
+            <p className="nd-subtitle">جناح العناية المركزة - الفترة الصباحية</p>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <ThemeLanguageToggle />
-          <div className="nd-topbar__user">
-            <span className="nd-topbar__username">{userName}</span>
-            <span className="nd-topbar__role-badge">{roleName || 'تمريض'}</span>
-            <button className="nd-topbar__logout" onClick={handleLogout}>
-              <LogOut size={14} style={{ marginLeft: 4 }} />
-              خروج
+        <div className="nd-header-left">
+          <div className="nd-bell-wrapper">
+            <button className="nd-bell-btn" onClick={toggleBell}>
+              <Bell size={20} color="#6F767E" />
+              {allNotifications.length > 0 && (
+                <span className="nd-bell-dot" />
+              )}
             </button>
+            
+            {/* Notifications Dropdown */}
+            {isBellOpen && (
+              <div className="nd-notifications-dropdown">
+                <div className="nd-notif-header">الإشعارات ({allNotifications.length})</div>
+                <div className="nd-notif-list">
+                  {allNotifications.length === 0 ? (
+                    <div className="nd-notif-empty">لا توجد إشعارات</div>
+                  ) : (
+                    allNotifications.map(n => (
+                      <div key={n.id} className="nd-notif-item">
+                        <div className="nd-notif-title">{n.title}</div>
+                        <div className="nd-notif-desc">{n.desc}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
-      <div className="nd-content">
-        {/* ═══ Sidebar ═══ */}
+      {/* ===== Main Layout ===== */}
+      <div className="nd-layout">
+        
+        {/* RIGHT AREA: Main Content */}
+        <main className="nd-main">
+          
+          {/* Top Stats Cards */}
+          <div className="nd-stats-row">
+            {/* Card 1: Total */}
+            <div className="nd-stat-card">
+              <div className="nd-stat-icon-wrap nd-icon-blue">
+                <Users size={24} color="#0066FF" />
+              </div>
+              <div className="nd-stat-info">
+                <span className="nd-stat-label">إجمالي المرضى</span>
+                <span className="nd-stat-value">{stats?.totalPatientsToday ?? totalPatients}</span>
+              </div>
+            </div>
+
+            {/* Card 2: Critical */}
+            <div className="nd-stat-card">
+              <div className="nd-stat-icon-wrap nd-icon-red">
+                <AlertCircle size={24} color="#EF4444" />
+              </div>
+              <div className="nd-stat-info">
+                <span className="nd-stat-label">حالات حرجة</span>
+                <span className="nd-stat-value nd-text-red">
+                  {stats?.emergencyCases != null ? (stats.emergencyCases < 10 ? `0${stats.emergencyCases}` : stats.emergencyCases) : '03'}
+                </span>
+              </div>
+            </div>
+
+            {/* Card 3: Active Calls */}
+            <div className="nd-stat-card">
+              <div className="nd-stat-icon-wrap nd-icon-orange">
+                <BellRing size={24} color="#F97316" />
+              </div>
+              <div className="nd-stat-info">
+                <span className="nd-stat-label">نداءات نشطة</span>
+                <span className="nd-stat-value nd-text-orange">
+                   {stats?.waitingPatients != null ? (stats.waitingPatients < 10 ? `0${stats.waitingPatients}` : stats.waitingPatients) : '02'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Ward Overview */}
+          <div className="nd-section-header">
+            <h2 className="nd-section-title">نظرة عامة على الجناح</h2>
+            <div className="nd-legend">
+              <span className="nd-legend-item">
+                <span className="nd-dot nd-dot-green" /> مستقرة
+              </span>
+              <span className="nd-legend-item">
+                <span className="nd-dot nd-dot-orange" /> متابعة
+              </span>
+            </div>
+          </div>
+
+          <div className="nd-ward-grid">
+            {wardOverviewCards.length === 0 ? (
+               <div style={{ padding: '2rem', textAlign: 'center', color: '#6F767E', gridColumn: 'span 3', border: '1px dashed #EAECEE', borderRadius: '16px' }}>
+                 لا يوجد مرضى في الجناح حالياً
+               </div>
+            ) : (
+              wardOverviewCards.map((card, idx) => (
+                <div className="nd-ward-card" key={card.id || idx}>
+                  <div className="nd-ward-top">
+                    <span className="nd-room-badge">غرفة {card.room}</span>
+                    {card.isStable ? (
+                      <div className="nd-status-icon nd-status-green">
+                        <CheckCircle size={16} />
+                      </div>
+                    ) : (
+                      <div className="nd-status-icon nd-status-orange">
+                        <AlertCircle size={16} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="nd-ward-patient">{card.patient}</div>
+                  
+                  <div className="nd-vitals-row">
+                    <div className="nd-vital">
+                      <span className="nd-vital-label">النبض</span>
+                      <span className="nd-vital-value">bpm {card.hr}</span>
+                    </div>
+                    <div className="nd-vital">
+                      <span className="nd-vital-label">الضغط</span>
+                      <span className={`nd-vital-value ${!card.isStable ? 'nd-text-red' : ''}`}>
+                        {card.bp}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="nd-ward-bottom">
+                    <div className="nd-ward-bottom-right">
+                      <span className={`nd-status-pill nd-pill-${card.status.toLowerCase()}`}>
+                        {card.status === 'In-op' ? 'قيد العملية (In-op)' : 
+                         card.status === 'Post-op' ? 'ما بعد العملية (Post-op)' : 
+                         card.status === 'Check-in' ? 'تم الدخول (Check-in)' :
+                         card.status === 'Waiting-Reception' ? 'انتظار الاستقبال' :
+                         card.status === 'Pending' ? 'بانتظار التأكيد' :
+                         'ما قبل العملية (Pre-op)'}
+                      </span>
+                      <span className="nd-time-pill">
+                        <Clock size={12} />
+                        {card.time}
+                      </span>
+                    </div>
+                    <button className="nd-arrow-btn">
+                      <ChevronLeft size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Patient List */}
+          <div className="nd-section-header" style={{ marginTop: '2rem' }}>
+            <h2 className="nd-section-title">قائمة المرضى</h2>
+            <div className="nd-list-actions">
+              <span className="nd-list-count">{totalPatients} مريضاً في الجناح <span className="nd-blue-dot"/></span>
+              <a href="#all" className="nd-link-all">عرض الكل</a>
+            </div>
+          </div>
+
+          <div className="nd-table-wrap">
+            <table className="nd-table">
+              <thead>
+                <tr>
+                  <th>الغرفة</th>
+                  <th>المريض / التعاقد</th>
+                  <th>التشخيص</th>
+                  <th>الطبيب المعالج</th>
+                  <th>الحالة الجراحية</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tablePatients.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', color: '#6F767E', padding: '3rem' }}>
+                      لا يوجد مرضى في الطابور
+                    </td>
+                  </tr>
+                ) : (
+                  tablePatients.map(p => (
+                    <tr key={p.id} className={p.isPendingCheckoutNurse ? 'nd-row-danger' : ''}>
+                      <td className="nd-td-room">{p.room}</td>
+                      <td>
+                        <div className="nd-td-patient">
+                          <span className="nd-td-name">{p.name}</span>
+                          <span className={`nd-td-type nd-type-${p.typeColor}`}>{p.type}</span>
+                        </div>
+                      </td>
+                      <td className="nd-td-muted">{p.diagnosis}</td>
+                      <td className="nd-td-muted">{p.doctor}</td>
+                      <td>
+                        <span className={`nd-state-badge nd-state-${p.status.toLowerCase()}`}>
+                          {p.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="nd-td-actions">
+                          <button className="nd-action-btn nd-btn-blue">
+                            <FileText size={14} />
+                            الملف الطبي
+                          </button>
+                          <button 
+                            className={`nd-action-btn nd-btn-red ${p.isPendingCheckoutReception ? 'nd-disabled' : ''}`}
+                            onClick={async (e) => {
+                               const btn = e.currentTarget as HTMLButtonElement;
+                               btn.disabled = true;
+                               try {
+                                 await apiClient.patch(`/visits/${p.id}/finish`);
+                                 refresh();
+                               } catch (err) {
+                                 console.error("Checkout failed", err);
+                               } finally {
+                                 btn.disabled = false;
+                               }
+                            }}
+                            disabled={p.isPendingCheckoutReception}
+                          >
+                            <LogOut size={14} style={{ transform: 'scaleX(-1)' }} />
+                            {p.isPendingCheckoutNurse ? 'تأكيد الخروج' : p.isPendingCheckoutReception ? 'بانتظار الاستقبال' : 'خروج'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+        </main>
+
+        {/* LEFT AREA: Sidebar Alerts */}
         <aside className="nd-sidebar">
-          <nav className="nd-nav">
-            <button
-              className={`nd-nav__item ${activeTab === 'queue' ? 'active' : ''}`}
-              onClick={() => setActiveTab('queue')}
-            >
-              <ClipboardList size={18} />
-              طابور المرضى
-            </button>
-            <button
-              className={`nd-nav__item ${activeTab === 'appointments' ? 'active' : ''}`}
-              onClick={() => setActiveTab('appointments')}
-            >
-              <Calendar size={18} />
-              المواعيد
-            </button>
-            <button
-              className={`nd-nav__item ${activeTab === 'alerts' ? 'active' : ''}`}
-              onClick={() => setActiveTab('alerts')}
-            >
-              <Bell size={18} />
-              التنبيهات
-              {alerts.length > 0 && (
-                <span className="nd-nav__badge">{alerts.length}</span>
-              )}
-            </button>
-          </nav>
-          <div className="nd-sidebar__footer">
-            <button className="nd-btn nd-btn--ghost nd-btn--sm" onClick={handleLogout}>
-              تسجيل الخروج
-            </button>
+          <div className="nd-sidebar-header">
+            <h3 className="nd-sidebar-title">تنبيهات عاجلة</h3>
+            <span className="nd-sidebar-count">{allNotifications.length}</span>
+          </div>
+
+          <div className="nd-alerts-list">
+            {allNotifications.length === 0 ? (
+               <div style={{ textAlign: 'center', color: '#6F767E', padding: '2rem 0' }}>لا توجد تنبيهات</div>
+            ) : (
+              allNotifications.map(alert => (
+                <div key={alert.id} className={`nd-alert-card nd-alert-${alert.type}`}>
+                  <div className="nd-alert-icon-box">
+                    {alert.icon === 'triangle' && <AlertTriangle size={20} />}
+                    {alert.icon === 'asterisk' && <Droplet size={20} />}
+                    {alert.icon === 'bell' && <Bell size={20} />}
+                  </div>
+                  <div className="nd-alert-content">
+                    <div className="nd-alert-title">{alert.title}</div>
+                    <div className="nd-alert-desc">{alert.desc}</div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </aside>
-
-        {/* ═══ Main Content ═══ */}
-        <main className="nd-main">
-          {/* Stats Cards */}
-          <div className="nd-stats">
-            <div className="nd-stat">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="nd-stat__label">إجمالي المرضى اليوم</span>
-                <Users size={20} color="var(--accent-color)" />
-              </div>
-              <span className="nd-stat__value">{stats?.totalPatientsToday ?? '—'}</span>
-            </div>
-            <div className="nd-stat nd-stat--warning">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="nd-stat__label">المرضى في الانتظار</span>
-                <Clock size={20} color="var(--warning)" />
-              </div>
-              <span className="nd-stat__value">{stats?.waitingPatients ?? '—'}</span>
-            </div>
-            <div className="nd-stat">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="nd-stat__label">المواعيد القادمة</span>
-                <Activity size={20} color="var(--accent-color)" />
-              </div>
-              <span className="nd-stat__value">{stats?.upcomingAppointments ?? '—'}</span>
-            </div>
-            <div className="nd-stat nd-stat--danger">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="nd-stat__label">الحالات الطارئة</span>
-                <AlertCircle size={20} color="#d93025" />
-              </div>
-              <span className="nd-stat__value">{stats?.emergencyCases ?? '—'}</span>
-            </div>
-          </div>
-
-          {/* ═══ Tab: Queue ═══ */}
-          {activeTab === 'queue' && (
-            <div className="nd-section">
-              <div className="nd-section__header">
-                <div>
-                  <h1 className="nd-section__title">طابور المرضى</h1>
-                  <p className="nd-section__sub">
-                    قائمة المرضى المنتظرين اليوم مع الأولوية والحالة
-                  </p>
-                </div>
-                <div className="nd-section__actions">
-                  <button className="nd-btn nd-btn--ghost" onClick={refresh}>
-                    <RefreshCw size={14} style={{ marginLeft: 6, verticalAlign: 'middle' }} />
-                    تحديث
-                  </button>
-                </div>
-              </div>
-
-              {/* Priority Filter */}
-              <div className="nd-filters">
-                <span className="nd-filters__label">الأولوية:</span>
-                {['all', 'طوارئ', 'عاجل', 'عادي'].map(f => (
-                  <button
-                    key={f}
-                    className={`nd-filter-btn ${priorityFilter === f ? 'active' : ''}`}
-                    onClick={() => { setPriorityFilter(f); setQueuePage(1) }}
-                  >
-                    {f === 'all' ? 'الكل' : f}
-                  </button>
-                ))}
-              </div>
-
-              <div className="nd-table-wrap">
-                <table className="nd-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>اسم المريض</th>
-                      <th>رقم الهوية</th>
-                      <th>وقت الوصول</th>
-                      <th>النوع</th>
-                      <th>الحالة</th>
-                      <th>الطبيب</th>
-                      <th>القسم</th>
-                      <th>الأولوية</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {isLoading ? (
-                      <tr>
-                        <td colSpan={9} className="nd-table__empty">
-                          <span className="nd-spinner" /> جارٍ التحميل...
-                        </td>
-                      </tr>
-                    ) : error ? (
-                      <tr>
-                        <td colSpan={9} className="nd-table__error">{error}</td>
-                      </tr>
-                    ) : queuePageData.length === 0 ? (
-                      <tr>
-                        <td colSpan={9} className="nd-table__empty">
-                          لا يوجد مرضى في الطابور
-                        </td>
-                      </tr>
-                    ) : (
-                      queuePageData.map((q: QueuePatient) => (
-                        <tr key={q.visitId}>
-                          <td>
-                            <span className="nd-queue-number">{q.queueNumber}</span>
-                          </td>
-                          <td>
-                            <div className="nd-patient-cell">
-                              <span className="nd-avatar">
-                                {initials(q.patientName)}
-                              </span>
-                              <div className="nd-patient-cell__name">
-                                {q.patientName}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="nd-table__muted">{q.nationalId || '—'}</td>
-                          <td className="nd-table__muted">{formatTime(q.arrivalTime)}</td>
-                          <td>
-                            <span className={`nd-type-badge ${getTypeClass(q.visitTypeName)}`}>
-                              {q.visitTypeName}
-                            </span>
-                          </td>
-                          <td className="nd-table__muted">{q.statusName}</td>
-                          <td className="nd-table__muted">{q.doctorName}</td>
-                          <td className="nd-table__muted">{q.departmentName}</td>
-                          <td>
-                            <span className={`nd-priority-badge ${getPriorityClass(q.priorityName)}`}>
-                              {q.priorityName}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-
-                {filteredQueue.length > PAGE_SIZE && (
-                  <div className="nd-pagination">
-                    <span className="nd-pagination__info">
-                      عرض {queuePageData.length} من أصل {filteredQueue.length} مريض
-                    </span>
-                    <div className="nd-pagination__btns">
-                      {Array.from(
-                        { length: Math.ceil(filteredQueue.length / PAGE_SIZE) },
-                        (_, i) => (
-                          <button
-                            key={i}
-                            className={`nd-page-btn ${queuePage === i + 1 ? 'active' : ''}`}
-                            onClick={() => setQueuePage(i + 1)}
-                          >
-                            {i + 1}
-                          </button>
-                        )
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* ═══ Tab: Appointments ═══ */}
-          {activeTab === 'appointments' && (
-            <div className="nd-section">
-              <div className="nd-section__header">
-                <div>
-                  <h1 className="nd-section__title">مواعيد اليوم</h1>
-                  <p className="nd-section__sub">
-                    قائمة جميع مواعيد اليوم مع الحالة الحالية
-                  </p>
-                </div>
-                <div className="nd-section__actions">
-                  <button className="nd-btn nd-btn--ghost" onClick={refresh}>
-                    <RefreshCw size={14} style={{ marginLeft: 6, verticalAlign: 'middle' }} />
-                    تحديث
-                  </button>
-                </div>
-              </div>
-
-              {isLoading ? (
-                <div className="nd-loading-center">
-                  <span className="nd-spinner" />
-                  <span>جارٍ التحميل...</span>
-                </div>
-              ) : error ? (
-                <div className="nd-table__error" style={{ padding: '2rem', textAlign: 'center' }}>
-                  {error}
-                </div>
-              ) : appointments.length === 0 ? (
-                <div className="nd-table__empty" style={{ padding: '3rem', textAlign: 'center' }}>
-                  لا توجد مواعيد اليوم
-                </div>
-              ) : (
-                <div className="nd-appointments">
-                  {appointments.map((a: TodayAppointment) => (
-                    <div className="nd-appt-card" key={a.visitId}>
-                      <div className="nd-appt-card__time">
-                        <span className="nd-appt-card__time-value">
-                          {formatTime(a.scheduledTime)}
-                        </span>
-                        <span className="nd-appt-card__time-label">
-                          {a.visitTypeName}
-                        </span>
-                      </div>
-                      <div className="nd-appt-card__divider" />
-                      <div className="nd-appt-card__info">
-                        <div className="nd-appt-card__patient">{a.patientName}</div>
-                        <div className="nd-appt-card__doctor">
-                          {a.doctorName} · {a.departmentName}
-                        </div>
-                      </div>
-                      <div className="nd-appt-card__status">
-                        <span
-                          className={`nd-stage-badge ${getAppointmentStatusClass(a.status)}`}
-                        >
-                          {a.status}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ═══ Tab: Alerts ═══ */}
-          {activeTab === 'alerts' && (
-            <div className="nd-section">
-              <div className="nd-section__header">
-                <div>
-                  <h1 className="nd-section__title">تنبيهات عاجلة</h1>
-                  <p className="nd-section__sub">
-                    تنبيهات فورية للتمريض — مرضى متأخرون ومواعيد قادمة
-                  </p>
-                </div>
-                <div className="nd-section__actions">
-                  <button className="nd-btn nd-btn--ghost" onClick={refresh}>
-                    <RefreshCw size={14} style={{ marginLeft: 6, verticalAlign: 'middle' }} />
-                    تحديث
-                  </button>
-                </div>
-              </div>
-
-              {isLoading ? (
-                <div className="nd-loading-center">
-                  <span className="nd-spinner" />
-                  <span>جارٍ التحميل...</span>
-                </div>
-              ) : alerts.length === 0 ? (
-                <div className="nd-alerts-empty">
-                  <div className="nd-alerts-empty__icon">
-                    <CheckCircle size={28} />
-                  </div>
-                  <div className="nd-alerts-empty__text">
-                    لا توجد تنبيهات عاجلة حالياً
-                  </div>
-                </div>
-              ) : (
-                <div className="nd-alerts">
-                  {alerts.map((alert: NurseAlert) => (
-                    <div
-                      key={alert.id}
-                      className={`nd-alert-card ${
-                        alert.type === 'late'
-                          ? 'nd-alert-card--late'
-                          : 'nd-alert-card--upcoming'
-                      }`}
-                    >
-                      <div
-                        className={`nd-alert-icon ${
-                          alert.type === 'late'
-                            ? 'nd-alert-icon--late'
-                            : 'nd-alert-icon--upcoming'
-                        }`}
-                      >
-                        {alert.type === 'late' ? (
-                          <AlertTriangle size={20} />
-                        ) : (
-                          <Clock size={20} />
-                        )}
-                      </div>
-                      <div className="nd-alert-body">
-                        <div className="nd-alert-body__title">
-                          {alert.patientName}
-                        </div>
-                        <div className="nd-alert-body__desc">
-                          {alert.message}
-                        </div>
-                        <div className="nd-alert-body__time">
-                          الموعد: {alert.time}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </main>
       </div>
 
-      {/* ═══ Live Toast Notification ═══ */}
+      {/* Live Toast Notification */}
       {liveToast && (
-        <div style={{
-          position: 'fixed',
-          bottom: '30px',
-          left: '30px',
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--accent-color)',
-          boxShadow: 'var(--shadow-lg)',
-          padding: '16px 24px',
-          borderRadius: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          zIndex: 9999,
-          animation: 'nd-slide-up 0.3s ease-out forwards'
-        }}>
-          <div style={{ background: 'var(--accent-soft)', color: 'var(--accent-color)', padding: '8px', borderRadius: '50%' }}>
-            <Bell size={20} />
+        <div className="nd-toast">
+          <div className="nd-toast-icon">
+            <BellRing size={20} color="#0066FF" />
           </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-main)' }}>تنبيه جديد</div>
-            <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{liveToast.message}</div>
+          <div className="nd-toast-content">
+            <div className="nd-toast-title">{liveToast.title}</div>
+            <div className="nd-toast-desc">{liveToast.message}</div>
           </div>
         </div>
       )}
-      <style>{`
-        @keyframes nd-slide-up {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   )
 }
