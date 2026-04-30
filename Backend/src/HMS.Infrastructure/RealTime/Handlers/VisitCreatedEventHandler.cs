@@ -1,4 +1,4 @@
-﻿using HMS.Application.Features.Visits.Events;
+using HMS.Application.Features.Visits.Events;
 using HMS.Infrastructure.RealTime;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
@@ -14,7 +14,7 @@ public class VisitCreatedEventHandler : INotificationHandler<VisitCreatedEvent>
 
     public async Task Handle(VisitCreatedEvent notification, CancellationToken cancellationToken)
     {
-        var groupName = $"Tenant_{notification.TenantId}_Nurses_{notification.BranchId}";
+        var groupName = $"Nurses_{notification.TenantId}_{notification.BranchId}";
 
         var payload = new
         {

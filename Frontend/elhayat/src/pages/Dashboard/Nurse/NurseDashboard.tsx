@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Users, Clock, Calendar, AlertCircle, RefreshCw,
@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useNurse } from '../../../hooks/useNurse'
 import type { NurseAlert } from '../../../hooks/useNurse'
+import { useSignalR } from '../../../hooks/useSignalR'
 import type { QueuePatient, TodayAppointment } from '../../../services/nurseService'
 import { getUserName, getRole, getOrgName, getBranchName } from '../../../utils/auth'
 import { authService } from '../../../services/authService'
@@ -64,6 +65,46 @@ export default function NurseDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('queue')
   const [queuePage, setQueuePage] = useState(1)
   const [priorityFilter, setPriorityFilter] = useState('all')
+  const [liveToast, setLiveToast] = useState<{ id: number; message: string } | null>(null)
+
+  const playAlertSound = useCallback(() => {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+      if (!AudioContextClass) return
+      const ctx = new AudioContextClass()
+      const osc = ctx.createOscillator()
+      const gainNode = ctx.createGain()
+      
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(880, ctx.currentTime) // A5 note
+      
+      gainNode.gain.setValueAtTime(0.1, ctx.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.5)
+      
+      osc.connect(gainNode)
+      gainNode.connect(ctx.destination)
+      
+      osc.start()
+      osc.stop(ctx.currentTime + 0.5)
+    } catch (e) {
+      console.error('Audio play failed:', e)
+    }
+  }, [])
+
+  const handleNewNotification = useCallback((payload?: any) => {
+    playAlertSound()
+    setLiveToast({ id: Date.now(), message: 'إشعار جديد: يوجد تحديث في الطابور أو المواعيد' })
+    refresh()
+    
+    setTimeout(() => {
+      setLiveToast(null)
+    }, 5000)
+  }, [playAlertSound, refresh])
+
+  useSignalR(useMemo(() => [
+    { name: 'NewVisitAssigned', handler: handleNewNotification },
+    { name: 'Notification', handler: handleNewNotification }
+  ], [handleNewNotification]))
 
   // ── Queue filtering ─────────────────────────────────────────────────────
   const filteredQueue = useMemo(() => {
@@ -462,6 +503,39 @@ export default function NurseDashboard() {
           )}
         </main>
       </div>
+
+      {/* ═══ Live Toast Notification ═══ */}
+      {liveToast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '30px',
+          left: '30px',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--accent-color)',
+          boxShadow: 'var(--shadow-lg)',
+          padding: '16px 24px',
+          borderRadius: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          zIndex: 9999,
+          animation: 'nd-slide-up 0.3s ease-out forwards'
+        }}>
+          <div style={{ background: 'var(--accent-soft)', color: 'var(--accent-color)', padding: '8px', borderRadius: '50%' }}>
+            <Bell size={20} />
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-main)' }}>تنبيه جديد</div>
+            <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{liveToast.message}</div>
+          </div>
+        </div>
+      )}
+      <style>{`
+        @keyframes nd-slide-up {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   )
 }
