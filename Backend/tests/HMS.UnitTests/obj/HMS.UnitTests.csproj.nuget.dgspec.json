@@ -1,20 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "A:\\multiTenanti\\Backend\\tests\\HMS.UnitTests\\HMS.UnitTests.csproj": {}
+    "D:\\multi tenant\\multiTenanti\\Backend\\tests\\HMS.UnitTests\\HMS.UnitTests.csproj": {}
   },
   "projects": {
-    "A:\\multiTenanti\\Backend\\tests\\HMS.UnitTests\\HMS.UnitTests.csproj": {
+    "D:\\multi tenant\\multiTenanti\\Backend\\tests\\HMS.UnitTests\\HMS.UnitTests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "A:\\multiTenanti\\Backend\\tests\\HMS.UnitTests\\HMS.UnitTests.csproj",
+        "projectUniqueName": "D:\\multi tenant\\multiTenanti\\Backend\\tests\\HMS.UnitTests\\HMS.UnitTests.csproj",
         "projectName": "HMS.UnitTests",
-        "projectPath": "A:\\multiTenanti\\Backend\\tests\\HMS.UnitTests\\HMS.UnitTests.csproj",
-        "packagesPath": "C:\\Users\\ahmed\\.nuget\\packages\\",
-        "outputPath": "A:\\multiTenanti\\Backend\\tests\\HMS.UnitTests\\obj\\",
+        "projectPath": "D:\\multi tenant\\multiTenanti\\Backend\\tests\\HMS.UnitTests\\HMS.UnitTests.csproj",
+        "packagesPath": "C:\\Users\\Yathrip\\.nuget\\packages\\",
+        "outputPath": "D:\\multi tenant\\multiTenanti\\Backend\\tests\\HMS.UnitTests\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\ahmed\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Yathrip\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -40,7 +44,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.200"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net9.0": {
@@ -79,7 +83,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.309/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

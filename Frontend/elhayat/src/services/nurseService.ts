@@ -23,6 +23,7 @@ export interface QueuePatient {
   arrivalTime: string
   visitTypeName: string
   statusName: string
+  status: string
   doctorName: string
   departmentName: string
   priorityName: string

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   Bed, Users, Activity, AlertCircle, RefreshCw, Plus, 
@@ -8,6 +8,7 @@ import {
 import { useDashboard } from '../../../hooks/useDashboard'
 import { getUserName, getRole, getOrgName, getBranchName } from '../../../utils/auth'
 import { authService } from '../../../services/authService'
+import { useSignalR } from '../../../hooks/useSignalR'
 import type { Visit, Patient } from '../../../services/dashboardService'
 import Modal from '../../../components/Modal'
 import ConfirmModal from '../../../components/ConfirmModal'
@@ -49,6 +50,8 @@ const STATUS_MAP: Record<string, { label: string, class: string }> = {
   'OpCompleted': { label: 'انتهت العملية', class: 'stage-post' },
   'PostOp': { label: 'ما بعد العملية', class: 'stage-post' },
   'Completed': { label: 'تم الانتهاء', class: 'stage-post' },
+  'PendingCheckoutNurse': { label: 'بانتظار خروج التمريض', class: 'stage-pre' },
+  'PendingCheckoutReception': { label: 'تأكيد خروج الاستقبال', class: 'stage-in' },
 }
 
 function getStageInfo(stage: string) {
@@ -80,6 +83,17 @@ export default function ReceptionDashboard() {
     id: string,
     isLoading: boolean
   }>({ isOpen: false, type: 'finish', id: '', isLoading: false })
+  
+  const [liveToast, setLiveToast] = useState<{ title: string, message: string } | null>(null)
+
+  const handleCheckoutNotification = useCallback(() => {
+    refresh()
+    setLiveToast({ 
+      title: 'طلب خروج', 
+      message: 'التمريض يطلب تأكيد خروج مريض' 
+    })
+    setTimeout(() => setLiveToast(null), 5000)
+  }, [refresh])
 
   const filteredVisits = useMemo(() => {
     if (deptFilter === 'all') return visits
@@ -108,6 +122,11 @@ export default function ReceptionDashboard() {
 
   const visitsPage = filteredVisits.slice((roomsPage - 1) * PAGE_SIZE, roomsPage * PAGE_SIZE)
   const patientsPageData = filteredPatients.slice((patientsPage - 1) * PAGE_SIZE, patientsPage * PAGE_SIZE)
+
+  useSignalR(useMemo(() => [
+    { name: 'roomStatusUpdated', handler: handleCheckoutNotification },
+    { name: 'visitCreated', handler: () => refresh() },
+  ], [refresh, handleCheckoutNotification]))
 
   function handleLogout() {
     authService.logout()
@@ -267,7 +286,7 @@ export default function ReceptionDashboard() {
                       const isICU = String(room).includes('ICU') || (v.departmentName || v.department || '').includes('عناية')
                       const stage = v.stage ?? 'نشط'
                       return (
-                        <tr key={v.id}>
+                        <tr key={v.id} className={stage === 'PendingCheckoutReception' ? 'rd-row-danger' : ''}>
                           <td><span className={`rd-room-badge ${isICU ? 'rd-room-badge--icu' : ''}`}>{room}</span></td>
                           <td>
                             <div className="rd-patient-cell">
@@ -293,8 +312,8 @@ export default function ReceptionDashboard() {
                           <td>
                             <div className="rd-table-actions">
                               <button 
-                                className="rd-action-btn rd-action-btn--success" 
-                                title="إنهاء الزيارة"
+                                className={`rd-action-btn rd-action-btn--success ${stage === 'PendingCheckoutReception' ? 'rd-action-btn--pulse' : ''}`}
+                                title={stage === 'PendingCheckoutReception' ? 'تأكيد خروج المريض' : 'إنهاء الزيارة'}
                                 onClick={() => setConfirmModal({ isOpen: true, type: 'finish', id: v.id, isLoading: false })}
                               >
                                 <CheckCircle size={16} />
@@ -473,6 +492,18 @@ export default function ReceptionDashboard() {
         variant={confirmModal.type === 'delete' ? 'danger' : 'success'}
         confirmText={confirmModal.type === 'delete' ? 'حذف نهائي' : 'إنهاء الآن'}
       />
+      {/* Live Toast Notification */}
+      {liveToast && (
+        <div className="rd-toast">
+          <div className="rd-toast-icon">
+            <CheckCircle size={20} color="#10b981" />
+          </div>
+          <div className="rd-toast-content">
+            <div className="rd-toast-title">{liveToast.title}</div>
+            <div className="rd-toast-desc">{liveToast.message}</div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

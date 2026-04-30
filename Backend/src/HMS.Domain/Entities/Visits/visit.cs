@@ -89,6 +89,7 @@ public class Visit : TenantEntity
     private static bool IsValidTransition(VisitStatus current, VisitStatus next)
     {
         if (next == VisitStatus.Completed) return true;
+        if (next == VisitStatus.PendingCheckoutNurse || next == VisitStatus.PendingCheckoutReception) return true;
 
         return current switch
         {

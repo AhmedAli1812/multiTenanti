@@ -1,20 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "A:\\multiTenanti\\Backend\\tests\\HMS.IntegrationTests\\HMS.IntegrationTests.csproj": {}
+    "D:\\multi tenant\\multiTenanti\\Backend\\tests\\HMS.IntegrationTests\\HMS.IntegrationTests.csproj": {}
   },
   "projects": {
-    "A:\\multiTenanti\\Backend\\tests\\HMS.IntegrationTests\\HMS.IntegrationTests.csproj": {
+    "D:\\multi tenant\\multiTenanti\\Backend\\tests\\HMS.IntegrationTests\\HMS.IntegrationTests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "A:\\multiTenanti\\Backend\\tests\\HMS.IntegrationTests\\HMS.IntegrationTests.csproj",
+        "projectUniqueName": "D:\\multi tenant\\multiTenanti\\Backend\\tests\\HMS.IntegrationTests\\HMS.IntegrationTests.csproj",
         "projectName": "HMS.IntegrationTests",
-        "projectPath": "A:\\multiTenanti\\Backend\\tests\\HMS.IntegrationTests\\HMS.IntegrationTests.csproj",
-        "packagesPath": "C:\\Users\\ahmed\\.nuget\\packages\\",
-        "outputPath": "A:\\multiTenanti\\Backend\\tests\\HMS.IntegrationTests\\obj\\",
+        "projectPath": "D:\\multi tenant\\multiTenanti\\Backend\\tests\\HMS.IntegrationTests\\HMS.IntegrationTests.csproj",
+        "packagesPath": "C:\\Users\\Yathrip\\.nuget\\packages\\",
+        "outputPath": "D:\\multi tenant\\multiTenanti\\Backend\\tests\\HMS.IntegrationTests\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\ahmed\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Yathrip\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -40,7 +44,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.200"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net9.0": {
@@ -79,7 +83,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.309/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

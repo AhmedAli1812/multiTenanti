@@ -8,5 +8,7 @@ public enum VisitStatus
     InOp = 4,
     OpCompleted = 5,
     PostOp = 6,
-    Completed = 7
+    Completed = 7,
+    PendingCheckoutNurse = 8,
+    PendingCheckoutReception = 9
 }
