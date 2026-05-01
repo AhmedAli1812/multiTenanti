@@ -90,7 +90,7 @@ export interface IntakeFormData {
     emergencyContactName: string
     emergencyRelation: string
     emergencyPhone: string
-    preferredContact: 'WhatsApp' | 'Email' | 'SMS'
+    preferredContact: 'WhatsApp' | 'Call' | 'SMS'
   }>
   step3: Partial<{
     departmentId: string
@@ -103,6 +103,7 @@ export interface IntakeFormData {
     /** UI may show "Walk-in"; store as "WalkIn" for backend */
     arrivalMethod: 'WalkIn' | 'Ambulance'
     chiefComplaint: string
+    notes: string
   }>
   step4: Partial<{
     paymentType: 'Cash' | 'Insurance' | 'Referral'
@@ -114,6 +115,10 @@ export interface IntakeFormData {
     consentToTreatment: boolean
     privacyConsent: boolean
     insuranceDataSharing: boolean
+    generalAdmission: boolean
+    surgicalConsent: boolean
+    financialResponsibility: boolean
+    bloodTransfusion: boolean
   }>
   step6: Partial<{
     needsTranslator: boolean
@@ -168,8 +173,8 @@ export interface IntakeSubmitPayload {
   }
   contactPreferences: {
     whatsApp: boolean
-    sms: boolean              // NOT SMS — backend property is "SMS" but JSON is case-insensitive
-    email: boolean
+    sms: boolean
+    call: boolean
   }
   visitInfo: {
     branchId: string
@@ -177,6 +182,7 @@ export interface IntakeSubmitPayload {
     arrivalMethod: string     // STRING name: "WalkIn" | "Ambulance"
     priority: string          // STRING name: "Normal" | "Urgent" | "Emergency"
     chiefComplaint?: string
+    notes?: string
     doctorId?: string | null
     roomId?: string | null
   }
@@ -190,6 +196,10 @@ export interface IntakeSubmitPayload {
     treatment: boolean
     privacy: boolean
     insuranceShare: boolean
+    generalAdmission?: boolean
+    surgicalConsent?: boolean
+    financialResponsibility?: boolean
+    bloodTransfusion?: boolean
   }
   flags: {
     needsTranslator: boolean

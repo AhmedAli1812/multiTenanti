@@ -24,7 +24,8 @@ public sealed class PatientIntake : TenantEntity, IAggregateRoot
         ArrivalMethod arrivalMethod,
         PriorityLevel priority,
         PaymentType  paymentType,
-        string       chiefComplaint)
+        string       chiefComplaint,
+        string?      notes = null)
     {
         var intake = new PatientIntake
         {
@@ -36,6 +37,7 @@ public sealed class PatientIntake : TenantEntity, IAggregateRoot
             Priority       = priority,
             PaymentType    = paymentType,
             ChiefComplaint = chiefComplaint.Trim(),
+            Notes          = notes,
             Status         = IntakeStatus.Draft,
             CreatedAt      = DateTime.UtcNow,
         };
@@ -52,6 +54,7 @@ public sealed class PatientIntake : TenantEntity, IAggregateRoot
     public PriorityLevel Priority      { get; private set; }
     public PaymentType   PaymentType   { get; private set; }
     public string        ChiefComplaint { get; private set; } = string.Empty;
+    public string?       Notes          { get; private set; }
     public IntakeStatus  Status         { get; private set; } = IntakeStatus.Draft;
 
     // ── Normalized owned entities (replaces JSON blobs) ────────────────────────
@@ -70,7 +73,8 @@ public sealed class PatientIntake : TenantEntity, IAggregateRoot
         VisitType     visitType,
         PriorityLevel priority,
         ArrivalMethod arrivalMethod,
-        string        chiefComplaint)
+        string        chiefComplaint,
+        string?       notes = null)
     {
         EnsureNotSubmitted();
         BranchId       = branchId;
@@ -78,6 +82,7 @@ public sealed class PatientIntake : TenantEntity, IAggregateRoot
         Priority       = priority;
         ArrivalMethod  = arrivalMethod;
         ChiefComplaint = chiefComplaint.Trim();
+        Notes          = notes;
     }
 
     public void SetEmergencyContact(string name, string phone, string? relationship = null)
@@ -111,7 +116,7 @@ public sealed class PatientIntake : TenantEntity, IAggregateRoot
         Status    = IntakeStatus.Submitted;
 
         RaiseDomainEvent(new IntakeSubmittedEvent(
-            Id, patientId, TenantId, BranchId, VisitType, Priority));
+            Id, patientId, TenantId, BranchId, VisitType, Priority, ArrivalMethod, ChiefComplaint, Notes));
     }
 
     public void MarkConvertedToVisit(Guid visitId)

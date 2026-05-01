@@ -157,7 +157,7 @@ export function useIntake() {
         contactPreferences: {
           whatsApp: step2.preferredContact === 'WhatsApp',
           sms:      step2.preferredContact === 'SMS',
-          email:    step2.preferredContact === 'Email',
+          call:     step2.preferredContact === 'Call',
         },
         visitInfo: {
           branchId,
@@ -168,6 +168,7 @@ export function useIntake() {
           // STRING name: "Normal" | "Urgent" | "Emergency"
           priority:      parsePriorityStr(step3.priority),
           chiefComplaint: step3.chiefComplaint,
+          notes:          step3.notes,
           doctorId:      step3.doctorId || null,
           roomId:        step3.roomId   || null,
         },
@@ -181,6 +182,10 @@ export function useIntake() {
           treatment:     step5.consentToTreatment  ?? false,
           privacy:       step5.privacyConsent       ?? false,
           insuranceShare: step5.insuranceDataSharing ?? false,
+          generalAdmission: step5.generalAdmission ?? false,
+          surgicalConsent:  step5.surgicalConsent  ?? false,
+          financialResponsibility: step5.financialResponsibility ?? false,
+          bloodTransfusion: step5.bloodTransfusion ?? false,
         },
         flags: {
           needsTranslator:  step6.needsTranslator        ?? false,

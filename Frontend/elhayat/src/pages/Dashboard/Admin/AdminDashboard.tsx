@@ -1,10 +1,8 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   LayoutDashboard, Users, ShieldCheck, Bed, ClipboardList, Building2, Globe, 
-  Search, Plus, Trash2, X, UserPlus, LogOut, TrendingUp, Hospital, 
-  MapPin, CheckCircle, ChevronLeft, ChevronRight, Activity, Calendar,
-  DollarSign, PieChart, BarChart3, Star, MoreHorizontal, UserCheck
+  Plus, X, LogOut, Hospital, Calendar
 } from 'lucide-react'
 import { getUserName, getRole, getOrgName, getBranchName, isSuperAdmin } from '../../../utils/auth'
 import { authService } from '../../../services/authService'
@@ -382,6 +380,8 @@ function AddRoomModal({ onClose, onSubmit }: {
 
   const [form, setForm] = useState<CreateRoomDto>({
     roomNumber: '',
+    name: '',
+    type: 1, // Default: Clinic
     capacity: 1,
     floorId: '',
     branchId: '',
@@ -404,7 +404,7 @@ function AddRoomModal({ onClose, onSubmit }: {
   }
 
   const submit = async () => {
-    if (!form.roomNumber || !form.capacity || !form.floorId || !form.branchId) {
+    if (!form.roomNumber || !form.name || !form.floorId || !form.branchId) {
       setError('جميع الحقول مطلوبة')
       return
     }
@@ -437,6 +437,19 @@ function AddRoomModal({ onClose, onSubmit }: {
             <div className="ad-field">
               <label className="ad-label">رقم الغرفة</label>
               <input className="ad-input" value={form.roomNumber} onChange={e => handle('roomNumber', e.target.value)} placeholder="101" autoFocus />
+            </div>
+            <div className="ad-field">
+              <label className="ad-label">اسم الغرفة (للعرض)</label>
+              <input className="ad-input" value={form.name} onChange={e => handle('name', e.target.value)} placeholder="غرفة الكشف 1" />
+            </div>
+            <div className="ad-field">
+              <label className="ad-label">نوع الغرفة</label>
+              <select className="ad-input" value={form.type} onChange={e => handle('type', parseInt(e.target.value))}>
+                <option value={1}>عيادة (Clinic)</option>
+                <option value={2}>طوارئ (ER)</option>
+                <option value={3}>رعاية مركزة (ICU)</option>
+                <option value={4}>عمليات (Operation)</option>
+              </select>
             </div>
             <div className="ad-field">
               <label className="ad-label">السعة (عدد الأسرة)</label>

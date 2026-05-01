@@ -75,10 +75,15 @@ export function useNurse() {
 
   const refresh = useCallback(() => { load() }, [load])
 
+  const dischargePatient = useCallback(async (visitId: string) => {
+    await nurseService.dischargePatient(visitId)
+    await load()
+  }, [load])
+
   // ── Computed alerts ──────────────────────────────────────────────────────
   const alerts: NurseAlert[] = computeAlerts(state.appointments)
 
-  return { ...state, alerts, refresh }
+  return { ...state, alerts, refresh, dischargePatient }
 }
 
 // ── Alert computation (client-side) ──────────────────────────────────────────

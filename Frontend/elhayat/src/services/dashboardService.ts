@@ -37,6 +37,8 @@ interface RoomStatusDto {
   doctorName: string
   departmentName: string
   diagnosis: string
+  chiefComplaint?: string
+  notes?: string
   status: string
 }
 
@@ -49,6 +51,8 @@ interface PreviousPatientDto {
   dischargeDate: string | null
   departmentName: string
   diagnosis: string
+  chiefComplaint?: string
+  notes?: string
   status: string
 }
 
@@ -80,6 +84,8 @@ export interface Visit {
   patientMedicalNumber: string
   doctorName: string
   diagnosis: string
+  chiefComplaint?: string
+  notes?: string
   stage: string
   age: number
   gender: string
@@ -141,7 +147,11 @@ export const dashboardService = {
       patientMedicalNumber: r.patientMedicalNumber ?? '—',
       doctorName:           r.doctorName  ?? '—',
       diagnosis:            r.diagnosis   ?? '—',
+      chiefComplaint:       r.chiefComplaint,
+      notes:                r.notes,
       stage:                r.status      ?? 'نشط',
+      age:                  0,
+      gender:               '—',
       department:           '',
       departmentName:       r.departmentName ?? '—',
     }))
@@ -161,7 +171,9 @@ export const dashboardService = {
       department:     '',
       departmentName: '',
       lastDiagnosis:  '—',
+      admissionDate:  p.admissionDate ?? '—',
       dischargeDate:  p.dischargeDate ?? '',
+      doctorName:     p.doctorName    ?? '—',
       gender:         '',
       age:            0,
     }))

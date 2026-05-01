@@ -1,9 +1,9 @@
 import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
-import { authService } from './authService'
+import { getStoredToken } from '../utils/auth'
 
 const SIGNALR_URL = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL.replace('/api', '')}/hubs/notifications`
-  : 'https://localhost:7087/hubs/notifications'
+  : '/hubs/notifications'
 
 class SignalRService {
   private connection: HubConnection | null = null
@@ -15,7 +15,7 @@ class SignalRService {
     this.isConnecting = true
 
     try {
-      const token = authService.getToken()
+      const token = getStoredToken()
       if (!token) throw new Error('No auth token available for SignalR')
 
       this.connection = new HubConnectionBuilder()

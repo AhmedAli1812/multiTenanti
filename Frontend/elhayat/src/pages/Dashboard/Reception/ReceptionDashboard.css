@@ -391,6 +391,12 @@
   background: var(--bg-hover);
 }
 
+.rd-row--discharged td {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.3) !important;
+  transition: background-color 0.5s ease;
+}
+
 .rd-table__muted {
   color: var(--text-muted) !important;
   font-size: 13px !important;

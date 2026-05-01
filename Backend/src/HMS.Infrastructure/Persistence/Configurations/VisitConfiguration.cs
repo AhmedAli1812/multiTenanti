@@ -47,6 +47,7 @@ public class VisitConfiguration : IEntityTypeConfiguration<Visit>
         builder.Property(v => v.Priority).IsRequired();
         builder.Property(v => v.ArrivalMethod).IsRequired();
         builder.Property(v => v.ChiefComplaint).HasMaxLength(1000).IsRequired(false);
+        builder.Property(v => v.Notes).HasMaxLength(4000).IsRequired(false);
         builder.Property(v => v.PayerType).IsRequired();
         builder.Property(v => v.Status).IsRequired();
         builder.Property(v => v.QueueNumber).IsRequired();

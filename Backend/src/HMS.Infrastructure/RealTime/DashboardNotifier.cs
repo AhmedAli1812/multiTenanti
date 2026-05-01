@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using HMS.Application.Abstractions.Services;
 
 namespace HMS.Infrastructure.RealTime;
@@ -47,5 +47,11 @@ public class DashboardNotifier : IDashboardNotifier
             {
                 timestamp = DateTime.UtcNow
             });
+    }
+
+    public async Task NotifyPatientDischarged(Guid tenantId, Guid branchId, Guid visitId)
+    {
+        await _hub.Clients.Group($"Reception_{tenantId}_{branchId}")
+            .SendAsync("patientDischarged", new { visitId });
     }
 }

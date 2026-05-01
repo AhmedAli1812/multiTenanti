@@ -37,7 +37,9 @@ public class GetTodayAppointmentsHandler : IRequestHandler<GetTodayAppointmentsQ
                 PatientName = v.Patient.FullName,
                 DoctorName = v.Doctor != null ? v.Doctor.FullName : "-",
                 DepartmentName = v.Doctor != null && v.Doctor.Department != null
-                    ? v.Doctor.Department.Name : "-"
+                    ? v.Doctor.Department.Name : "-",
+                v.ChiefComplaint,
+                v.Notes
             })
             .ToListAsync(ct);
 
@@ -50,6 +52,8 @@ public class GetTodayAppointmentsHandler : IRequestHandler<GetTodayAppointmentsQ
             ScheduledTime = v.VisitDate,
             QueueNumber = v.QueueNumber,
             Status = ComputeAppointmentStatus(v.Status, v.VisitDate, now),
+            ChiefComplaint = v.ChiefComplaint,
+            Notes = v.Notes,
             VisitTypeName = MapVisitType(v.VisitType)
         }).ToList();
     }

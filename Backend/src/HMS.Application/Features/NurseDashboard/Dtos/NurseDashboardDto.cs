@@ -19,6 +19,8 @@ public class QueuePatientDto
     public string DoctorName { get; set; } = string.Empty;
     public string DepartmentName { get; set; } = string.Empty;
     public string PriorityName { get; set; } = string.Empty;
+    public string? ChiefComplaint { get; set; }
+    public string? Notes { get; set; }
     public int QueueNumber { get; set; }
 }
 
@@ -31,5 +33,7 @@ public class TodayAppointmentDto
     public DateTime ScheduledTime { get; set; }
     public int QueueNumber { get; set; }
     public string Status { get; set; } = string.Empty;
+    public string? ChiefComplaint { get; set; }
+    public string? Notes { get; set; }
     public string VisitTypeName { get; set; } = string.Empty;
 }

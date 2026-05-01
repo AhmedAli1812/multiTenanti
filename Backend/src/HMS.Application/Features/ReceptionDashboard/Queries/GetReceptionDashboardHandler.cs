@@ -96,20 +96,21 @@ public class GetReceptionDashboardHandler
                 v.VisitDate,
                 v.CompletedAt,
 
-                PatientName = v.Patient.FullName,
-                MedicalNumber = v.Patient.MedicalNumber,
-                PatientDob = v.Patient.DateOfBirth,
-                PatientGender = v.Patient.Gender,
+                PatientName = v.Patient != null ? v.Patient.FullName : null,
+                MedicalNumber = v.Patient != null ? v.Patient.MedicalNumber : null,
+                PatientDob = v.Patient != null ? (DateTime?)v.Patient.DateOfBirth : null,
+                PatientGender = v.Patient != null ? (Gender?)v.Patient.Gender : null,
                 DoctorName = v.Doctor != null ? v.Doctor.FullName : "-",
 
                 // 🔥 Room من RoomAssignments
                 RoomName = _context.RoomAssignments
                     .Where(a => a.VisitId == v.Id && a.IsActive)
-                    .Select(a => a.Room.RoomNumber)
+                    .Select(a => a.Room != null ? a.Room.RoomNumber : null)
                     .FirstOrDefault(),
 
                 DepartmentName = v.Doctor != null && v.Doctor.Department != null ? v.Doctor.Department.Name : "-",
-                ChiefComplaint = v.ChiefComplaint ?? "-"
+                ChiefComplaint = v.ChiefComplaint ?? "-",
+                Notes = v.Notes
             })
             .ToListAsync(ct);
 
@@ -120,8 +121,8 @@ public class GetReceptionDashboardHandler
         var rooms = pagedVisits
             .Where(v => v.Status != VisitStatus.Completed)
             .Select(v => {
-                var age = today.Year - v.PatientDob.Year;
-                if (v.PatientDob > today.AddYears(-age)) age--;
+                var age = v.PatientDob.HasValue ? today.Year - v.PatientDob.Value.Year : 0;
+                if (v.PatientDob.HasValue && v.PatientDob.Value > today.AddYears(-age)) age--;
 
                 return new RoomStatusDto
                 {
@@ -131,9 +132,11 @@ public class GetReceptionDashboardHandler
                     PatientMedicalNumber = v.MedicalNumber ?? "",
                     DoctorName = v.DoctorName ?? "-",
                     DepartmentName = v.DepartmentName ?? "-",
+                    ChiefComplaint = v.ChiefComplaint ?? "-",
+                    Notes = v.Notes ?? "-",
                     Diagnosis = v.ChiefComplaint ?? "-",
                     Age = age,
-                    Gender = v.PatientGender.ToString(),
+                    Gender = v.PatientGender?.ToString() ?? "-",
                     Status = v.Status.ToString()
                 };
             })
@@ -154,6 +157,8 @@ public class GetReceptionDashboardHandler
                 AdmissionDate = v.VisitDate,
                 DischargeDate = v.CompletedAt,
                 DepartmentName = v.Doctor != null && v.Doctor.Department != null ? v.Doctor.Department.Name : "-",
+                ChiefComplaint = v.ChiefComplaint ?? "-",
+                Notes = v.Notes,
                 Diagnosis = v.ChiefComplaint ?? "-",
                 v.Patient.DateOfBirth,
                 v.Patient.Gender
@@ -172,6 +177,8 @@ public class GetReceptionDashboardHandler
                 AdmissionDate = p.AdmissionDate,
                 DischargeDate = p.DischargeDate,
                 DepartmentName = p.DepartmentName,
+                ChiefComplaint = p.ChiefComplaint,
+                Notes = p.Notes,
                 Diagnosis = p.Diagnosis,
                 Age = age,
                 Gender = p.Gender.ToString(),

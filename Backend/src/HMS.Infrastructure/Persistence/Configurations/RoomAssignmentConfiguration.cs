@@ -6,6 +6,7 @@ public class RoomAssignmentConfiguration : IEntityTypeConfiguration<RoomAssignme
 {
     public void Configure(EntityTypeBuilder<RoomAssignment> builder)
     {
+        builder.ToTable("RoomAssignments");
         builder.HasKey(x => x.Id);
 
         builder.HasIndex(x => x.RoomId);
