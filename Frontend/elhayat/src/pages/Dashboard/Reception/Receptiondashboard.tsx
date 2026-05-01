@@ -14,6 +14,7 @@ import Modal from '../../../components/Modal'
 import ConfirmModal from '../../../components/ConfirmModal'
 import PatientIntakeFlow from '../../Intake/PatientIntakeFlow'
 import ThemeLanguageToggle from '../../../components/ThemeLanguageToggle'
+import { useSignalR } from '../../../hooks/useSignalR'
 import './ReceptionDashboard.css'
 
 const PAGE_SIZE = 5
@@ -94,6 +95,58 @@ export default function ReceptionDashboard() {
     })
     setTimeout(() => setLiveToast(null), 5000)
   }, [refresh])
+
+  const [dischargedVisits, setDischargedVisits] = useState<Set<string>>(new Set())
+
+  const playAlertSound = useCallback(() => {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+      if (!AudioContextClass) return
+      const ctx = new AudioContextClass()
+      const osc = ctx.createOscillator()
+      const gainNode = ctx.createGain()
+      
+      osc.type = 'triangle'
+      osc.frequency.setValueAtTime(440, ctx.currentTime) // A4 note
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1)
+      
+      gainNode.gain.setValueAtTime(0.2, ctx.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.5)
+      
+      osc.connect(gainNode)
+      gainNode.connect(ctx.destination)
+      
+      osc.start()
+      osc.stop(ctx.currentTime + 0.5)
+    } catch (e) {
+      console.error('Audio play failed:', e)
+    }
+  }, [])
+
+  useSignalR(useMemo(() => [
+    { 
+      name: 'patientDischarged', 
+      handler: (data: any) => {
+        if (data?.visitId) {
+          playAlertSound()
+          setDischargedVisits(prev => {
+            const next = new Set(prev)
+            next.add(data.visitId)
+            return next
+          })
+          // Auto remove the highlight after 10 seconds
+          setTimeout(() => {
+            setDischargedVisits(prev => {
+              const next = new Set(prev)
+              next.delete(data.visitId)
+              return next
+            })
+            refresh()
+          }, 10000)
+        }
+      } 
+    }
+  ], [playAlertSound, refresh]))
 
   const filteredVisits = useMemo(() => {
     if (deptFilter === 'all') return visits
@@ -269,7 +322,8 @@ export default function ReceptionDashboard() {
                       <th>الغرفة</th>
                       <th>بيانات المريض</th>
                       <th>الطبيب المعالج</th>
-                      <th>التشخيص</th>
+                      <th>الشكوى</th>
+                      <th>الملاحظات</th>
                       <th>المرحلة</th>
                       <th>الإجراءات</th>
                     </tr>
@@ -285,8 +339,13 @@ export default function ReceptionDashboard() {
                       const room = v.roomNumber ?? '—'
                       const isICU = String(room).includes('ICU') || (v.departmentName || v.department || '').includes('عناية')
                       const stage = v.stage ?? 'نشط'
+                      const isDischarged = dischargedVisits.has(v.id)
                       return (
+<<<<<<< HEAD
+                        <tr key={v.id} className={isDischarged ? 'rd-row--discharged' : ''}>
+=======
                         <tr key={v.id} className={stage === 'PendingCheckoutReception' ? 'rd-row-danger' : ''}>
+>>>>>>> aabffe2c2a7205a85a20852e838644d212a1747d
                           <td><span className={`rd-room-badge ${isICU ? 'rd-room-badge--icu' : ''}`}>{room}</span></td>
                           <td>
                             <div className="rd-patient-cell">
@@ -303,7 +362,12 @@ export default function ReceptionDashboard() {
                           <td className="rd-table__muted">
                             {(v.doctorName ?? '—').replace(/^د\.\s*/, '').replace(/\s*د\.$/, '')}
                           </td>
-                          <td className="rd-table__muted">{v.diagnosis ?? '—'}</td>
+                          <td className="rd-table__muted" style={{ fontWeight: '600', color: 'var(--text-main)' }}>
+                            {v.chiefComplaint || '—'}
+                          </td>
+                          <td className="rd-table__muted" style={{ fontSize: '0.85rem', color: 'var(--accent-color)', fontStyle: 'italic' }}>
+                            {v.notes || '—'}
+                          </td>
                           <td>
                             <span className={`rd-stage-badge ${getStageInfo(stage).class}`}>
                               {getStageInfo(stage).label}

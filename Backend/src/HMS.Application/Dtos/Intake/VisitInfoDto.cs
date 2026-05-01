@@ -1,4 +1,4 @@
-﻿using HMS.Domain.Enums;
+using HMS.Domain.Enums;
 
 public class VisitInfoDto
 {
@@ -9,6 +9,7 @@ public class VisitInfoDto
     public string Priority { get; set; } = default!;
 
     public string? ChiefComplaint { get; set; }
+    public string? Notes { get; set; }
 
     public Guid? DoctorId { get; set; }
     public Guid? RoomId { get; set; }

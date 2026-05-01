@@ -129,6 +129,7 @@ public class FinishVisitHandler : IRequestHandler<FinishVisitCommand, Unit>
 
                 // 🔥 Notify immediately
                 await _dashboard.NotifyRoomAssigned(tenantId, visit.BranchId);
+                await _dashboard.NotifyPatientDischarged(tenantId, visit.BranchId, visit.Id);
 
                 // 💣 Notify after cleaning time
                 _ = Task.Run(async () =>

@@ -41,13 +41,17 @@ public sealed class IntakeSubmittedEventHandler(
 
             // ── Create Visit ───────────────────────────────────────────────────
             var visit = Visit.Create(
-                patientId:   evt.PatientId,
-                branchId:    evt.BranchId,
-                visitType:   visitType,
-                tenantId:    evt.TenantId,
-                queueNumber: queueNumber,
-                doctorId:    doctorId,
-                createdBy:   null);
+                patientId:      evt.PatientId,
+                branchId:       evt.BranchId,
+                visitType:      visitType,
+                tenantId:       evt.TenantId,
+                queueNumber:    queueNumber,
+                doctorId:       doctorId,
+                priority:       (PriorityLevel)(int)evt.Priority,
+                arrivalMethod:  (ArrivalMethod)(int)evt.ArrivalMethod,
+                chiefComplaint: evt.ChiefComplaint,
+                notes:          evt.Notes,
+                createdBy:      null);
 
             await context.Visits.AddAsync(visit, cancellationToken);
 

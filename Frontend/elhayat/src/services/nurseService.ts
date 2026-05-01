@@ -20,6 +20,7 @@ export interface QueuePatient {
   visitId: string
   patientName: string
   nationalId: string
+  nationalIdUrl?: string
   arrivalTime: string
   visitTypeName: string
   statusName: string
@@ -28,6 +29,8 @@ export interface QueuePatient {
   departmentName: string
   priorityName: string
   queueNumber: number
+  chiefComplaint?: string
+  notes?: string
 }
 
 export interface TodayAppointment {
@@ -39,6 +42,8 @@ export interface TodayAppointment {
   queueNumber: number
   status: string
   visitTypeName: string
+  chiefComplaint?: string
+  notes?: string
 }
 
 // ── Service ───────────────────────────────────────────────────────────────────
@@ -73,5 +78,12 @@ export const nurseService = {
     const { data } = await apiClient.get<TodayAppointment[]>('/nurse/appointments/today')
     if (!Array.isArray(data)) return []
     return data
+  },
+
+  /**
+   * PATCH /api/visits/{id}/finish
+   */
+  dischargePatient: async (visitId: string): Promise<void> => {
+    await apiClient.patch(`/visits/${visitId}/finish`)
   },
 }

@@ -8,6 +8,7 @@ public class UserConfiguration : TenantEntityConfiguration<User>
 {
     public override void Configure(EntityTypeBuilder<User> builder)
     {
+        builder.ToTable("Users");
         base.Configure(builder);
 
         builder.Property(x => x.FullName)

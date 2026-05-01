@@ -11,13 +11,13 @@ export default defineConfig({
     // The browser only ever sees http://localhost:5173, so no preflight needed.
     proxy: {
       '/api': {
-        target: 'https://localhost:7154',
+        target: 'http://localhost:5004',
         changeOrigin: true,
         // Accept the self-signed dev cert from the .NET dev server
         secure: false,
       },
       '/hubs': {
-        target: 'https://localhost:7154',
+        target: 'http://localhost:5004',
         changeOrigin: true,
         secure: false,
         ws: true,   // WebSocket (SignalR DashboardHub)

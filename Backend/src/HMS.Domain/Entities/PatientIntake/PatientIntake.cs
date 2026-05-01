@@ -1,4 +1,4 @@
-﻿using HMS.Domain.Entities.Base;
+using HMS.Domain.Entities.Base;
 using HMS.Domain.Enums;
 
 
@@ -14,6 +14,7 @@ public class PatientIntake : TenantEntity
     public PriorityLevel Priority { get; set; }
 
     public string ChiefComplaint { get; set; } = string.Empty;
+    public string? Notes { get; set; }
 
     public PaymentType PaymentType { get; set; }
 

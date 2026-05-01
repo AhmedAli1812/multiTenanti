@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
-  User, Phone, Mail, UploadCloud, AlertCircle, MessageSquare, Hospital, 
+  User, Phone, PhoneCall, UploadCloud, AlertCircle, MessageSquare, Hospital, 
   UserCheck, DoorOpen, Check, CreditCard, Coins, ShieldCheck, CheckCircle2, 
   Globe, Star, Accessibility, Printer, ChevronLeft, ChevronRight, X, Plus
 } from 'lucide-react'
@@ -209,7 +209,7 @@ function Step2({ data, onChange }: {
         <div className="pif-radio-group">
           {[
             { id: 'WhatsApp', label: 'واتساب (WhatsApp)', icon: <MessageSquare size={18} /> },
-            { id: 'Email', label: 'البريد الإلكتروني', icon: <Mail size={18} /> },
+            { id: 'Call', label: 'الاتصال هاتفيا', icon: <PhoneCall size={18} /> },
             { id: 'SMS', label: 'رسائل قصيرة (SMS)', icon: <Phone size={18} /> },
           ].map((opt) => (
             <label key={opt.id} className={`pif-radio-card ${data.preferredContact === opt.id ? 'selected' : ''}`}>
@@ -246,34 +246,28 @@ function Step3({ data, onChange, departments, doctors, rooms }: {
           <span className="pif-card__icon"><Hospital size={20} /></span>
           <h3>معلومات الحجز</h3>
         </div>
-        <div className="pif-grid pif-grid--2">
-          <div className="pif-field">
-            <SearchableSelect
-              label="القسم"
-              required
-              placeholder="اختر القسم"
-              value={data.departmentId ?? ''}
-              options={departments.map(d => ({ id: d.id, label: d.name }))}
-              onChange={val => onChange({ ...data, departmentId: val })}
-              icon={<Hospital size={16} />}
-            />
-          </div>
-          <div className="pif-field">
-            <label>نوع الزيارة</label>
-            <div className="pif-segmented">
-              {([
-                { value: 'Inpatient', label: 'داخلي' },
-                { value: 'Emergency', label: 'طوارئ' },
-                { value: 'Outpatient', label: 'حاضنات' },
-              ] as const).map(t => (
-                <button key={t.value}
-                  className={`pif-segmented__btn ${data.visitType === t.value ? 'active' : ''}`}
-                  onClick={() => onChange({ ...data, visitType: t.value })}>
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className="pif-field pif-field--full">
+          <label>القسم والزيارة <span style={{ color: 'var(--danger)' }}>*</span></label>
+          <SearchableSelect
+            placeholder="اختر القسم ونوع الزيارة..."
+            options={(departments || []).flatMap(d => [
+              { id: `${d.id}_Outpatient`, label: `${d.name} (Outpatient)`, visitType: 'Outpatient' },
+              { id: `${d.id}_Emergency`, label: `${d.name} (Emergency)`, visitType: 'Emergency' },
+              { id: `${d.id}_Inpatient`, label: `${d.name} (Inpatient)`, visitType: 'Inpatient' },
+            ])}
+            value={data.departmentId ? `${data.departmentId}_${data.visitType}` : ''}
+            onChange={val => {
+              const [deptId, vType] = val.split('_')
+              onChange({ 
+                ...data, 
+                departmentId: deptId,
+                visitType: vType as any
+              })
+            }}
+            icon={<Hospital size={16} />}
+          />
+        </div>
+        <div className="pif-grid pif-grid--2" style={{ marginTop: '1rem' }}>
           {data.visitType === 'Inpatient' && (
             <>
               <div className="pif-field">
@@ -344,9 +338,16 @@ function Step3({ data, onChange, departments, doctors, rooms }: {
         <div className="pif-field pif-field--full" style={{ marginTop: '1.5rem' }}>
           <label>الشكوى الرئيسية</label>
           <textarea className="pif-input pif-textarea"
-            placeholder="اكتب الشكوى الرئيسية للمريض هنا..." rows={4}
+            placeholder="اكتب الشكوى الرئيسية للمريض هنا..." rows={3}
             value={data.chiefComplaint ?? ''}
             onChange={e => onChange({ ...data, chiefComplaint: e.target.value })} />
+        </div>
+        <div className="pif-field pif-field--full" style={{ marginTop: '1rem' }}>
+          <label>ملاحظات إضافية</label>
+          <textarea className="pif-input pif-textarea"
+            placeholder="اكتب أي ملاحظات إضافية هنا..." rows={3}
+            value={data.notes ?? ''}
+            onChange={e => onChange({ ...data, notes: e.target.value })} />
         </div>
       </div>
     </div>
@@ -442,7 +443,11 @@ function Step5({ data, onChange }: {
 }) {
   const consents = [
     { key: 'consentToTreatment' as const, title: 'الموافقة على العلاج', desc: 'أقر بموافقتي على تلقي الرعاية الطبية والفحوصات اللازمة تحت إشراف الفريق الطبي المختص.' },
-    { key: 'privacyConsent' as const, title: 'خصوصية البيانات (HIPAA/GDPR)', desc: 'أوافق على سياسة معالجة البيانات الشخصية والطبية وفقاً للمعايير العالمية لحماية الخصوصية.' },
+    { key: 'generalAdmission' as const, title: 'إقرار الدخول العام (General Admission)', desc: 'أوافق على سياسة الدخول العامة للمستشفى والالتزام باللوائح والأنظمة الداخلية.' },
+    { key: 'surgicalConsent' as const, title: 'إقرار العمليات الجراحية (Surgical)', desc: 'أوافق على إجراء العمليات الجراحية والتخدير اللازم وفقاً لتقدير الفريق الجراحي المختص.' },
+    { key: 'privacyConsent' as const, title: 'خصوصية البيانات (Data Privacy)', desc: 'أوافق على سياسة معالجة البيانات الشخصية والطبية وفقاً للمعايير العالمية لحماية الخصوصية.' },
+    { key: 'financialResponsibility' as const, title: 'المسؤولية المالية (Financial)', desc: 'أقر بمسؤوليتي الكاملة عن سداد كافة التكاليف الطبية والخدمات غير المغطاة تأمينياً.' },
+    { key: 'bloodTransfusion' as const, title: 'إقرار نقل الدم (Blood Transfusion)', desc: 'أوافق على تلقي نقل الدم أو مشتقاته في حالة الضرورة الطبية وفقاً لتقدير الأطباء.' },
     { key: 'insuranceDataSharing' as const, title: 'مشاركة بيانات التأمين', desc: 'أفوض المنشأة بمشاركة البيانات الضرورية مع جهة التأمين الصحي لتغطية تكاليف العلاج.' },
   ]
 
@@ -593,7 +598,7 @@ export default function PatientIntakeFlow({ onClose }: { onClose?: () => void })
   const isStepValid = (step: number) => {
     if (step === 1) return !!(formData.step1.fullName && formData.step1.medicalNumber && formData.step1.nationalId && formData.step1.phone)
     if (step === 2) return !!(formData.step2.emergencyContactName && formData.step2.emergencyPhone)
-    if (step === 3) return !!(formData.step3.departmentId)
+    if (step === 3) return !!(formData.step3.departmentId || formData.step3.visitType)
     if (step === 5) return !!(formData.step5.consentToTreatment && formData.step5.privacyConsent)
     return true
   }

@@ -27,22 +27,30 @@ public sealed class Visit : TenantEntity, IAggregateRoot
         VisitType  visitType,
         Guid       tenantId,
         int        queueNumber,
-        Guid?      doctorId  = null,
-        Guid?      createdBy = null)
+        Guid?          doctorId       = null,
+        PriorityLevel  priority       = PriorityLevel.Normal,
+        ArrivalMethod  arrivalMethod  = ArrivalMethod.WalkIn,
+        string         chiefComplaint = "",
+        string?        notes          = null,
+        Guid?          createdBy      = null)
     {
         var visit = new Visit
         {
-            Id          = Guid.NewGuid(),
-            PatientId   = patientId,
-            BranchId    = branchId,
-            VisitType   = visitType,
-            DoctorId    = doctorId,
-            TenantId    = tenantId,
-            QueueNumber = queueNumber,
-            Status      = VisitStatus.CheckedIn,
-            VisitDate   = DateTime.UtcNow,
-            CreatedAt   = DateTime.UtcNow,
-            CreatedBy   = createdBy,
+            Id             = Guid.NewGuid(),
+            PatientId      = patientId,
+            BranchId       = branchId,
+            VisitType      = visitType,
+            Priority       = priority,
+            ArrivalMethod  = arrivalMethod,
+            ChiefComplaint = chiefComplaint,
+            Notes          = notes,
+            DoctorId       = doctorId,
+            TenantId       = tenantId,
+            QueueNumber    = queueNumber,
+            Status         = VisitStatus.CheckedIn,
+            VisitDate      = DateTime.UtcNow,
+            CreatedAt      = DateTime.UtcNow,
+            CreatedBy      = createdBy,
         };
 
         visit.RaiseDomainEvent(new VisitCreatedEvent(visit.Id, patientId, tenantId, branchId));
@@ -50,13 +58,17 @@ public sealed class Visit : TenantEntity, IAggregateRoot
     }
 
     // ── Core ───────────────────────────────────────────────────────────────────
-    public Guid       PatientId   { get; private set; }
-    public Guid?      DoctorId    { get; private set; }
-    public Guid       BranchId    { get; private set; }
-    public VisitType  VisitType   { get; private set; }
-    public PayerType  PayerType   { get; set; }
-    public VisitStatus Status     { get; private set; } = VisitStatus.CheckedIn;
-    public int        QueueNumber { get; private set; }
+    public Guid       PatientId      { get; private set; }
+    public Guid?      DoctorId       { get; private set; }
+    public Guid       BranchId       { get; private set; }
+    public VisitType  VisitType      { get; private set; }
+    public PriorityLevel Priority     { get; private set; }
+    public ArrivalMethod ArrivalMethod { get; private set; }
+    public string     ChiefComplaint { get; private set; } = string.Empty;
+    public string?    Notes          { get; private set; }
+    public PayerType  PayerType      { get; set; }
+    public VisitStatus Status        { get; private set; } = VisitStatus.CheckedIn;
+    public int        QueueNumber    { get; private set; }
 
     // ── Tracking ───────────────────────────────────────────────────────────────
     public DateTime  VisitDate   { get; private set; }
@@ -101,5 +113,7 @@ public sealed class Visit : TenantEntity, IAggregateRoot
         };
 }
 
-public enum VisitType  { Outpatient = 1, Emergency = 2, Inpatient = 3 }
-public enum PayerType  { Cash, Insurance, Referral }
+public enum VisitType      { Outpatient = 1, Emergency = 2, Inpatient = 3 }
+public enum PayerType      { Cash, Insurance, Referral }
+public enum ArrivalMethod  { WalkIn, Ambulance, Referral, Transfer }
+public enum PriorityLevel  { Normal, Urgent, Critical, Emergency }

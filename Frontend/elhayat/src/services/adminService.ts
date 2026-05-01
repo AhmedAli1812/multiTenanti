@@ -76,6 +76,8 @@ export interface Room {
 
 export interface CreateRoomDto {
   roomNumber: string
+  name: string
+  type: number
   capacity: number
   floorId: string
   branchId: string

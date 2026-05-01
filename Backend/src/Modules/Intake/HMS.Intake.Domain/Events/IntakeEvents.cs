@@ -25,7 +25,10 @@ public sealed record IntakeSubmittedEvent(
     Guid          TenantId,
     Guid          BranchId,
     VisitType     VisitType,
-    PriorityLevel Priority) : IDomainEvent
+    PriorityLevel Priority,
+    ArrivalMethod ArrivalMethod,
+    string        ChiefComplaint,
+    string?       Notes) : IDomainEvent
 {
     public Guid     Id         { get; } = Guid.NewGuid();
     public DateTime OccurredOn { get; } = DateTime.UtcNow;

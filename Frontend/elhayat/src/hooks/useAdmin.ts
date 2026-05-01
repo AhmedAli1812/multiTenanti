@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   adminService,
-  type User, type Role, type Permission, type AuditLog, type Branch, type CreateUserDto, type Tenant, type CreateTenantDto,
+  type User, type Role, type Permission, type AuditLog, type Branch, type CreateUserDto, type Tenant,
   type Room, type CreateRoomDto, type Floor, type CreateFloorDto, type Department, type CreateDepartmentDto,
   type DashboardStats
 } from '../services/adminService'

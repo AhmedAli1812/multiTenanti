@@ -41,11 +41,13 @@ public class GetNurseQueueHandler : IRequestHandler<GetNurseQueueQuery, List<Que
                 v.Status,
                 v.Priority,
                 v.QueueNumber,
-                PatientName = v.Patient.FullName,
-                NationalId = v.Patient.NationalId ?? v.Patient.MedicalNumber,
+                PatientName = v.Patient != null ? v.Patient.FullName : "-",
+                NationalId = v.Patient != null ? (v.Patient.NationalId ?? v.Patient.MedicalNumber) : "-",
                 DoctorName = v.Doctor != null ? v.Doctor.FullName : "-",
                 DepartmentName = v.Doctor != null && v.Doctor.Department != null
-                    ? v.Doctor.Department.Name : "-"
+                    ? v.Doctor.Department.Name : "-",
+                v.ChiefComplaint,
+                v.Notes
             })
             .ToListAsync(ct);
 
@@ -61,6 +63,8 @@ public class GetNurseQueueHandler : IRequestHandler<GetNurseQueueQuery, List<Que
             DoctorName = v.DoctorName ?? "-",
             DepartmentName = v.DepartmentName ?? "-",
             PriorityName = MapPriority(v.Priority),
+            ChiefComplaint = v.ChiefComplaint,
+            Notes = v.Notes,
             QueueNumber = v.QueueNumber
         }).ToList();
     }

@@ -162,6 +162,9 @@ public class SubmitIntakeHandler : IRequestHandler<SubmitIntakeCommand, Wristban
             if (!string.IsNullOrWhiteSpace(request.VisitInfo.ChiefComplaint))
                 intake.ChiefComplaint = request.VisitInfo.ChiefComplaint.Trim();
 
+            if (!string.IsNullOrWhiteSpace(request.VisitInfo.Notes))
+                intake.Notes = request.VisitInfo.Notes.Trim();
+
             if (!string.IsNullOrWhiteSpace(request.VisitInfo.ArrivalMethod) &&
                 Enum.TryParse<ArrivalMethod>(request.VisitInfo.ArrivalMethod, true, out var arrivalMethod))
             {
@@ -190,6 +193,7 @@ public class SubmitIntakeHandler : IRequestHandler<SubmitIntakeCommand, Wristban
                 Priority       = intake.Priority,
                 ArrivalMethod  = intake.ArrivalMethod,
                 ChiefComplaint = intake.ChiefComplaint,
+                Notes          = intake.Notes,
                 DoctorId       = doctorId,
                 TenantId       = tenantId,
                 PayerType      = Enum.TryParse<PayerType>(request.Payment.PaymentType, true, out var payerType) ? payerType : PayerType.Cash,

@@ -30,6 +30,8 @@ public class PreviousPatientDto
     public DateTime? AdmissionDate { get; set; }
     public DateTime? DischargeDate { get; set; }
     public string DepartmentName { get; set; } = string.Empty;
+    public string? ChiefComplaint { get; set; }
+    public string? Notes { get; set; }
     public string Diagnosis { get; set; } = string.Empty;
     public int Age { get; set; }
     public string Gender { get; set; } = string.Empty;
@@ -44,6 +46,8 @@ public class RoomStatusDto
     public string PatientMedicalNumber { get; set; } = string.Empty;
     public string DoctorName { get; set; } = string.Empty;
     public string DepartmentName { get; set; } = string.Empty;
+    public string? ChiefComplaint { get; set; }
+    public string? Notes { get; set; }
     public string Diagnosis { get; set; } = string.Empty;
     public int Age { get; set; }
     public string Gender { get; set; } = string.Empty;

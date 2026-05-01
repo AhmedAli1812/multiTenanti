@@ -63,4 +63,10 @@ public class DashboardNotifier : IDashboardNotifier
         await _hub.Clients.Group($"Reception_{tenantId}_{branchId}")
             .SendAsync("roomStatusUpdated", new { timestamp = DateTime.UtcNow });
     }
+
+    public async Task NotifyPatientDischarged(Guid tenantId, Guid branchId, Guid visitId)
+    {
+        await _hub.Clients.Group($"Reception_{tenantId}_{branchId}")
+            .SendAsync("patientDischarged", new { visitId });
+    }
 }

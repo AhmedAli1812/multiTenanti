@@ -39,6 +39,7 @@ public class Visit : TenantEntity
     public ArrivalMethod ArrivalMethod { get; set; }
 
     public string ChiefComplaint { get; set; } = string.Empty;
+    public string? Notes { get; set; }
 
     public PayerType PayerType { get; set; }
 

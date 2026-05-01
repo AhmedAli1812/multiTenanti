@@ -267,6 +267,61 @@ try
     using (var scope = app.Services.CreateScope())
     {
         var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        
+        // 🔥 DATABASE CLEANUP & REPAIR (NUKE MODULAR SCHEMAS)
+        var db = ctx.Database;
+        try 
+        {
+            Log.Information("Cleaning up modular schemas and repairing legacy tables...");
+            
+            // 1. Nuke modular schemas and their tables
+            await db.ExecuteSqlRawAsync(@"
+                IF EXISTS (SELECT * FROM sys.schemas WHERE name = 'visits') BEGIN DROP TABLE IF EXISTS visits.Visits; DROP SCHEMA visits; END
+                IF EXISTS (SELECT * FROM sys.schemas WHERE name = 'patients') BEGIN DROP TABLE IF EXISTS patients.Patients; DROP SCHEMA patients; END
+                IF EXISTS (SELECT * FROM sys.schemas WHERE name = 'rooms') BEGIN DROP TABLE IF EXISTS rooms.RoomAssignments; DROP TABLE IF EXISTS rooms.Rooms; DROP SCHEMA rooms; END
+                IF EXISTS (SELECT * FROM sys.schemas WHERE name = 'intake') BEGIN 
+                    DROP TABLE IF EXISTS intake.IntakeFlags; 
+                    DROP TABLE IF EXISTS intake.IntakeInsurance; 
+                    DROP TABLE IF EXISTS intake.IntakeEmergencyContacts; 
+                    DROP TABLE IF EXISTS intake.Intakes; 
+                    DROP SCHEMA intake; 
+                END
+                IF EXISTS (SELECT * FROM sys.schemas WHERE name = 'identity') BEGIN 
+                    DROP TABLE IF EXISTS identity.UserSessions; 
+                    DROP TABLE IF EXISTS identity.RefreshTokens; 
+                    DROP TABLE IF EXISTS identity.RolePermissions; 
+                    DROP TABLE IF EXISTS identity.UserRoles; 
+                    DROP TABLE IF EXISTS identity.Permissions; 
+                    DROP TABLE IF EXISTS identity.Roles; 
+                    DROP TABLE IF EXISTS identity.Users; 
+                    DROP SCHEMA identity; 
+                END
+            ");
+
+            // 2. Repair legacy tables (Add missing columns to dbo schema)
+            await db.ExecuteSqlRawAsync(@"
+                -- Visits table repairs
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Visits]') AND name = 'ChiefComplaint') ALTER TABLE [dbo].[Visits] ADD [ChiefComplaint] nvarchar(1000) NULL;
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Visits]') AND name = 'Notes') ALTER TABLE [dbo].[Visits] ADD [Notes] nvarchar(max) NULL;
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Visits]') AND name = 'Priority') ALTER TABLE [dbo].[Visits] ADD [Priority] int NOT NULL DEFAULT 1;
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Visits]') AND name = 'ArrivalMethod') ALTER TABLE [dbo].[Visits] ADD [ArrivalMethod] int NOT NULL DEFAULT 1;
+                
+                -- Intakes table repairs
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Intakes]') AND name = 'ChiefComplaint') ALTER TABLE [dbo].[Intakes] ADD [ChiefComplaint] nvarchar(1000) NULL;
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Intakes]') AND name = 'Notes') ALTER TABLE [dbo].[Intakes] ADD [Notes] nvarchar(max) NULL;
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Intakes]') AND name = 'VisitType') ALTER TABLE [dbo].[Intakes] ADD [VisitType] int NOT NULL DEFAULT 1;
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Intakes]') AND name = 'Priority') ALTER TABLE [dbo].[Intakes] ADD [Priority] int NOT NULL DEFAULT 1;
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Intakes]') AND name = 'ArrivalMethod') ALTER TABLE [dbo].[Intakes] ADD [ArrivalMethod] int NOT NULL DEFAULT 1;
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Intakes]') AND name = 'PaymentType') ALTER TABLE [dbo].[Intakes] ADD [PaymentType] int NOT NULL DEFAULT 1;
+            ");
+
+            Log.Information("Database cleanup and repair completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Database cleanup/repair encountered an issue. This might be fine if the database is already clean.");
+        }
+
         await PermissionSeeder.SeedAsync(ctx);
         await TenantSeeder.SeedAsync(ctx, CancellationToken.None);
     }
