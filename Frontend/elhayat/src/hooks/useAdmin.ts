@@ -150,6 +150,8 @@ export function useTenants() {
     }
   }, [])
 
+  useEffect(() => { load() }, [load])
+
   const createTenant = async (dto: { name: string; code: string }) => {
     await adminService.createTenant(dto)
     await load()

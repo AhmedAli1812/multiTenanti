@@ -9,10 +9,12 @@ namespace HMS.Application.Features.NurseDashboard.Queries;
 public class GetNurseQueueHandler : IRequestHandler<GetNurseQueueQuery, List<QueuePatientDto>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly HMS.Application.Abstractions.CurrentUser.ICurrentUser _currentUser;
 
-    public GetNurseQueueHandler(IApplicationDbContext context)
+    public GetNurseQueueHandler(IApplicationDbContext context, HMS.Application.Abstractions.CurrentUser.ICurrentUser currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<List<QueuePatientDto>> Handle(GetNurseQueueQuery request, CancellationToken ct)
@@ -20,9 +22,12 @@ public class GetNurseQueueHandler : IRequestHandler<GetNurseQueueQuery, List<Que
         var today = DateTime.UtcNow.Date;
         var tomorrow = today.AddDays(1);
 
+        var branchId = _currentUser.BranchId;
+
         var visits = await _context.Visits
             .AsNoTracking()
             .Where(v => v.TenantId == request.TenantId
+                     && (branchId == Guid.Empty || v.BranchId == branchId)
                      && v.VisitDate >= today
                      && v.VisitDate < tomorrow
                      && v.Status != VisitStatus.Completed)
@@ -54,6 +59,7 @@ public class GetNurseQueueHandler : IRequestHandler<GetNurseQueueQuery, List<Que
             ArrivalTime = v.VisitDate,
             VisitTypeName = MapVisitType(v.VisitType),
             StatusName = MapStatus(v.Status),
+            Status = v.Status.ToString(),
             DoctorName = v.DoctorName ?? "-",
             DepartmentName = v.DepartmentName ?? "-",
             PriorityName = MapPriority(v.Priority),
@@ -65,10 +71,10 @@ public class GetNurseQueueHandler : IRequestHandler<GetNurseQueueQuery, List<Que
 
     private static string MapVisitType(VisitType type) => type switch
     {
-        VisitType.Outpatient => "حجز",
-        VisitType.Emergency  => "طارئ",
-        VisitType.Inpatient  => "راجع",
-        _                    => "حجز"
+        VisitType.Outpatient => "عيادات",
+        VisitType.Emergency  => "طوارئ",
+        VisitType.Inpatient  => "داخلي",
+        _                    => "أخرى"
     };
 
     private static string MapStatus(VisitStatus status) => status switch
@@ -80,6 +86,8 @@ public class GetNurseQueueHandler : IRequestHandler<GetNurseQueueQuery, List<Que
         VisitStatus.OpCompleted   => "انتهت العملية",
         VisitStatus.PostOp        => "ما بعد العملية",
         VisitStatus.Completed     => "مكتمل",
+        VisitStatus.PendingCheckoutNurse => "بانتظار خروج التمريض",
+        VisitStatus.PendingCheckoutReception => "بانتظار خروج الاستقبال",
         _                         => "نشط"
     };
 

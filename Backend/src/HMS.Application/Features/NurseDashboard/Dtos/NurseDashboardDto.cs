@@ -16,6 +16,7 @@ public class QueuePatientDto
     public DateTime ArrivalTime { get; set; }
     public string VisitTypeName { get; set; } = string.Empty;
     public string StatusName { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
     public string DoctorName { get; set; } = string.Empty;
     public string DepartmentName { get; set; } = string.Empty;
     public string PriorityName { get; set; } = string.Empty;

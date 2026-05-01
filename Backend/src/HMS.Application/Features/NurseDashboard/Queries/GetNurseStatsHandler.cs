@@ -9,10 +9,12 @@ namespace HMS.Application.Features.NurseDashboard.Queries;
 public class GetNurseStatsHandler : IRequestHandler<GetNurseStatsQuery, NurseStatsDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly HMS.Application.Abstractions.CurrentUser.ICurrentUser _currentUser;
 
-    public GetNurseStatsHandler(IApplicationDbContext context)
+    public GetNurseStatsHandler(IApplicationDbContext context, HMS.Application.Abstractions.CurrentUser.ICurrentUser currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<NurseStatsDto> Handle(GetNurseStatsQuery request, CancellationToken ct)
@@ -20,9 +22,12 @@ public class GetNurseStatsHandler : IRequestHandler<GetNurseStatsQuery, NurseSta
         var today = DateTime.UtcNow.Date;
         var tomorrow = today.AddDays(1);
 
+        var branchId = _currentUser.BranchId;
+
         var todayVisits = _context.Visits
             .AsNoTracking()
             .Where(v => v.TenantId == request.TenantId
+                     && (branchId == Guid.Empty || v.BranchId == branchId)
                      && v.VisitDate >= today
                      && v.VisitDate < tomorrow);
 

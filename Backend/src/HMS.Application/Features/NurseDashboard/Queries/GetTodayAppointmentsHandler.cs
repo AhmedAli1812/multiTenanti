@@ -9,10 +9,12 @@ namespace HMS.Application.Features.NurseDashboard.Queries;
 public class GetTodayAppointmentsHandler : IRequestHandler<GetTodayAppointmentsQuery, List<TodayAppointmentDto>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly HMS.Application.Abstractions.CurrentUser.ICurrentUser _currentUser;
 
-    public GetTodayAppointmentsHandler(IApplicationDbContext context)
+    public GetTodayAppointmentsHandler(IApplicationDbContext context, HMS.Application.Abstractions.CurrentUser.ICurrentUser currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<List<TodayAppointmentDto>> Handle(GetTodayAppointmentsQuery request, CancellationToken ct)
@@ -21,9 +23,12 @@ public class GetTodayAppointmentsHandler : IRequestHandler<GetTodayAppointmentsQ
         var tomorrow = today.AddDays(1);
         var now = DateTime.UtcNow;
 
+        var branchId = _currentUser.BranchId;
+
         var visits = await _context.Visits
             .AsNoTracking()
             .Where(v => v.TenantId == request.TenantId
+                     && (branchId == Guid.Empty || v.BranchId == branchId)
                      && v.VisitDate >= today
                      && v.VisitDate < tomorrow)
             .OrderBy(v => v.VisitDate)
@@ -79,9 +84,9 @@ public class GetTodayAppointmentsHandler : IRequestHandler<GetTodayAppointmentsQ
 
     private static string MapVisitType(VisitType type) => type switch
     {
-        VisitType.Outpatient => "حجز",
-        VisitType.Emergency  => "طارئ",
-        VisitType.Inpatient  => "راجع",
-        _                    => "حجز"
+        VisitType.Outpatient => "عيادات",
+        VisitType.Emergency  => "طوارئ",
+        VisitType.Inpatient  => "داخلي",
+        _                    => "أخرى"
     };
 }
